@@ -1,0 +1,1 @@
+<canvas type="2d" id="{{canvasId}}" canvas-id="{{canvasId}}" class="ec-canvas" bind:init="init"></canvas>

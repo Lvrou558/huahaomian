@@ -1,0 +1,84 @@
+<view class="temple-page">
+  <view class="temple-hero">
+    <view class="hero-head">
+      <text class="hero-title">安眠小禅院</text>
+      <text class="hero-sub">睡前静心拜一拜，求一夜安睡</text>
+    </view>
+    <view class="sound-toggle" bindtap="toggleSound">
+      <text class="sound-icon">{{soundOn ? "🔊" : "🔇"}}</text>
+      <text class="sound-text">{{soundOn ? "轻音已开启" : "轻音已关闭"}}</text>
+    </view>
+    <view class="track-row">
+      <view
+        class="track-item {{currentTrack === item.key ? 'active' : ''}}"
+        wx:for="{{tracks}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="switchTrack"
+      >
+        {{item.label}}
+      </view>
+    </view>
+    <view class="hero-scene">
+      <text class="scene-moon">🌙</text>
+      <text class="scene-temple">🏯</text>
+      <text class="scene-cloud">☁︎ ☁︎</text>
+      <text class="scene-smoke {{incenseAnimating ? 'smoking' : ''}}">〰 〰 〰</text>
+    </view>
+  </view>
+
+  <view class="ritual-card">
+    <view class="ritual-progress">{{progressText}}</view>
+    <view class="step-row {{incenseDone ? 'done' : ''}}">
+      <text class="step-tag">01</text>
+      <view class="step-main">
+        <text class="step-title">上一炷安眠香</text>
+        <text class="step-desc">愿今夜安睡，无梦无醒，晨起精神</text>
+      </view>
+      <button class="step-btn" bindtap="offerIncense">{{incenseDone ? "已上香" : "上香"}}</button>
+    </view>
+
+    <view class="wish-box">
+      <text class="wish-title">小心愿（10 字内，可选）</text>
+      <input
+        class="wish-input"
+        maxlength="10"
+        placeholder="例如：希望今晚秒睡"
+        value="{{wishText}}"
+        bindinput="onWishInput"
+      />
+    </view>
+
+    <view class="step-row {{bowDone ? 'done' : ''}}">
+      <text class="step-tag">02</text>
+      <view class="step-main">
+        <text class="step-title">轻轻拜一拜</text>
+        <text class="step-desc">给自己一个放松的睡前仪式</text>
+      </view>
+      <button class="step-btn {{bowAnimating ? 'bouncing' : ''}}" bindtap="doBow">{{bowDone ? "礼成" : "拜一拜"}}</button>
+    </view>
+
+    <view class="step-row {{drawnToday ? 'done' : ''}}">
+      <text class="step-tag">03</text>
+      <view class="step-main">
+        <text class="step-title">抽取好眠签（每日 1 次）</text>
+        <text class="step-desc">全正向签文，无凶签无压力</text>
+      </view>
+      <button class="step-btn {{drawAnimating ? 'shaking' : ''}}" bindtap="drawFortune" disabled="{{drawnToday}}">
+        {{drawnToday ? "今日已抽" : "摇签"}}
+      </button>
+    </view>
+  </view>
+
+  <view class="fortune-card" wx:if="{{fortune}}">
+    <text class="fortune-level {{fortune.level}}">{{fortune.title}}</text>
+    <text class="fortune-poem">{{fortune.poem}}</text>
+    <text class="fortune-interpret">解签：{{fortune.interpretation}}</text>
+    <text class="fortune-wish">你的心愿：{{fortune.wishText}}</text>
+  </view>
+
+  <view class="sleep-tip-card" wx:if="{{drawnToday}}">
+    <text class="sleep-tip">放下手机，安心入睡吧</text>
+    <button class="sleep-btn" bindtap="startSleepMonitor">开启睡眠监测</button>
+  </view>
+</view>

@@ -1,0 +1,385 @@
+<view class="page">
+  <view class="card top-status">
+    <view class="status-left">
+      <text class="status-icon">📶</text>
+      <text class="status-text">健康监测仪 X2 · 已正常在线 | 昨夜监测数据完整</text>
+    </view>
+    <text class="status-link">⚙️ 设备详情</text>
+  </view>
+
+  <view class="card summary-card">
+    <view class="summary-text">近7天睡眠整体稳定向好，睡眠效率全程保持优秀，仅入睡时长波动略大，整体无需过度干预</view>
+  </view>
+
+  <view class="card kline-card">
+    <view class="kline-title">长期睡眠趋势 · K线式作息走势图</view>
+    <view class="toolbar-row">
+      <view class="toolbar-tabs">
+        <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">本周</text>
+        <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">本月</text>
+        <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+      </view>
+      <view class="toolbar-ops">
+        <text class="op-btn {{!klineControlState.canJumpStart ? 'disabled' : ''}}" bindtap="jumpToStart">«</text>
+        <text class="op-btn {{!klineControlState.canPrev ? 'disabled' : ''}}" bindtap="panLeft">‹</text>
+        <text class="op-hint">左右滑动查看</text>
+        <text class="op-btn {{!klineControlState.canNext ? 'disabled' : ''}}" bindtap="panRight">›</text>
+        <text class="op-btn {{!klineControlState.canJumpEnd ? 'disabled' : ''}}" bindtap="jumpToEnd">»</text>
+        <text class="op-btn {{!klineControlState.canZoomIn ? 'disabled' : ''}}" bindtap="zoomIn">🔍+</text>
+        <text class="op-btn {{!klineControlState.canZoomOut ? 'disabled' : ''}}" bindtap="zoomOut">🔍-</text>
+      </view>
+    </view>
+
+    <view class="kline-wrap" bindtouchstart="onKlineTouchStart" bindtouchmove="onKlineTouchMove" bindtouchend="onKlineTouchEnd">
+      <canvas type="2d" id="klineChart" class="kline-canvas"></canvas>
+    </view>
+
+    <view class="chart-axis axis-days">
+      <text wx:for="{{visibleLabels}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <view class="kline-scrollbar" id="klineScrollbarTrack" bindtap="onScrollbarTrackTap">
+      <view
+        class="kline-scrollbar-thumb"
+        style="width: {{klineScrollbarWidth}}%; margin-left: {{klineScrollbarOffset}}%;"
+        bindtouchstart="onScrollbarTouchStart"
+        bindtouchmove="onScrollbarTouchMove"
+        bindtouchend="onScrollbarTouchEnd"
+        bindtouchcancel="onScrollbarTouchEnd"
+      ></view>
+    </view>
+
+    <view class="avg-panel">
+      <view class="avg-row">
+        <text class="avg-label">平均上床</text>
+        <view class="avg-divider"></view>
+        <text class="avg-value">{{klineSummary.avgBed}}</text>
+      </view>
+      <view class="avg-row">
+        <text class="avg-label">平均起床</text>
+        <view class="avg-divider"></view>
+        <text class="avg-value">{{klineSummary.avgWake}}</text>
+      </view>
+    </view>
+
+    <view class="kpi-strip">
+      <view class="kpi-item">
+        <text class="kpi-label">平均上床</text>
+        <text class="kpi-value">{{klineSummary.avgBed}}</text>
+      </view>
+      <view class="kpi-item">
+        <text class="kpi-label">平均起床</text>
+        <text class="kpi-value">{{klineSummary.avgWake}}</text>
+      </view>
+      <view class="kpi-item">
+        <text class="kpi-label">健康窗口入睡</text>
+        <text class="kpi-value">{{klineSummary.healthyBedRate}}%</text>
+      </view>
+      <view class="kpi-item">
+        <text class="kpi-label">作息规律度</text>
+        <text class="kpi-value">{{klineSummary.regularity}}%</text>
+      </view>
+    </view>
+
+    <view class="insight-block">
+      <view class="insight-line">✨ 本周有多天在健康早睡窗口入睡，作息越来越稳定</view>
+      <view class="insight-line tip">💡 如果把上床时间再提前15分钟，固定23:00前入睡，深睡会更充足</view>
+      <view class="insight-source">（数据由健康监测仪X2无感自动采集，全周期数据完整可追溯）</view>
+    </view>
+  </view>
+
+  <view class="module-card {{expanded.sleep ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="sleep">
+      <view class="module-left">
+        <text class="module-index">1.</text>
+        <view>
+          <view class="module-title">睡眠趋势</view>
+          <view class="module-desc">全周期睡眠质量持续改善，作息稳定性、睡眠时长稳步上升</view>
+        </view>
+      </view>
+      <text class="module-link">{{expanded.sleep ? '收起' : '点击查看详细趋势 →'}}</text>
+    </view>
+
+    <view class="module-body" wx:if="{{expanded.sleep}}">
+      <view class="metric-section {{focusMetric === 'duration' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">睡眠时长</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="metric-subline">近7天平均7.9h，稳定在健康范围</view>
+        <view class="chart-container">
+          <canvas type="2d" id="durationChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="duration"></canvas>
+        </view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.duration}}</view>
+        <view class="metric-insight">全周期睡眠时长持续上升，较首次使用提升1.2h，长期作息稳定性提升60%</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'efficiency' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">睡眠效率</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="metric-subline">近7天平均84.6%，保持优秀水平</view>
+        <view class="chart-container">
+          <canvas type="2d" id="efficiencyChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="efficiency"></canvas>
+        </view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.efficiency}}</view>
+        <view class="metric-insight">全周期睡眠效率稳步提升，较初期平均提升7.2%，卧床时间利用效率持续优化</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'prep' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">入睡准备时长</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="metric-subline">近7天波动15-40分钟，规律性待提升</view>
+        <view class="chart-container">
+          <canvas type="2d" id="prepChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="prep"></canvas>
+        </view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.prep}}</view>
+        <view class="metric-insight">全周期入睡时长呈波动下降趋势，较初期平均缩短12分钟，入睡能力逐步改善</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'deep' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">深睡占比</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="metric-subline">近7天平均20%，处于健康区间</view>
+        <view class="chart-container">
+          <canvas type="2d" id="deepChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="deep"></canvas>
+        </view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.deep}}</view>
+        <view class="metric-insight">全周期深睡占比长期稳定在15-25%理想区间，无异常下滑，身体恢复能力持续稳定</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="module-card {{expanded.breath ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="breath">
+      <view class="module-left">
+        <text class="module-index">2.</text>
+        <view>
+          <view class="module-title">呼吸健康</view>
+          <view class="module-desc">全周期AHI指数长期低于健康警戒线，呼吸暂停时长持续下降，气道状态稳定</view>
+        </view>
+      </view>
+      <text class="module-link">{{expanded.breath ? '收起' : '点击查看详细趋势 →'}}</text>
+    </view>
+
+    <view class="module-body" wx:if="{{expanded.breath}}">
+      <view class="metric-section {{focusMetric === 'breathRate' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">平均夜间呼吸频率</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="breathRateChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="breathRate"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.breathRate}}</view>
+        <view class="metric-insight">全周期呼吸频率稳定在12-15次/分，无异常波动，呼吸节奏平稳</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'ahi' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">AHI呼吸暂停指数</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="ahiChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="ahi"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.ahi}}</view>
+        <view class="metric-insight">全周期AHI指数长期低于5次/小时的健康警戒线，无睡眠呼吸暂停风险</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'apnea' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">最长呼吸暂停时长</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="apneaChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="apnea"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.apnea}}</view>
+        <view class="metric-insight">全周期最长呼吸暂停时长呈持续下降趋势，较初期缩短8秒，气道阻塞风险持续降低</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="module-card {{expanded.heart ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="heart">
+      <view class="module-left">
+        <text class="module-index">3.</text>
+        <view>
+          <view class="module-title">心肺健康</view>
+          <view class="module-desc">全周期静息心率持续降低，HRV稳定在健康区间，心脏休息效率与自主调节能力稳步提升</view>
+        </view>
+      </view>
+      <text class="module-link">{{expanded.heart ? '收起' : '点击查看详细趋势 →'}}</text>
+    </view>
+
+    <view class="module-body" wx:if="{{expanded.heart}}">
+      <view class="metric-section {{focusMetric === 'heartRate' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">夜间平均心率</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="heartRateChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="heartRate"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.heartRate}}</view>
+        <view class="metric-insight">全周期夜间平均心率呈缓慢下降趋势，较初期降低5bpm，心脏休息效率持续提升</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'hrv' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">HRV心率变异性</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="hrvChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="hrv"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.hrv}}</view>
+        <view class="metric-insight">全周期HRV长期稳定在健康区间，身体压力水平持续下降，自主神经调节能力良好</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'heartIndex' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">心脏健康指数</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="heartIndexChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="heartIndex"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.heartIndex}}</view>
+        <view class="metric-insight">全周期心脏健康指数全程稳定在90分以上，无异常下滑，心脏健康状态持续稳定</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="module-card {{expanded.sound ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="sound">
+      <view class="module-left">
+        <text class="module-index">4.</text>
+        <view>
+          <view class="module-title">睡眠声音趋势 <text class="vip-badge">会员专属</text></view>
+          <view class="module-desc">全周期睡眠环境噪音持续降低，鼾声频次逐步减少，睡眠环境稳定性持续提升</view>
+        </view>
+      </view>
+      <text class="module-link">{{expanded.sound ? '收起' : '点击查看详细趋势 →'}}</text>
+    </view>
+
+    <view class="module-body" wx:if="{{expanded.sound}}">
+      <view class="metric-section {{focusMetric === 'noise' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">环境平均噪音</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="noiseChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="noise"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.noise}}</view>
+        <view class="metric-insight">全周期环境平均噪音持续降低，较初期下降8分贝，睡眠环境持续优化</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'snore' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">鼾声总频次</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="snoreChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="snore"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.snore}}</view>
+        <view class="metric-insight">全周期鼾声频次呈持续下降趋势，月均减少3次/晚，与呼吸暂停改善趋势匹配</view>
+      </view>
+
+      <view class="metric-section {{focusMetric === 'noiseImpact' ? 'focused' : ''}}">
+        <view class="metric-row">
+          <text class="metric-title">噪音睡眠影响占比</text>
+          <view class="metric-toolbar">
+            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
+            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
+            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
+            <text class="op-btn" bindtap="panLeft">‹</text>
+            <text class="op-btn" bindtap="panRight">›</text>
+          </view>
+        </view>
+        <view class="chart-container"><canvas type="2d" id="noiseImpactChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="noiseImpact"></canvas></view>
+        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
+        <view class="point-tip">{{pointTips.noiseImpact}}</view>
+        <view class="metric-insight">全周期噪音对睡眠的影响占比持续下降，较初期降低18%，睡眠连续性持续提升</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>

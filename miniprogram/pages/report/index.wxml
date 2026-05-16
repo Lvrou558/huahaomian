@@ -1,0 +1,173 @@
+<view class="page">
+  <view class="top-status">
+    <text>📶 健康监测仪 X2 · 已正常在线 | 昨夜监测数据完整</text>
+    <text class="status-link">⚙️ 设备详情</text>
+  </view>
+
+  <view class="card hero-card">
+    <view class="hero-grid">
+      <view class="recover">
+        <view class="percent">92%</view>
+        <view class="recover-title">身体恢复程度</view>
+        <view class="recover-note">✨ 身体充饱电</view>
+      </view>
+      <view class="score-center">
+        <view class="score-ring">
+          <text class="score-num">{{summary.score}}分</text>
+        </view>
+        <text class="score-tip">睡的超稳</text>
+      </view>
+      <view class="duration">
+        <view class="dur-value">{{summary.duration}}</view>
+        <view class="dur-note">健康范围</view>
+        <view class="dur-sub">🌙 睡够了健康时长</view>
+      </view>
+    </view>
+    <view class="hero-second">
+      <view class="percent">90%</view>
+      <view class="recover-title">精神恢复程度</view>
+      <view class="recover-note">☁️ 脑子歇够啦</view>
+    </view>
+    <view class="hero-text">昨晚不仅身体充饱了电，脑子也好好歇够了，深睡超给力，心肺全程稳稳的。</view>
+    <view class="hero-text">要是今晚能早15分钟放下手机，入睡会更丝滑哦 😴</view>
+    <view class="hero-note">✨ 全程无感监测，不用戴手表也能躺平恢复状态</view>
+    <view class="hero-action">分享我的睡眠小确幸 →</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">睡眠周期</view>
+    <view class="sub-title">{{cycleInfo}}</view>
+  </view>
+
+  <view class="card">
+    <view class="time-row"><text>入睡23:15</text><text>起床08:35</text></view>
+    <canvas type="2d" id="sleepCycle" class="chart-lg"></canvas>
+    <view class="cycle-tags">
+      <text>完整循环1</text><text>完整循环2</text><text>完整循环3</text><text>完整循环4</text>
+    </view>
+    <view class="legend-row">
+      <text>● 清醒 0h35min</text>
+      <text>● 浅睡 3h50min</text>
+      <text>● 深睡 1h21min</text>
+      <text>● 快速眼动 1h31min</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">❤️‍🩹 心肺健康</view>
+    <view class="sub-title">整体状态优秀！整夜呼吸、心率全程平稳，心肺负担小，身体恢复状态超棒</view>
+  </view>
+
+  <view class="card">
+    <view class="fold-head" bindtap="toggleBreathing">
+      <view class="section-title">🌬️ 呼吸健康</view>
+      <text class="fold-action">{{showBreathing ? '收起' : '展开'}}</text>
+    </view>
+    <view class="sub-title">整夜呼吸节奏稳定，AHI指数保持健康区间</view>
+    <block wx:if="{{showBreathing}}">
+      <view class="metric-grid">
+        <view class="metric-box" wx:for="{{breathingCards}}" wx:key="label">
+          <view class="m-label">{{item.label}}</view>
+          <view class="m-value">{{item.value}}</view>
+          <view class="m-level">{{item.level}}</view>
+        </view>
+      </view>
+      <view class="mini-title">整夜呼吸趋势</view>
+      <canvas type="2d" id="breathingTrend" class="chart-sm"></canvas>
+      <view class="axis">23:00  00:00  01:00  03:00  05:00  08:00</view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="fold-head" bindtap="toggleHeart">
+      <view class="section-title">❤️ 心脏健康</view>
+      <text class="fold-action">{{showHeart ? '收起' : '展开'}}</text>
+    </view>
+    <view class="sub-title">整夜心率平稳，心脏休息充分，自主神经调节表现良好</view>
+    <block wx:if="{{showHeart}}">
+      <view class="metric-grid">
+        <view class="metric-box" wx:for="{{heartCards}}" wx:key="label">
+          <view class="m-label">{{item.label}}</view>
+          <view class="m-value">{{item.value}}</view>
+          <view class="m-level">{{item.level}}</view>
+        </view>
+      </view>
+      <view class="mini-title">整夜心率变化趋势</view>
+      <canvas type="2d" id="heartTrend" class="chart-sm"></canvas>
+      <view class="axis">23:00  00:00  01:00  03:00  05:00  08:00</view>
+    </block>
+    <view class="expand-link" bindtap="toggleAdvanced">{{showAdvanced ? '收起专业监测数据' : '展开查看专业监测数据'}} →</view>
+  </view>
+
+  <block wx:if="{{showAdvanced}}">
+    <view class="card">
+      <view class="section-title">🔊 睡眠声音监测 · 进阶分析版 <text class="vip">会员专属</text></view>
+      <view class="sub-title">与硬件睡眠监测同步启停，所有声音仅本地识别，不上传任何原始录音，全力保护隐私</view>
+      <view class="btn-row">
+        <button class="btn primary" bindtap="enableMonitor">开启睡眠声音自动监测</button>
+        <button class="btn ghost" bindtap="managePermission">管理麦克风权限</button>
+      </view>
+      <view class="tip">* 仅睡眠时段启用麦克风，锁屏后台可正常运行，原始音频100%留存用户本地</view>
+    </view>
+
+    <view class="card">
+      <view class="metric-grid">
+        <view class="metric-box" wx:for="{{soundEnvCards}}" wx:key="label">
+          <view class="m-label">{{item.label}}</view>
+          <view class="m-value">{{item.value}}</view>
+          <view class="m-level">{{item.level}}</view>
+        </view>
+      </view>
+      <view class="metric-grid mt12">
+        <view class="metric-box" wx:for="{{soundEventCards}}" wx:key="label">
+          <view class="m-label">{{item.label}}</view>
+          <view class="m-value">{{item.value}}</view>
+          <view class="m-level">{{item.level}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="mini-title">整夜声音&睡眠联动趋势</view>
+      <canvas type="2d" id="soundTrend" class="chart-sm"></canvas>
+      <view class="axis">23:00  00:00  01:00  03:00  05:00  08:00</view>
+      <view class="tip">* 黄色标注=鼾声/咳嗽，红色标注=强环境噪音，灰色标注=对应睡眠周期中断</view>
+    </view>
+
+    <view class="card">
+      <view class="section-title">📊 睡眠影响联动深度分析</view>
+      <view class="list-item">1. 凌晨02:17的62分贝交通噪音，导致你从深睡切换至浅睡，睡眠连续性中断</view>
+      <view class="list-item">2. 凌晨03:02-03:15的3次鼾声，与当晚呼吸暂停时段重合，影响睡眠稳定性</view>
+      <view class="list-item">3. 整夜无持续强噪音干扰，整体睡眠环境对恢复的负面影响较低</view>
+    </view>
+
+    <view class="card">
+      <view class="section-title">⚕️ 健康风险关联提示</view>
+      <view class="list-item">1. 鼾声属于轻度频发，若每周出现≥5天，建议关注呼吸道健康</view>
+      <view class="list-item">2. 整夜无异常咳嗽、呼吸声记录，呼吸道状态平稳</view>
+      <view class="list-item">3. 环境噪音仅单次突发，不会对长期睡眠健康造成持续负面影响</view>
+    </view>
+
+    <view class="card">
+      <view class="section-title">💡 个性化改善方案</view>
+      <view class="list-item">1. 针对交通噪音：建议关闭卧室窗户，或使用隔音耳塞</view>
+      <view class="list-item">2. 针对轻度鼾声：优先采用侧卧位，减少气道阻塞</view>
+      <view class="list-item">3. 长期优化：固定睡前10分钟关闭门窗，营造稳定安静睡眠环境</view>
+      <view class="link-row">
+        <text>查看近1个月声音健康趋势 →</text>
+        <text>查看异常声音完整记录 →</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="card">
+    <view class="section-title">✨ 整夜睡眠核心亮点</view>
+    <view class="list-item">1. 身体&精神恢复双优秀，睡眠周期规律，深睡、REM睡眠均达标</view>
+    <view class="list-item">2. 呼吸、心率全程平稳，心肺负担小，身体无过度焦虑</view>
+    <view class="section-title">⚠️ 可微调的小细节</view>
+    <view class="list-item">单次最长呼吸暂停13秒，略超10秒参考值，建议继续关注长期变化趋势</view>
+    <view class="section-title">💡 今晚可执行核心建议</view>
+    <view class="list-item">1. 睡前1小时放下手机，缩短入睡时长</view>
+    <view class="list-item">2. 优先侧卧位，降低呼吸暂停概率，减轻心肺负担</view>
+  </view>
+</view>

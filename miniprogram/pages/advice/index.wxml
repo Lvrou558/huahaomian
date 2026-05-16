@@ -1,0 +1,71 @@
+<view class="page">
+  <view class="card overview-card">
+    <view class="overview-head">
+      <text class="overview-title">今夜风险：{{overviewRisk.level}}</text>
+    </view>
+    <view class="overview-summary">{{overviewRisk.summary}}</view>
+  </view>
+
+  <view class="card heart-health-card">
+    <view class="heart-block-title">⚠️ 心脏健康潜在关注项</view>
+    <view class="heart-block-sub">{{heartHealthIntro}}</view>
+    <view class="heart-risk-item" wx:for="{{heartRisks}}" wx:key="title">
+      <text class="heart-risk-num">{{index + 1}}.</text>
+      <text class="heart-risk-strong">{{item.title}}：</text>
+      <text class="heart-risk-text">{{item.detail}}</text>
+    </view>
+
+    <view class="heart-block-title heart-block-title-spaced">💡 心脏健康优化建议</view>
+    <view class="heart-advice-block" wx:for="{{heartAdviceBlocks}}" wx:key="heading">
+      <view class="heart-advice-heading">{{item.heading}}</view>
+      <view class="heart-advice-line" wx:for="{{item.bullets}}" wx:for-item="line" wx:key="*this">
+        <text class="heart-advice-dash">- </text>
+        <text class="heart-advice-text">{{line}}</text>
+      </view>
+    </view>
+    <view
+      class="heart-evidence-link"
+      bindtap="onTapRiskEvidence"
+      data-module="heart"
+      data-metric="heartRate"
+    >
+      查看长期页「夜间平均心率」趋势 →
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">风险分类</view>
+    <view class="risk-group-card level-{{item.levelKey}}" wx:for="{{riskGroups}}" wx:key="id">
+      <view class="risk-group-head" bindtap="toggleRiskGroup" data-id="{{item.id}}">
+        <text class="risk-level-tag">{{item.level}}</text>
+        <text class="risk-head-text">{{item.triggerReason}}</text>
+        <text class="risk-toggle">{{item.expanded ? "收起" : "展开"}}</text>
+      </view>
+      <view class="risk-group-body" wx:if="{{item.expanded}}">
+        <view class="risk-factor-line">
+          <text class="risk-factor-chip" wx:for="{{item.factors}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view
+          class="risk-evidence-link"
+          bindtap="onTapRiskEvidence"
+          data-module="{{item.source.module}}"
+          data-metric="{{item.source.metric}}"
+        >
+          查看趋势证据（{{item.source.label}}） →
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">今晚先做这 2 件事</view>
+    <view class="action-item" wx:for="{{prioritizedActions}}" wx:key="id" bindtap="toggleAdviceCheck" data-id="{{item.id}}">
+      <text class="action-checkbox {{item.checked ? 'checked' : ''}}">{{item.checked ? "✓" : ""}}</text>
+      <text class="action-text {{item.checked ? 'done' : ''}}">{{item.text}}</text>
+    </view>
+  </view>
+
+  <view class="upgrade-tip">
+    <text>{{upgradeReminder}}</text>
+  </view>
+</view>

@@ -1,0 +1,676 @@
+.home {
+  padding: 20rpx;
+  padding-bottom: 60rpx;
+  background: #F4FBF9;
+  min-height: 100vh;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(32, 132, 108, 0.06);
+}
+
+/* 状态栏 */
+.status-bar {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 16rpx;
+  padding: 0 8rpx;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  font-size: 22rpx;
+  color: #5B7B73;
+}
+
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #B0BEC5;
+  margin-right: 10rpx;
+}
+
+.status-dot.connected,
+.status-dot.synced {
+  background: #26A69A;
+}
+
+/* 核心评分区 */
+.hero {
+  background: linear-gradient(145deg, #E8F5F2 0%, #ffffff 60%);
+  position: relative;
+}
+
+.hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
+.hero-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1B3A36;
+  margin-bottom: 8rpx;
+}
+
+.hero-sub {
+  font-size: 24rpx;
+  color: #5B7B73;
+  line-height: 1.5;
+  max-width: 400rpx;
+}
+
+.efficiency-badge {
+  background: linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%);
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  text-align: center;
+  color: white;
+}
+
+.efficiency-value {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.efficiency-label {
+  font-size: 20rpx;
+  opacity: 0.95;
+  margin-top: 4rpx;
+}
+
+/* 评分圆环 */
+.score-section {
+  display: flex;
+  align-items: center;
+  gap: 40rpx;
+}
+
+.score-container {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #E8F5E9;
+}
+
+.score-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-inner {
+  width: 160rpx;
+  height: 160rpx;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.score-value {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #26A69A;
+}
+
+.score-label {
+  font-size: 22rpx;
+  color: #5B7B73;
+  margin-top: 4rpx;
+}
+
+.quality-tag {
+  position: absolute;
+  bottom: -10rpx;
+  background: #26A69A;
+  color: white;
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+/* 时长信息 */
+.duration-info {
+  flex: 1;
+}
+
+.duration-label {
+  font-size: 24rpx;
+  color: #5B7B73;
+  margin-bottom: 12rpx;
+}
+
+.duration-value {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #1B3A36;
+  margin-bottom: 8rpx;
+}
+
+.duration-note {
+  font-size: 22rpx;
+  color: #81C784;
+}
+
+/* 指标网格 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1B3A36;
+}
+
+.section-sub {
+  font-size: 22rpx;
+  color: #7B928C;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.metric-card {
+  background: linear-gradient(135deg, #F7FCFA 0%, #FFFFFF 100%);
+  border: 2rpx solid #E0F2F1;
+  border-radius: 20rpx;
+  padding: 20rpx;
+}
+
+.metric-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.metric-label {
+  font-size: 24rpx;
+  color: #5B7B73;
+}
+
+.metric-trend {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.metric-trend.up {
+  color: #26A69A;
+  background: #E8F5E9;
+}
+
+.metric-trend.down {
+  color: #E57373;
+  background: #FFEBEE;
+}
+
+.metric-value-section {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+}
+
+.metric-main {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1B3A36;
+}
+
+.metric-sub {
+  font-size: 22rpx;
+  color: #7B928C;
+}
+
+/* 睡眠结构 */
+.stages-bar {
+  height: 32rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 24rpx;
+}
+
+.stage-segment {
+  height: 100%;
+}
+
+.stages-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 22rpx;
+}
+
+.legend-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+}
+
+.legend-name {
+  color: #5B7B73;
+}
+
+.legend-value {
+  color: #1B3A36;
+  font-weight: 600;
+}
+
+.legend-percent {
+  color: #26A69A;
+  margin-left: auto;
+}
+
+/* 波形图 */
+.waveform {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F9F7 100%);
+}
+
+.chart-container {
+  height: 240rpx;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 16rpx;
+}
+
+.wave-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.time-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 20rpx;
+  color: #7B928C;
+  margin-bottom: 12rpx;
+  padding: 0 8rpx;
+}
+
+.reference-note {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 20rpx;
+  color: #7B928C;
+}
+
+.ref-line {
+  width: 40rpx;
+  border-top: 2rpx dashed #B0BEC5;
+}
+
+/* 可折叠模块 */
+.detail-module {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module-title-section {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.module-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+
+.module-icon.heart {
+  background: #FFEBEE;
+}
+
+.module-icon.breath {
+  background: #E0F7FA;
+}
+
+.module-icon.sound {
+  background: #F3E5F5;
+}
+
+.module-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1B3A36;
+}
+
+.module-summary {
+  font-size: 22rpx;
+  color: #7B928C;
+  margin-top: 4rpx;
+}
+
+.expand-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #F0F9F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #26A69A;
+}
+
+.module-content {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid #E0F2F1;
+}
+
+.chart-wrapper {
+  height: 180rpx;
+  background: #F7FCFA;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.detail-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* 数据网格 */
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16rpx;
+}
+
+.data-item {
+  text-align: center;
+  padding: 16rpx;
+  background: #F7FCFA;
+  border-radius: 12rpx;
+}
+
+.data-label {
+  font-size: 20rpx;
+  color: #7B928C;
+  margin-bottom: 8rpx;
+}
+
+.data-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #26A69A;
+}
+
+.data-time,
+.data-note {
+  font-size: 18rpx;
+  color: #9E9E9E;
+  margin-top: 4rpx;
+}
+
+/* 呼吸统计 */
+.breathing-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.stat-item {
+  padding: 16rpx;
+  background: #F7FCFA;
+  border-radius: 12rpx;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 20rpx;
+  color: #7B928C;
+  margin-bottom: 8rpx;
+}
+
+.stat-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #26A69A;
+}
+
+.stat-value.safe {
+  color: #66BB6A;
+}
+
+.stat-note {
+  font-size: 18rpx;
+  color: #9E9E9E;
+  margin-top: 4rpx;
+}
+
+/* 声音监测 */
+.noise-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.noise-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background: #F7FCFA;
+  border-radius: 12rpx;
+}
+
+.noise-type {
+  font-size: 24rpx;
+  color: #5B7B73;
+  width: 180rpx;
+}
+
+.noise-count {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1B3A36;
+  width: 140rpx;
+}
+
+.noise-level {
+  font-size: 20rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+
+.noise-level.mild {
+  color: #FFB74D;
+  background: #FFF3E0;
+}
+
+.noise-level.good {
+  color: #66BB6A;
+  background: #E8F5E9;
+}
+
+.noise-time {
+  font-size: 20rpx;
+  color: #9E9E9E;
+  margin-left: auto;
+}
+
+.privacy-note {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 20rpx;
+  padding: 16rpx;
+  background: #FFF8E1;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  color: #F9A825;
+}
+
+.privacy-icon {
+  font-size: 24rpx;
+}
+
+/* 建议区 */
+.suggestion {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F9F7 100%);
+}
+
+.suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.suggestion-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1B3A36;
+}
+
+.suggestion-tag {
+  font-size: 20rpx;
+  color: #26A69A;
+  background: #E8F5E9;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.tip-card {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.tip-card.primary {
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+  border-left: 4rpx solid #66BB6A;
+}
+
+.tip-card.secondary {
+  background: linear-gradient(135deg, #E3F2FD 0%, #E8F5E9 100%);
+  border-left: 4rpx solid #42A5F5;
+}
+
+.tip-icon {
+  font-size: 36rpx;
+}
+
+.tip-content {
+  flex: 1;
+  font-size: 26rpx;
+  color: #1B3A36;
+  line-height: 1.6;
+}
+
+.action-btn {
+  margin-top: 24rpx;
+  background: linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%);
+  color: white;
+  border-radius: 32rpx;
+  padding: 28rpx 0;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  border: none;
+}
+
+.btn-arrow {
+  font-size: 32rpx;
+}
+
+/* 详细解读面板 */
+.detail-panel {
+  background: linear-gradient(180deg, #F7FCFA 0%, #FFFFFF 100%);
+}
+
+.panel-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1B3A36;
+  margin-bottom: 24rpx;
+}
+
+.interpretation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.interp-item {
+  padding: 24rpx;
+  background: white;
+  border-radius: 16rpx;
+  border-left: 4rpx solid #26A69A;
+}
+
+.interp-item.warning {
+  border-left-color: #FFB74D;
+}
+
+.interp-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1B3A36;
+  margin-bottom: 12rpx;
+}
+
+.interp-desc {
+  font-size: 22rpx;
+  color: #5B7B73;
+  line-height: 1.7;
+}

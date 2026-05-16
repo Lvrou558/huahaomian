@@ -1,0 +1,158 @@
+<view class="page">
+  <!-- 隐私承诺弹窗 -->
+  <view class="privacy-modal" wx:if="{{privacyModalVisible}}">
+    <view class="modal-mask" bindtap="closePrivacyModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <view class="modal-icon">🔒</view>
+        <view class="modal-title">睡眠声音监测隐私承诺</view>
+      </view>
+      <view class="modal-body">
+        <view class="promise-item">
+          <view class="promise-icon">📱</view>
+          <view class="promise-text">所有声音仅在你的<strong>手机本地识别</strong>，不上传任何原始录音</view>
+        </view>
+        <view class="promise-item">
+          <view class="promise-icon">🌙</view>
+          <view class="promise-text">仅在<strong>睡眠时段</strong>启用麦克风，非睡眠时段不采集</view>
+        </view>
+        <view class="promise-item">
+          <view class="promise-icon">💾</view>
+          <view class="promise-text">原始音频<strong>100%留存本地</strong>，你可随时关闭或清除</view>
+        </view>
+        <view class="promise-item">
+          <view class="promise-icon">⚙️</view>
+          <view class="promise-text">你可<strong>单独管理</strong>麦克风权限，不影响基础睡眠监测</view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-disagree" bindtap="disagreePrivacy">暂不开启</button>
+        <button class="btn-agree" bindtap="agreePrivacy">同意并开启</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设备状态 -->
+  <view class="card device-card">
+    <view class="device-header">
+      <view class="device-status">
+        <view class="status-dot {{deviceInfo.connected ? 'connected' : ''}}"></view>
+        <text>{{deviceInfo.connected ? '设备已连接' : '设备未连接'}}</text>
+      </view>
+      <view class="device-battery" wx:if="{{deviceInfo.connected}}">
+        <text>🔋 {{deviceInfo.battery}}%</text>
+      </view>
+    </view>
+    <view class="device-info" wx:if="{{deviceInfo.connected}}">
+      <view class="device-name">{{deviceInfo.name}}</view>
+      <view class="device-meta">
+        <text>今日同步 {{deviceInfo.lastSync}}</text>
+      </view>
+    </view>
+    <view class="device-actions">
+      <button class="device-btn {{deviceInfo.connected ? 'danger' : 'primary'}}" bindtap="{{deviceInfo.connected ? 'disconnectDevice' : 'reconnectDevice'}}">
+        {{deviceInfo.connected ? '断开连接' : '重新连接'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 隐私与声音监测 -->
+  <view class="card privacy-card">
+    <view class="section-header">
+      <view class="section-icon">🔒</view>
+      <view>
+        <view class="section-title">隐私与声音监测</view>
+        <view class="section-subtitle">数据安全与权限管理</view>
+      </view>
+    </view>
+    
+    <view class="privacy-promises">
+      <view class="promise-row">
+        <view class="promise-check">✓</view>
+        <text>所有声音仅手机本地识别</text>
+      </view>
+      <view class="promise-row">
+        <view class="promise-check">✓</view>
+        <text>不上传任何原始录音</text>
+      </view>
+      <view class="promise-row">
+        <view class="promise-check">✓</view>
+        <text>仅睡眠时段启用麦克风</text>
+      </view>
+      <view class="promise-row">
+        <view class="promise-check">✓</view>
+        <text>原始音频100%留存本地</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 声音监测开关 -->
+  <view class="card switch-card">
+    <view class="switch-header">
+      <view>
+        <view class="switch-title">睡眠声音监测</view>
+        <view class="switch-desc">可单独管理权限，不影响基础睡眠监测</view>
+      </view>
+      <switch color="#26A69A" checked="{{voiceMonitor}}" bindchange="onVoiceSwitchChange" />
+    </view>
+    <view class="switch-note" wx:if="{{voiceMonitor}}">
+      <view class="note-icon">✓</view>
+      <text>声音监测已开启，将识别鼾声、环境噪音等</text>
+    </view>
+    <view class="switch-note disabled" wx:else>
+      <view class="note-icon">○</view>
+      <text>声音监测已关闭，核心睡眠监测不受影响</text>
+    </view>
+  </view>
+
+  <!-- 本地数据管理 -->
+  <view class="card data-card">
+    <view class="section-title">本地数据管理</view>
+    <view class="data-stats">
+      <view class="data-item">
+        <view class="data-label">本地音频数据</view>
+        <view class="data-value">{{localData.audioSize}}MB</view>
+      </view>
+      <view class="data-item">
+        <view class="data-label">最近清理</view>
+        <view class="data-value">{{localData.lastCleanup}}</view>
+      </view>
+      <view class="data-item">
+        <view class="data-label">近7天权限调用</view>
+        <view class="data-value">{{localData.permissionCount}}次</view>
+      </view>
+    </view>
+    <view class="data-actions">
+      <button class="action-btn secondary" bindtap="viewPermissionLog">查看权限记录</button>
+      <button class="action-btn danger" bindtap="clearLocalData">清除本地音频</button>
+    </view>
+  </view>
+
+  <!-- 关于与帮助 -->
+  <view class="card help-card">
+    <view class="section-title">关于与帮助</view>
+    <view class="help-list">
+      <view class="help-item">
+        <text>使用指南</text>
+        <view class="arrow">→</view>
+      </view>
+      <view class="help-item">
+        <text>隐私政策</text>
+        <view class="arrow">→</view>
+      </view>
+      <view class="help-item">
+        <text>数据安全说明</text>
+        <view class="arrow">→</view>
+      </view>
+      <view class="help-item">
+        <text>反馈与建议</text>
+        <view class="arrow">→</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text>话好眠 v1.0.0</text>
+  </view>
+</view>

@@ -1,0 +1,42 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/report/index",
+    "pages/trend/index",
+    "pages/mine/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "话好眠",
+    "navigationBarBackgroundColor": "#F4FBF9",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F4FBF9",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#7B928C",
+    "selectedColor": "#1F8A6F",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/report/index",
+        "text": "报告"
+      },
+      {
+        "pagePath": "pages/trend/index",
+        "text": "趋势"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

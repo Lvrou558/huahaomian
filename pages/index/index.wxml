@@ -1,0 +1,251 @@
+<view class="home">
+  <!-- 设备状态栏 -->
+  <view class="status-bar">
+    <view class="status-item">
+      <view class="status-dot {{deviceConnected ? 'connected' : ''}}"></view>
+      <text>床头监测仪 {{deviceConnected ? '已连接' : '未连接'}}</text>
+    </view>
+    <view class="status-item">
+      <view class="status-dot {{dataSynced ? 'synced' : ''}}"></view>
+      <text>昨夜睡眠数据 {{dataSynced ? '已同步' : '同步中'}}</text>
+    </view>
+  </view>
+
+  <!-- 核心评分区 -->
+  <view class="hero card">
+    <view class="hero-header">
+      <view>
+        <view class="hero-title">昨晚睡眠质量</view>
+        <view class="hero-sub">{{summary.statusText}}</view>
+      </view>
+      <view class="efficiency-badge">
+        <view class="efficiency-value">{{summary.efficiency}}%</view>
+        <view class="efficiency-label">睡眠效率</view>
+      </view>
+    </view>
+
+    <view class="score-section">
+      <view class="score-container">
+        <view class="score-ring-bg"></view>
+        <view class="score-ring" style="background: conic-gradient(#26A69A 0deg, #26A69A {{summary.score * 3.6}}deg, #E8F5E9 {{summary.score * 3.6}}deg);">
+          <view class="score-inner">
+            <view class="score-value">{{summary.score}}</view>
+            <view class="score-label">睡眠评分</view>
+          </view>
+        </view>
+        <view class="quality-tag">{{summary.qualityLabel}}</view>
+      </view>
+
+      <view class="duration-info">
+        <view class="duration-label">总睡眠时长</view>
+        <view class="duration-value">{{summary.duration}}</view>
+        <view class="duration-note">无感监测 · 整夜记录</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 关键指标网格 -->
+  <view class="metrics card">
+    <view class="section-header">
+      <view class="section-title">核心数据</view>
+      <view class="section-sub">点击展开详细分析</view>
+    </view>
+    <view class="metrics-grid">
+      <view class="metric-card" wx:for="{{metrics}}" wx:key="key">
+        <view class="metric-top">
+          <view class="metric-label">{{item.label}}</view>
+          <view class="metric-trend {{item.trendUp ? 'up' : 'down'}}">{{item.trend}}</view>
+        </view>
+        <view class="metric-value-section">
+          <view class="metric-main">{{item.value}}</view>
+          <view class="metric-sub">{{item.subValue}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 睡眠分期与波形 -->
+  <view class="sleep-stages card">
+    <view class="section-header">
+      <view class="section-title">睡眠结构</view>
+      <view class="section-sub">昨夜各阶段分布</view>
+    </view>
+    <view class="stages-bar">
+      <view class="stage-segment" wx:for="{{stages}}" wx:key="name" style="width: {{item.percent}}%; background: {{item.color}};">
+      </view>
+    </view>
+    <view class="stages-legend">
+      <view class="legend-item" wx:for="{{stages}}" wx:key="name">
+        <view class="legend-dot" style="background: {{item.color}};"></view>
+        <view class="legend-name">{{item.name}}</view>
+        <view class="legend-value">{{item.duration}}</view>
+        <view class="legend-percent">{{item.percent}}%</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 睡眠波形图 -->
+  <view class="waveform card">
+    <view class="section-header">
+      <view class="section-title">昨夜睡眠波形</view>
+      <view class="section-sub">脑体动综合节律</view>
+    </view>
+    <view class="chart-container">
+      <canvas type="2d" id="sleepWaveform" class="wave-canvas"></canvas>
+    </view>
+    <view class="time-axis">
+      <text>23:00</text>
+      <text>01:00</text>
+      <text>03:00</text>
+      <text>05:00</text>
+      <text>07:00</text>
+    </view>
+    <view class="reference-note">
+      <view class="ref-line"></view>
+      <text>健康参考区间</text>
+    </view>
+  </view>
+
+  <!-- 心率分析（可折叠） -->
+  <view class="detail-module card" bindtap="toggleDetail" data-key="heartRate">
+    <view class="module-header">
+      <view class="module-title-section">
+        <view class="module-icon heart">❤</view>
+        <view>
+          <view class="module-title">心率分析</view>
+          <view class="module-summary">睡眠平均56bpm，较上周下降3bpm</view>
+        </view>
+      </view>
+      <view class="expand-icon">{{detailExpanded.heartRate ? '−' : '+'}}</view>
+    </view>
+    <view class="module-content" wx:if="{{detailExpanded.heartRate}}">
+      <view class="chart-wrapper">
+        <canvas type="2d" id="heartRateChart" class="detail-canvas"></canvas>
+      </view>
+      <view class="data-grid">
+        <view class="data-item">
+          <view class="data-label">最低心率</view>
+          <view class="data-value">51bpm</view>
+          <view class="data-time">04:23</view>
+        </view>
+        <view class="data-item">
+          <view class="data-label">最高心率</view>
+          <view class="data-value">62bpm</view>
+          <view class="data-time">入睡初期</view>
+        </view>
+        <view class="data-item">
+          <view class="data-label">心率变异性</view>
+          <view class="data-value">优秀</view>
+          <view class="data-note">自主神经平衡良好</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 呼吸分析（可折叠） -->
+  <view class="detail-module card" bindtap="toggleDetail" data-key="breathing">
+    <view class="module-header">
+      <view class="module-title-section">
+        <view class="module-icon breath">🫁</view>
+        <view>
+          <view class="module-title">呼吸分析</view>
+          <view class="module-summary">睡眠平均12次/分，节奏平稳</view>
+        </view>
+      </view>
+      <view class="expand-icon">{{detailExpanded.breathing ? '−' : '+'}}</view>
+    </view>
+    <view class="module-content" wx:if="{{detailExpanded.breathing}}">
+      <view class="chart-wrapper">
+        <canvas type="2d" id="breathingChart" class="detail-canvas"></canvas>
+      </view>
+      <view class="breathing-stats">
+        <view class="stat-item">
+          <view class="stat-label">呼吸暂停事件</view>
+          <view class="stat-value safe">0次</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-label">最慢呼吸率</view>
+          <view class="stat-value">10次/分</view>
+          <view class="stat-note">深睡期</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 声音监测（可折叠） -->
+  <view class="detail-module card" bindtap="toggleDetail" data-key="noise">
+    <view class="module-header">
+      <view class="module-title-section">
+        <view class="module-icon sound">🔊</view>
+        <view>
+          <view class="module-title">声音监测</view>
+          <view class="module-summary">鼾声3次（轻度），环境噪音正常</view>
+        </view>
+      </view>
+      <view class="expand-icon">{{detailExpanded.noise ? '−' : '+'}}</view>
+    </view>
+    <view class="module-content" wx:if="{{detailExpanded.noise}}">
+      <view class="noise-stats">
+        <view class="noise-item">
+          <view class="noise-type">鼾声片段</view>
+          <view class="noise-count">3次</view>
+          <view class="noise-level mild">轻度</view>
+          <view class="noise-time">01:15-01:22</view>
+        </view>
+        <view class="noise-item">
+          <view class="noise-type">环境噪音</view>
+          <view class="noise-count">平均32dB</view>
+          <view class="noise-level good">安静</view>
+          <view class="noise-time">整夜</view>
+        </view>
+      </view>
+      <view class="privacy-note">
+        <view class="privacy-icon">🔒</view>
+        <text>所有声音仅在本地识别，原始录音不上传</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日建议 -->
+  <view class="suggestion card">
+    <view class="suggestion-header">
+      <view class="suggestion-title">今日陪伴建议</view>
+      <view class="suggestion-tag">个性化</view>
+    </view>
+    <view class="tip-card primary">
+      <view class="tip-icon">💡</view>
+      <view class="tip-content">{{tips[0]}}</view>
+    </view>
+    <view class="tip-card secondary">
+      <view class="tip-icon">🌙</view>
+      <view class="tip-content">{{tips[1]}}</view>
+    </view>
+    <button class="action-btn" bindtap="toggleExpand">
+      <text>查看详细解读</text>
+      <view class="btn-arrow">→</view>
+    </button>
+  </view>
+
+  <!-- 详细解读（底部展开） -->
+  <view class="card detail-panel" wx:if="{{expanded}}">
+    <view class="panel-title">昨夜睡眠详细解读</view>
+    <view class="interpretation-list">
+      <view class="interp-item">
+        <view class="interp-title">入睡阶段 · 表现良好</view>
+        <view class="interp-desc">入睡时间23分钟，比近7天平均缩短8分钟。熄灯后10分钟内进入浅睡，入睡效率优秀。</view>
+      </view>
+      <view class="interp-item">
+        <view class="interp-title">深睡阶段 · 持续改善</view>
+        <view class="interp-desc">深睡占比42%，较近7天平均提升5%。深睡连续性评分85分，凌晨2-4点深睡集中度最高。</view>
+      </view>
+      <view class="interp-item">
+        <view class="interp-title">REM阶段 · 正常范围</view>
+        <view class="interp-desc">REM占比22%，处于20-25%的健康区间。梦境活跃期主要分布在凌晨4-6点，符合正常节律。</view>
+      </view>
+      <view class="interp-item warning">
+        <view class="interp-title">清醒片段 · 轻微干扰</view>
+        <view class="interp-desc">夜间短暂清醒4次，总计45分钟。主要集中在凌晨5点后，可能与晨间光线变化有关。建议检查窗帘遮光性。</view>
+      </view>
+    </view>
+  </view>
+</view>

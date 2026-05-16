@@ -1,0 +1,43 @@
+{
+  "pages": [
+    "pages/daily/index",
+    "pages/temple/index",
+    "pages/longterm/index",
+    "pages/advice/index",
+    "pages/my/index"
+  ],
+  "window": {
+    "backgroundColor": "#F4FBF9",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F4FBF9",
+    "navigationBarTitleText": "话好眠",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#7B928C",
+    "selectedColor": "#1F8A6F",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/daily/index",
+        "text": "每日"
+      },
+      {
+        "pagePath": "pages/longterm/index",
+        "text": "长期"
+      },
+      {
+        "pagePath": "pages/advice/index",
+        "text": "建议"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}
