@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心脏板块改造草图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #d6dde4;
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    min-height: 100vh;
+    color: #1a2c24;
+  }
+  .label {
+    width: 380px;
+    font-size: 13px;
+    color: #4a5a63;
+    font-weight: 600;
+    padding: 0 4px;
+  }
+  .phone {
+    width: 380px;
+    background: #F4FBF9;
+    border-radius: 24px;
+    box-shadow: 0 24px 60px rgba(20,40,30,0.18);
+    overflow: hidden;
+  }
+  .status-bar {
+    height: 26px;
+    background: #F4FBF9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 18px;
+    font-size: 12px;
+    color: #2a3a3a;
+    font-weight: 600;
+  }
+  .nav-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    position: relative;
+    background: #F4FBF9;
+  }
+  .nav-bar .dots {
+    position: absolute;
+    right: 18px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 2px 12px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    letter-spacing: 4px;
+  }
+  .page { padding: 0 14px 24px; }
+
+  /* ====== 顶部一句话诊断卡 ====== */
+  .diag-card {
+    background: linear-gradient(135deg, #e9f7f1 0%, #ffffff 60%);
+    border-radius: 18px;
+    padding: 18px 16px;
+    margin-top: 6px;
+    box-shadow: 0 4px 14px rgba(37,114,93,0.06);
+  }
+  .diag-headline {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .diag-title { font-size: 16px; font-weight: 700; color: #1a2c24; }
+  .diag-score {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1F8A6F;
+  }
+  .diag-tag {
+    font-size: 12px;
+    background: #c7e8dc;
+    color: #0F6E56;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-weight: 600;
+  }
+  .diag-trend { font-size: 13px; color: #1F8A6F; font-weight: 600; }
+  .diag-text {
+    font-size: 13px;
+    color: #4a5a63;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .diag-text b { color: #1a2c24; font-weight: 700; }
+  .diag-stats {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.7);
+    border-radius: 12px;
+    padding: 10px 4px;
+    border: 1px solid #e6f0ea;
+  }
+  .diag-stat { flex: 1; text-align: center; }
+  .diag-stat-label { font-size: 11px; color: #7B928C; }
+  .diag-stat-value { font-size: 18px; font-weight: 800; color: #1a2c24; line-height: 1.2; margin: 2px 0; }
+  .diag-stat-delta { font-size: 11px; font-weight: 600; }
+  .diag-stat-delta.up { color: #1F8A6F; }
+  .diag-stat-delta.down { color: #d97757; }
+  .diag-stat + .diag-stat { border-left: 1px solid #e6f0ea; }
+
+  /* ====== 全局周/月/全周期切换条（sticky） ====== */
+  .period-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-radius: 14px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .period-bar-label { font-size: 12px; color: #7B928C; font-weight: 600; }
+  .period-bar-tabs { display: flex; gap: 4px; }
+  .ptab {
+    font-size: 13px;
+    color: #7B928C;
+    padding: 5px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .ptab.active { background: #1F8A6F; color: #fff; }
+  .period-bar-nav { display: flex; gap: 8px; color: #7B928C; font-size: 16px; font-weight: 600; }
+
+  /* ====== 心脏板块卡 ====== */
+  .module {
+    background: #fff;
+    border-radius: 18px;
+    margin-top: 14px;
+    padding: 14px;
+    box-shadow: 0 4px 14px rgba(37,114,93,0.06);
+  }
+  .module-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .module-left { display: flex; align-items: center; gap: 10px; }
+  .module-emoji { font-size: 22px; }
+  .module-title-line { display: flex; align-items: center; gap: 8px; }
+  .module-title { font-size: 16px; font-weight: 700; color: #1a2c24; }
+  .module-score {
+    background: #c7e8dc;
+    color: #0F6E56;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 10px;
+  }
+  .module-sub { font-size: 12px; color: #7B928C; margin-top: 2px; }
+  .module-arrow { color: #7B928C; font-size: 14px; }
+
+  /* ====== 主图卡 ====== */
+  .hero-card {
+    background: #fafffd;
+    border: 1px solid #eaf3ef;
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .hero-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .hero-title { font-size: 15px; font-weight: 700; color: #1a2c24; }
+  .hero-healthy {
+    font-size: 11px;
+    background: #f0f7e9;
+    color: #4a7029;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .chart-wrap {
+    background: #fff;
+    border: 1px solid #eef4f1;
+    border-radius: 10px;
+    padding: 8px 4px;
+  }
+  .chart-svg { display: block; width: 100%; }
+  .hero-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #6a7a81;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .legend-line {
+    display: inline-block;
+    width: 14px;
+    height: 0;
+    border-top: 1.5px dashed #333;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .hero-tip {
+    background: #f5fbf9;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #4a5a63;
+    margin-top: 8px;
+  }
+  .hero-summary {
+    font-size: 13px;
+    color: #1a2c24;
+    line-height: 1.6;
+    margin-top: 10px;
+  }
+
+  /* ====== KPI 横排卡 ====== */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .kpi {
+    background: #fafffd;
+    border: 1px solid #eaf3ef;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    position: relative;
+  }
+  .kpi.active {
+    background: #fff;
+    border-color: #1F8A6F;
+    box-shadow: 0 4px 12px rgba(31,138,111,0.18);
+  }
+  .kpi-label {
+    font-size: 12px;
+    color: #7B928C;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .kpi-check {
+    color: #1F8A6F;
+    font-size: 12px;
+  }
+  .kpi-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a2c24;
+    line-height: 1.1;
+  }
+  .kpi-unit { font-size: 11px; color: #7B928C; font-weight: 500; }
+  .kpi-delta {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .kpi-delta.up { color: #1F8A6F; }
+  .kpi-delta.down { color: #d97757; }
+  .kpi-spark {
+    height: 18px;
+    margin-top: 4px;
+    width: 100%;
+  }
+  .kpi-arrow {
+    font-size: 10px;
+    color: #7B928C;
+    margin-top: 4px;
+  }
+
+  /* ====== 展开后的折叠区 ====== */
+  .expand-card {
+    background: #fafffd;
+    border: 1px solid #eaf3ef;
+    border-radius: 14px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== 草图 A：默认状态 ========== -->
+<div class="label">草图 A · 长期页默认状态（首屏只看到 4 条关键信息）</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>12:47</span>
+    <span>📶 5G ▮▮▮</span>
+  </div>
+  <div class="nav-bar">长期<span class="dots">⋯ ⊙</span></div>
+
+  <div class="page">
+
+    <!-- 顶部一句话诊断 -->
+    <div class="diag-card">
+      <div class="diag-headline">
+        <span class="diag-title">本周心脏健康</span>
+        <span class="diag-score">88</span>
+        <span class="diag-tag">良好</span>
+        <span class="diag-trend">↑ 2 分</span>
+      </div>
+      <div class="diag-text">
+        心率与 HRV 持续改善，AHI 略有上升，重点关注 <b>5/30 当晚饮酒/饱食</b>对气道的影响。
+      </div>
+      <div class="diag-stats">
+        <div class="diag-stat">
+          <div class="diag-stat-label">心脏年龄</div>
+          <div class="diag-stat-value">31</div>
+          <div class="diag-stat-delta up">比实际年轻 4 岁</div>
+        </div>
+        <div class="diag-stat">
+          <div class="diag-stat-label">HRV 均值</div>
+          <div class="diag-stat-value">65 ms</div>
+          <div class="diag-stat-delta up">▲ 5 vs 上周</div>
+        </div>
+        <div class="diag-stat">
+          <div class="diag-stat-label">静息心率</div>
+          <div class="diag-stat-value">73</div>
+          <div class="diag-stat-delta up">▼ 3 vs 上周</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 全局周/月/全周期 -->
+    <div class="period-bar">
+      <span class="period-bar-label">⏱ 时间维度</span>
+      <div class="period-bar-tabs">
+        <span class="ptab active">周</span>
+        <span class="ptab">月</span>
+        <span class="ptab">全周期</span>
+      </div>
+      <div class="period-bar-nav"><span>‹</span><span>›</span></div>
+    </div>
+
+    <!-- 心脏板块（默认展开） -->
+    <div class="module">
+      <div class="module-head">
+        <div class="module-left">
+          <div class="module-emoji">❤️</div>
+          <div>
+            <div class="module-title-line">
+              <span class="module-title">心脏直接指标</span>
+              <span class="module-score">88 分 · 良好</span>
+            </div>
+            <div class="module-sub">心脏综合状态稳定向好</div>
+          </div>
+        </div>
+        <div class="module-arrow">▲</div>
+      </div>
+
+      <!-- 主图：心脏健康指数 -->
+      <div class="hero-card">
+        <div class="hero-head">
+          <span class="hero-title">心脏健康指数</span>
+          <span class="hero-healthy">本周 6/7 天达标</span>
+        </div>
+
+        <div class="chart-wrap">
+          <svg class="chart-svg" viewBox="0 0 340 200">
+            <!-- 健康分区 -->
+            <rect x="38" y="20" width="290" height="50" fill="#C7E8DC" opacity="0.42"/>
+            <rect x="38" y="70" width="290" height="50" fill="#F8E4C4" opacity="0.45"/>
+            <rect x="38" y="120" width="290" height="40" fill="#F5B5A4" opacity="0.30"/>
+
+            <!-- 区域标签 -->
+            <rect x="2" y="32" width="32" height="28" fill="#fff" stroke="#7FCBA3" rx="4"/>
+            <text x="18" y="44" text-anchor="middle" font-size="8" fill="#0F6E56" font-weight="bold">健康区</text>
+            <text x="18" y="54" text-anchor="middle" font-size="7" fill="#0F6E56">&gt;85</text>
+
+            <rect x="2" y="82" width="32" height="28" fill="#fff" stroke="#D9B36C" rx="4"/>
+            <text x="18" y="94" text-anchor="middle" font-size="8" fill="#7E5810" font-weight="bold">亚健康</text>
+            <text x="18" y="104" text-anchor="middle" font-size="7" fill="#7E5810">75-85</text>
+
+            <rect x="2" y="130" width="32" height="22" fill="#fff" stroke="#E5A99B" rx="4"/>
+            <text x="18" y="144" text-anchor="middle" font-size="8" fill="#A14530" font-weight="bold">不健康</text>
+
+            <!-- Y 轴 -->
+            <text x="34" y="22" text-anchor="end" font-size="8" fill="#9aa8a2">100</text>
+            <text x="34" y="73" text-anchor="end" font-size="8" fill="#9aa8a2">85</text>
+            <text x="34" y="123" text-anchor="end" font-size="8" fill="#9aa8a2">75</text>
+            <text x="34" y="163" text-anchor="end" font-size="8" fill="#9aa8a2">60</text>
+
+            <!-- 14天均值线 -->
+            <path d="M 50 60 Q 130 55 220 50 T 320 45"
+                  fill="none" stroke="#333" stroke-width="1.2" stroke-dasharray="6,4"/>
+            <rect x="290" y="38" width="36" height="14" fill="#fff" stroke="#333" rx="3"/>
+            <text x="308" y="48" text-anchor="middle" font-size="8" font-weight="bold">14天 92</text>
+
+            <!-- 同龄人参考线 -->
+            <path d="M 50 78 L 320 78" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="3,4"/>
+            <rect x="290" y="71" width="36" height="14" fill="#fff" stroke="#888" rx="3"/>
+            <text x="308" y="81" text-anchor="middle" font-size="8">同龄人 80</text>
+
+            <!-- 数据线 + 数据点 -->
+            <path d="M 60 75 Q 90 50 120 45 Q 150 40 180 50 Q 210 60 240 35 Q 270 25 300 38"
+                  fill="none" stroke="#5b9ac9" stroke-width="2.4"/>
+
+            <!-- 数据点（部分绿色=建议见效日，部分红=警示） -->
+            <circle cx="60" cy="75" r="4" fill="#fff" stroke="#5b9ac9" stroke-width="2"/>
+            <circle cx="120" cy="45" r="4" fill="#1F8A6F" stroke="#fff" stroke-width="2"/>
+            <circle cx="180" cy="50" r="4" fill="#fff" stroke="#5b9ac9" stroke-width="2"/>
+            <circle cx="240" cy="35" r="4" fill="#1F8A6F" stroke="#fff" stroke-width="2"/>
+            <circle cx="300" cy="38" r="4" fill="#fff" stroke="#5b9ac9" stroke-width="2"/>
+
+            <!-- 标注气泡 -->
+            <g>
+              <rect x="92" y="6" width="64" height="22" fill="#0F6E56" rx="4"/>
+              <text x="124" y="16" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">🌙 卧室遮光</text>
+              <text x="124" y="24" text-anchor="middle" font-size="7" fill="#cfeadc">指数↑3</text>
+              <line x1="124" y1="28" x2="120" y2="42" stroke="#0F6E56" stroke-dasharray="2,2" stroke-width="0.8"/>
+            </g>
+
+            <!-- 日期轴 -->
+            <text x="60" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.26</text>
+            <text x="100" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.27</text>
+            <text x="140" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.28</text>
+            <text x="180" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.29</text>
+            <text x="220" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.30</text>
+            <text x="260" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.31</text>
+            <text x="300" y="178" text-anchor="middle" font-size="8" fill="#7B928C">6.1</text>
+          </svg>
+        </div>
+
+        <div class="hero-legend">
+          <span><span class="legend-dot" style="background:#C7E8DC;"></span>健康区</span>
+          <span><span class="legend-dot" style="background:#F8E4C4;"></span>亚健康</span>
+          <span><span class="legend-dot" style="background:#F5B5A4;"></span>不健康</span>
+          <span><span class="legend-line"></span>14 天均值</span>
+          <span><span class="legend-line" style="border-top-color:#888;"></span>同龄人</span>
+        </div>
+        <div class="hero-tip">💡 点击数据点查看当日详情 · 绿点为建议见效日</div>
+        <div class="hero-summary">全周期心脏综合指数上升 <b>8 分</b>，主因 HRV 改善</div>
+      </div>
+
+      <!-- KPI 横排 3 张 -->
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">心率 <span class="kpi-check">✓</span></div>
+          <div class="kpi-value">65<span class="kpi-unit"> bpm</span></div>
+          <div class="kpi-delta up">▼ 3 vs 上周</div>
+          <svg class="kpi-spark" viewBox="0 0 80 20">
+            <polyline points="0,14 13,12 26,10 40,11 53,8 66,10 80,9"
+                      fill="none" stroke="#1F8A6F" stroke-width="1.5"/>
+          </svg>
+          <div class="kpi-arrow">点击展开 ▼</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">HRV <span class="kpi-check">✓</span></div>
+          <div class="kpi-value">72<span class="kpi-unit"> ms</span></div>
+          <div class="kpi-delta up">▲ 5 vs 上周</div>
+          <svg class="kpi-spark" viewBox="0 0 80 20">
+            <polyline points="0,14 13,10 26,12 40,7 53,9 66,5 80,4"
+                      fill="none" stroke="#1F8A6F" stroke-width="1.5"/>
+          </svg>
+          <div class="kpi-arrow">点击展开 ▼</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">静息心率 <span class="kpi-check">✓</span></div>
+          <div class="kpi-value">60<span class="kpi-unit"> bpm</span></div>
+          <div class="kpi-delta up">▼ 3 vs 上周</div>
+          <svg class="kpi-spark" viewBox="0 0 80 20">
+            <polyline points="0,13 13,11 26,10 40,9 53,8 66,8 80,7"
+                      fill="none" stroke="#1F8A6F" stroke-width="1.5"/>
+          </svg>
+          <div class="kpi-arrow">点击展开 ▼</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 呼吸板块（折叠） -->
+    <div class="module">
+      <div class="module-head">
+        <div class="module-left">
+          <div class="module-emoji">🫁</div>
+          <div>
+            <div class="module-title-line">
+              <span class="module-title">影响心脏的呼吸因素</span>
+              <span class="module-score">90 分 · 优秀</span>
+            </div>
+            <div class="module-sub">AHI 1.1 次/小时，对心脏影响轻微</div>
+          </div>
+        </div>
+        <div class="module-arrow">▼</div>
+      </div>
+    </div>
+
+    <!-- 睡眠板块（折叠） -->
+    <div class="module">
+      <div class="module-head">
+        <div class="module-left">
+          <div class="module-emoji">🛌</div>
+          <div>
+            <div class="module-title-line">
+              <span class="module-title">支撑心脏的睡眠基础</span>
+              <span class="module-score">82 分 · 良好</span>
+            </div>
+            <div class="module-sub">睡眠效率 87%，深睡比例略低</div>
+          </div>
+        </div>
+        <div class="module-arrow">▼</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ========== 草图 B：点了 HRV KPI 后的展开状态 ========== -->
+<div class="label">草图 B · 用户点了 HRV 卡之后（手风琴展开）</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>12:47</span>
+    <span>📶 5G ▮▮▮</span>
+  </div>
+  <div class="nav-bar">长期<span class="dots">⋯ ⊙</span></div>
+
+  <div class="page">
+    <!-- 上面省略已经看过的部分 -->
+    <div style="padding: 30px 16px; text-align: center; color: #9aa8a2; font-size: 12px;">
+      （顶部诊断卡 + 周月切换条 + 心脏指数主图 省略）
+    </div>
+
+    <!-- KPI 横排：HRV 卡处于激活态 -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">心率 <span class="kpi-check">✓</span></div>
+        <div class="kpi-value">65<span class="kpi-unit"> bpm</span></div>
+        <div class="kpi-delta up">▼ 3 vs 上周</div>
+        <svg class="kpi-spark" viewBox="0 0 80 20">
+          <polyline points="0,14 13,12 26,10 40,11 53,8 66,10 80,9"
+                    fill="none" stroke="#1F8A6F" stroke-width="1.5"/>
+        </svg>
+        <div class="kpi-arrow">点击展开 ▼</div>
+      </div>
+      <div class="kpi active">
+        <div class="kpi-label">HRV <span class="kpi-check">✓</span></div>
+        <div class="kpi-value">72<span class="kpi-unit"> ms</span></div>
+        <div class="kpi-delta up">▲ 5 vs 上周</div>
+        <svg class="kpi-spark" viewBox="0 0 80 20">
+          <polyline points="0,14 13,10 26,12 40,7 53,9 66,5 80,4"
+                    fill="none" stroke="#1F8A6F" stroke-width="1.5"/>
+        </svg>
+        <div class="kpi-arrow">收起 ▲</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">静息心率 <span class="kpi-check">✓</span></div>
+        <div class="kpi-value">60<span class="kpi-unit"> bpm</span></div>
+        <div class="kpi-delta up">▼ 3 vs 上周</div>
+        <svg class="kpi-spark" viewBox="0 0 80 20">
+          <polyline points="0,13 13,11 26,10 40,9 53,8 66,8 80,7"
+                    fill="none" stroke="#1F8A6F" stroke-width="1.5"/>
+        </svg>
+        <div class="kpi-arrow">点击展开 ▼</div>
+      </div>
+    </div>
+
+    <!-- 展开的完整 HRV 图 -->
+    <div class="expand-card">
+      <div class="hero-head">
+        <span class="hero-title">HRV 心率变异性</span>
+        <span class="hero-healthy">本周 6/7 天健康</span>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart-svg" viewBox="0 0 340 200">
+          <rect x="38" y="20" width="290" height="60" fill="#C7E8DC" opacity="0.42"/>
+          <rect x="38" y="80" width="290" height="60" fill="#F8E4C4" opacity="0.45"/>
+          <rect x="38" y="140" width="290" height="20" fill="#F5B5A4" opacity="0.30"/>
+
+          <rect x="2" y="38" width="32" height="28" fill="#fff" stroke="#7FCBA3" rx="4"/>
+          <text x="18" y="50" text-anchor="middle" font-size="8" fill="#0F6E56" font-weight="bold">健康区</text>
+          <text x="18" y="60" text-anchor="middle" font-size="7" fill="#0F6E56">&gt;50ms</text>
+
+          <text x="34" y="22" text-anchor="end" font-size="8" fill="#9aa8a2">140</text>
+          <text x="34" y="83" text-anchor="end" font-size="8" fill="#9aa8a2">50</text>
+          <text x="34" y="143" text-anchor="end" font-size="8" fill="#9aa8a2">20</text>
+          <text x="34" y="163" text-anchor="end" font-size="8" fill="#9aa8a2">10</text>
+
+          <path d="M 50 100 Q 130 90 220 80 T 320 70"
+                fill="none" stroke="#333" stroke-width="1.2" stroke-dasharray="6,4"/>
+          <rect x="288" y="62" width="40" height="14" fill="#fff" stroke="#333" rx="3"/>
+          <text x="308" y="72" text-anchor="middle" font-size="8" font-weight="bold">14天 65ms</text>
+
+          <path d="M 60 110 Q 90 130 120 95 Q 150 50 180 60 Q 210 100 240 45 Q 270 30 300 70"
+                fill="none" stroke="#ca92ff" stroke-width="2.4"/>
+          <circle cx="60" cy="110" r="4" fill="#fff" stroke="#ca92ff" stroke-width="2"/>
+          <circle cx="120" cy="95" r="4" fill="#1F8A6F" stroke="#fff" stroke-width="2"/>
+          <circle cx="180" cy="60" r="4" fill="#1F8A6F" stroke="#fff" stroke-width="2"/>
+          <circle cx="240" cy="45" r="4" fill="#fff" stroke="#ca92ff" stroke-width="2"/>
+          <circle cx="300" cy="70" r="4" fill="#fff" stroke="#ca92ff" stroke-width="2"/>
+
+          <text x="60" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.26</text>
+          <text x="100" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.27</text>
+          <text x="140" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.28</text>
+          <text x="180" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.29</text>
+          <text x="220" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.30</text>
+          <text x="260" y="178" text-anchor="middle" font-size="8" fill="#7B928C">5.31</text>
+          <text x="300" y="178" text-anchor="middle" font-size="8" fill="#7B928C">6.1</text>
+        </svg>
+      </div>
+      <div class="hero-summary">本周 HRV 整体提升，腹式呼吸第 4 天达本周峰值 128ms</div>
+    </div>
+  </div>
+</div>
+
+<div class="label" style="opacity: 0.7;">
+  说明：草图 A 是默认状态（首屏只 4 屏不到），草图 B 是点开 HRV 后的展开。<br>
+  整页只用 1 张主图 + 3 个 KPI 卡，整个心脏板块占 1.2 屏。
+</div>
+
+</body>
+</html>

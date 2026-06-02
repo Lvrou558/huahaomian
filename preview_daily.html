@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>话好眠 · 每日页面完整预览</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    color: #14443a;
+  }
+  .phone-frame {
+    max-width: 414px;
+    margin: 0 auto;
+    background: #F4FBF9;
+    min-height: 100vh;
+    position: relative;
+  }
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 18px 4px;
+    font-size: 14px; font-weight: 600;
+  }
+  .sb-time { color: #1a1a1a; }
+  .sb-right { font-size: 13px; color: #1a1a1a; }
+  .page { padding: 0 14px 100px; }
+
+  /* ===== 星期选择器 ===== */
+  .week-selector {
+    background: #1a2a3a; border-radius: 18px; padding: 18px 16px;
+    margin: 8px 0 12px;
+  }
+  .week-header { display: flex; align-items: center; margin-bottom: 18px; }
+  .week-title { font-size: 30px; font-weight: 700; color: #fff; }
+  .week-subtitle {
+    font-size: 14px; color: #8a9baa; margin-left: 12px; flex: 1;
+  }
+  .week-calendar-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 9px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    cursor: pointer;
+  }
+  .week-calendar-btn:active { background: rgba(255,255,255,0.18); }
+  .week-calendar-btn .icon-calendar { font-size: 17px; }
+  .week-days { display: flex; justify-content: space-between; }
+  .day-circle {
+    width: 38px; height: 50px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px;
+  }
+  .day-circle.active {
+    border-color: #ff8a65; background: rgba(255,138,101,0.15); color: #ffb29b;
+  }
+  .day-text { font-size: 11px; line-height: 1.1; }
+  .day-num { font-size: 13px; font-weight: 700; margin-top: 1px; }
+
+  /* ===== 设备状态条 ===== */
+  .top-status {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px; background: #fff; border-radius: 12px;
+    font-size: 12px; color: #5a6a63; margin-bottom: 10px;
+  }
+  .status-link { color: #1F8A6F; font-weight: 600; }
+
+  /* ===== 卡片基础 ===== */
+  .card {
+    background: #fff; border-radius: 16px; padding: 16px;
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  /* ===== 总览卡 ===== */
+  .overview-header {
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 12px; border-bottom: 1px dashed #eef4f1;
+  }
+  .overview-emoji { font-size: 22px; }
+  .overview-title { font-size: 17px; font-weight: 800; color: #14443a; flex: 1; }
+  .overview-date {
+    font-size: 12px; color: #5a6a63;
+    background: #f3f8f6; padding: 3px 10px; border-radius: 999px;
+  }
+
+  /* ===== 心脏疾病风险卡 ===== */
+  .cardiac-risk-section { margin-top: 12px; }
+  .cardiac-risk-card {
+    background: #fff; border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 10px; border-left: 6px solid #d9b35c;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    cursor: pointer;
+  }
+  .cardiac-risk-card.warning { border-left-color: #d9b35c; background: #fffbf3; }
+  .cardiac-risk-card.alert { border-left-color: #c43a2c; background: #fff1ee; }
+  .cardiac-risk-card.normal-group { border-left-color: #4caf84; background: #f5fdf8; }
+  .cr-head { display: flex; align-items: center; gap: 10px; }
+  .cr-icon { font-size: 26px; flex-shrink: 0; }
+  .cr-text { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .cr-title { font-size: 17px; font-weight: 800; color: #14443a; }
+  .cr-summary { font-size: 13px; color: #5a6f6a; font-weight: 500; line-height: 1.4; }
+  .cr-arrow { font-size: 13px; color: #9aa8a2; }
+  .cardiac-risk-card.normal-group .cr-summary { color: #2e6a52; }
+  .cr-body {
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px dashed #ede1c8; display: none;
+  }
+  .cardiac-risk-card.expanded .cr-body { display: block; }
+  .cardiac-risk-card.normal-group .cr-body { border-top-color: #c8e8d6; }
+  .cr-disease-tags {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin-bottom: 10px;
+  }
+  .cr-disease-tags-label { font-size: 13px; color: #5a6a63; }
+  .cr-disease-tag {
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: #fdecde; color: #b86518; font-weight: 600;
+  }
+  .cr-detail-block { margin-bottom: 10px; }
+  .cr-detail-label { font-size: 13px; font-weight: 700; color: #14443a; display: block; margin-bottom: 4px; }
+  .cr-detail-text { font-size: 13px; color: #4a5a63; line-height: 1.65; }
+  .cr-suggestion { font-size: 13px; color: #2e6a52; line-height: 1.7; padding: 2px 0; }
+  .cr-data-list {
+    border: 1px solid rgba(217,179,92,0.25); border-radius: 10px;
+    overflow: hidden; background: rgba(255,251,240,0.6); margin-top: 4px;
+  }
+  .cr-data-row {
+    display: flex; padding: 9px 12px; font-size: 12px;
+    border-bottom: 1px solid rgba(217,179,92,0.15); align-items: center;
+  }
+  .cr-data-row:last-child { border-bottom: none; }
+  .cr-data-label { flex: 0 0 38%; color: #5a6a63; }
+  .cr-data-value { flex: 0 0 26%; font-weight: 700; color: #14443a; }
+  .cr-data-row.low .cr-data-value,
+  .cr-data-row.high .cr-data-value,
+  .cr-data-row.border .cr-data-value { color: #b86a18; }
+  .cr-data-row.ok .cr-data-value { color: #1f8a6f; }
+  .cr-data-ref { flex: 1; text-align: right; font-size: 11px; color: #8a978f; }
+  .cr-link {
+    margin-top: 8px; padding: 8px 12px; background: rgba(31,138,111,0.08);
+    border-radius: 8px; display: flex; justify-content: flex-end; gap: 6px;
+    font-size: 13px; color: #1f8a6f; font-weight: 600;
+  }
+  .normal-sub-item {
+    background: #fff; border-radius: 12px; padding: 12px 14px;
+    margin-top: 10px; border: 1px solid #d8ede1;
+  }
+  .normal-sub-item:first-child { margin-top: 0; }
+  .ng-title { font-size: 14px; font-weight: 700; color: #14443a; display: block; margin-bottom: 2px; }
+  .ng-summary { font-size: 12px; color: #5a6f6a; display: block; margin-bottom: 8px; }
+
+  /* ===== 今日建议打卡 ===== */
+  .today-checkins { margin-top: 16px; padding-top: 14px; border-top: 1px dashed #eef4f1; }
+  .today-checkins-head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .tc-head-emoji { font-size: 16px; }
+  .tc-head-text { font-size: 14px; font-weight: 700; color: #14443a; flex: 1; }
+  .tc-head-deadline { font-size: 11px; color: #8a978f; }
+  .today-checkin-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: #f7faf8;
+    border-radius: 12px; margin-bottom: 8px;
+    border: 1px solid #e8efea; cursor: pointer;
+  }
+  .today-checkin-item.checked {
+    background: rgba(31,138,111,0.06); border-color: rgba(31,138,111,0.25);
+  }
+  .tc-item-emoji { font-size: 22px; flex-shrink: 0; }
+  .tc-item-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .tc-item-title { font-size: 14px; font-weight: 700; color: #14443a; }
+  .tc-item-sub { font-size: 12px; color: #6a7a81; }
+  .tc-check-box {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid #c5d4ce; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700;
+  }
+  .today-checkin-item.checked .tc-check-box {
+    background: #1f8a6f; border-color: #1f8a6f;
+  }
+  .tc-check-icon { font-size: 13px; }
+
+  /* ===== 折叠卡 ===== */
+  .card-header, .fold-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; cursor: pointer;
+  }
+  .card-title { display: flex; align-items: center; gap: 6px; }
+  .card-title-emoji { font-size: 18px; }
+  .card-title-text, .section-title { font-size: 15px; font-weight: 700; color: #14443a; }
+  .card-collapse-btn, .fold-action { font-size: 13px; color: #1f8a6f; }
+  .fold-body { display: none; margin-top: 12px; }
+  .card.expanded .fold-body { display: block; }
+
+  /* ===== 状态行 ===== */
+  .status-line {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 4px 4px; font-size: 12px; margin-top: 4px; cursor: pointer;
+  }
+  .sl-label { color: #6a8b82; font-weight: 500; }
+  .sl-value { color: #14443a; font-weight: 700; margin-left: 2px; }
+  .sl-divider { color: #c5d4ce; margin: 0 4px; font-weight: 600; }
+  .status-line--one-row {
+    flex-wrap: nowrap; gap: 2px 2px; font-size: 11px; overflow: hidden;
+  }
+  .status-line--one-row .sl-label,
+  .status-line--one-row .sl-value { white-space: nowrap; flex-shrink: 0; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: 999px; font-weight: 600;
+  }
+  .status-pill.mini { padding: 2px 7px; font-size: 11px; }
+  .status-pill.normal { background: #e6f4ee; color: #1d6e54; }
+  .status-pill.warning { background: #fff0d4; color: #a86c0e; }
+  .status-pill.orange { background: #ffe6d4; color: #b54912; }
+
+  /* ===== 心脏健康指数渐变条 ===== */
+  .hi-compact { margin: 8px 0 6px; }
+  .hi-compact-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .hi-compact-title { font-size: 14px; font-weight: 700; color: #1f443c; }
+  .hi-gauge-wrap {
+    position: relative; height: 24px; padding: 0 4px;
+    background: #fafcfb; border-radius: 12px; border: 1px solid #eef2f0;
+  }
+  .hi-bar {
+    position: absolute; left: 8px; right: 8px; top: 50%;
+    transform: translateY(-50%); height: 13px; border-radius: 7px;
+    background: linear-gradient(90deg, #ef9a9a 0%, #f4c5bd 22%, #f6e1da 42%, #f0ece9 50%, #d4e2ea 58%, #b6d4e6 78%, #8ec2dc 100%);
+    display: flex; align-items: center; justify-content: space-around; padding: 0 6px;
+  }
+  .hi-tick { width: 1px; height: 6px; background: rgba(255,255,255,0.85); }
+  .hi-pointer {
+    position: absolute; top: 1px; bottom: 1px;
+    transform: translateX(-50%);
+  }
+  .hi-ptr-line { width: 2px; height: 100%; background: #2c4a44; border-radius: 1px; margin: 0 auto; }
+  .hi-ptr-circle {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; border: 2px solid #2c4a44; margin: -7px auto 0;
+  }
+  .hi-legend {
+    display: flex; justify-content: space-between;
+    margin-top: 6px; font-size: 10px; color: #8a978f; padding: 0 4px;
+  }
+
+  /* ===== 4 项核心指标 ===== */
+  .metrics-grid-2x2 {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;
+  }
+  .metric-box {
+    background: #f9fcfb; border-radius: 12px; padding: 12px;
+    border: 1px solid #eaf1ed;
+  }
+  .metric-name { font-size: 12px; color: #6a8b82; margin-bottom: 4px; }
+  .metric-number { font-size: 22px; font-weight: 800; color: #14443a; line-height: 1.1; }
+  .metric-note { font-size: 11px; color: #1f8a6f; margin-top: 3px; }
+
+  /* ===== 图表分析区 ===== */
+  .card-title-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .card-title-bold { font-size: 14px; font-weight: 700; color: #14443a; }
+  .chart-range { display: flex; align-items: baseline; gap: 4px; }
+  .range-number { font-size: 18px; font-weight: 800; color: #14443a; }
+  .range-unit { font-size: 11px; color: #6a8b82; }
+
+  .trend-chart, .ecg-waveform {
+    width: 100%; height: 130px; display: block;
+    background: rgba(247,251,250,0.6); border-radius: 10px;
+  }
+  .chart-axis-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #8a978f; padding: 4px 8px 0;
+  }
+  .ecg-axis-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #8a978f; padding: 4px 8px 0;
+  }
+
+  .analysis-box {
+    margin-top: 12px; padding: 12px;
+    border-radius: 10px; background: #f4fafd;
+    border-left: 3px solid #58c7f5;
+  }
+  .analysis-box.orange-variant {
+    background: #fff7ef; border-left-color: #f2b26b;
+  }
+  .analysis-headline { font-size: 13px; color: #14443a; line-height: 1.6; display: block; }
+  .analysis-list { margin-top: 6px; }
+  .analysis-bullet { display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; }
+  .bullet-dot { color: #58c7f5; font-size: 10px; margin-top: 4px; }
+  .bullet-dot.orange { color: #f2b26b; }
+  .bullet-text { font-size: 12.5px; color: #4a5a63; line-height: 1.6; flex: 1; }
+  .bold { font-weight: 700; color: #14443a; }
+  .baseline-pill {
+    display: inline-block; background: #e6f4ee; color: #1d6e54;
+    padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 12px;
+  }
+  .tooltip-term { color: #1f8a6f; border-bottom: 1px dashed #1f8a6f; }
+
+  /* ===== 呼吸暂停统计 ===== */
+  .breath-stats-row {
+    display: flex; align-items: center; justify-content: space-around;
+    background: #f9fcfb; border-radius: 12px; padding: 14px;
+    margin-top: 12px; border: 1px solid #eaf1ed;
+  }
+  .breath-stat-item { text-align: center; }
+  .breath-stat-item.highlight .breath-stat-num { color: #f2b26b; }
+  .breath-stat-num { font-size: 22px; font-weight: 800; color: #14443a; }
+  .breath-stat-unit { font-size: 12px; color: #6a8b82; margin-left: 2px; }
+  .breath-stat-label { font-size: 11px; color: #6a8b82; margin-top: 4px; }
+  .breath-stat-divider {
+    width: 1px; height: 30px; background: #d8e4dd;
+  }
+
+  /* ===== 睡眠双环 ===== */
+  .recovery-rings-row {
+    display: flex; justify-content: space-around; padding: 12px 0;
+  }
+  .recovery-ring-box { text-align: center; }
+  .recovery-ring {
+    width: 100px; height: 100px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .recovery-ring-box.body .recovery-ring {
+    background: conic-gradient(from -90deg, #1f8a6f 0deg, #4cd964 270deg, #ebf4ef 270deg, #ebf4ef 360deg);
+  }
+  .recovery-ring-box.mind .recovery-ring {
+    background: conic-gradient(from -90deg, #3aa0e2 0deg, #6c8cff 248deg, #eaeef7 248deg, #eaeef7 360deg);
+  }
+  .ring-inner {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: #fff; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-score { font-size: 24px; font-weight: 800; color: #14443a; }
+  .ring-unit { font-size: 10px; color: #8a978f; margin-top: 2px; }
+  .ring-label { display: block; font-size: 12px; color: #6a8b82; margin-top: 8px; }
+  .ring-status-pill {
+    display: inline-block; margin-top: 4px; padding: 2px 8px;
+    background: #e6f4ee; color: #1d6e54;
+    border-radius: 999px; font-size: 11px; font-weight: 600;
+  }
+  .recovery-ring-box.mind .ring-status-pill { background: #e8efff; color: #2f5db8; }
+
+  /* ===== 核心睡眠数据 5 项 ===== */
+  .core-metrics-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px;
+  }
+  .core-metric {
+    background: #f9fcfb; border-radius: 10px; padding: 8px 4px;
+    text-align: center; border: 1px solid #eaf1ed;
+  }
+  .core-metric-label { font-size: 10px; color: #6a8b82; display: block; margin-bottom: 4px; }
+  .core-metric-value { font-size: 14px; font-weight: 700; color: #14443a; }
+  .core-metric-unit { font-size: 10px; color: #8a978f; }
+
+  /* ===== 今晚医学建议 ===== */
+  .sleep-suggestion-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+  }
+  .sleep-suggestion {
+    background: #f9fcfb; border-radius: 12px; padding: 10px 12px;
+    display: flex; gap: 8px; border: 1px solid #eaf1ed;
+  }
+  .ss-icon { font-size: 22px; }
+  .ss-text { display: flex; flex-direction: column; gap: 1px; }
+  .ss-label { font-size: 10px; color: #6a8b82; }
+  .ss-value { font-size: 14px; font-weight: 800; color: #14443a; }
+  .ss-sub { font-size: 10px; color: #8a978f; }
+
+  /* ===== 睡眠分期 ===== */
+  .sleep-section-title {
+    margin-top: 14px; font-size: 13px; font-weight: 700;
+    color: #14443a; display: flex; align-items: center; gap: 4px;
+  }
+  .sub-title { font-size: 12px; color: #6a8b82; margin: 4px 0 8px; line-height: 1.5; }
+  .phase-time-row {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: #8a978f; margin: 4px 0;
+  }
+  .phase-chart {
+    width: 100%; height: 120px; display: block;
+    background: rgba(247,251,250,0.6); border-radius: 10px;
+  }
+  .phase-time-axis {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #8a978f; padding: 4px 4px 0;
+  }
+  .phase-legend-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;
+  }
+  .phase-legend-item {
+    display: flex; align-items: center; gap: 6px; font-size: 11px;
+    padding: 6px 8px; background: #f9fcfb; border-radius: 8px;
+  }
+  .phase-dot { width: 10px; height: 10px; border-radius: 3px; }
+  .phase-text { color: #14443a; font-weight: 500; }
+  .phase-pct { color: #8a978f; font-weight: 400; margin-left: 4px; }
+
+  /* ===== 体动 ===== */
+  .movement-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; margin-bottom: 6px;
+  }
+  .movement-title { font-size: 13px; font-weight: 700; color: #14443a; }
+  .movement-count-label { font-size: 11px; color: #6a8b82; margin-right: 4px; }
+  .movement-count-value { font-size: 18px; font-weight: 800; color: #f2b26b; }
+  .movement-count-unit { font-size: 11px; color: #6a8b82; margin-left: 2px; }
+  .movement-chart {
+    width: 100%; height: 100px; display: block;
+    background: rgba(247,251,250,0.6); border-radius: 10px;
+  }
+  .movement-legend { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: #6a8b82; }
+  .movement-legend-item { display: flex; align-items: center; gap: 4px; }
+  .movement-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .movement-dot-activity { background: #58c7f5; }
+  .movement-dot-turnover { background: #f2b26b; }
+
+  /* ===== 声音监测 8 项网格 ===== */
+  .sound-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .sound-box {
+    background: #f9fcfb; border-radius: 12px; padding: 10px 12px;
+    border: 1px solid #eaf1ed;
+  }
+  .sound-box.tappable { cursor: pointer; border-color: rgba(31,138,111,0.25); }
+  .sb-label { font-size: 11px; color: #6a8b82; margin-bottom: 4px; }
+  .sb-value { font-size: 17px; font-weight: 800; color: #14443a; }
+  .sb-level { font-size: 11px; color: #1f8a6f; margin-top: 2px; }
+  .sb-hint { font-size: 10px; color: #1f8a6f; margin-top: 4px; }
+
+  /* ===== 底部 tabbar ===== */
+  .tabbar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 414px;
+    display: flex; background: #fff;
+    border-top: 1px solid #f0f0f0;
+    padding: 8px 0 16px;
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    font-size: 11px; color: #7B928C;
+  }
+  .tab-item.active { color: #1F8A6F; font-weight: 700; }
+  .tab-emoji { font-size: 20px; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- 顶部状态栏 -->
+  <div class="status-bar">
+    <div class="sb-time">17:25</div>
+    <div class="sb-right">📶 5G ⛁23%</div>
+  </div>
+
+  <div class="page">
+
+    <!-- 星期选择器 -->
+    <div class="week-selector">
+      <div class="week-header">
+        <div class="week-title">星期六</div>
+        <div class="week-subtitle">5月30日</div>
+        <div class="week-calendar-btn" title="打开日历"><span class="icon-calendar">🗓</span></div>
+      </div>
+      <div class="week-days">
+        <div class="day-circle"><span class="day-text">日</span><span class="day-num">24</span></div>
+        <div class="day-circle"><span class="day-text">一</span><span class="day-num">25</span></div>
+        <div class="day-circle"><span class="day-text">二</span><span class="day-num">26</span></div>
+        <div class="day-circle"><span class="day-text">三</span><span class="day-num">27</span></div>
+        <div class="day-circle"><span class="day-text">四</span><span class="day-num">28</span></div>
+        <div class="day-circle"><span class="day-text">五</span><span class="day-num">29</span></div>
+        <div class="day-circle active"><span class="day-text">六</span><span class="day-num">30</span></div>
+      </div>
+    </div>
+
+    <!-- 设备状态条 -->
+    <div class="top-status">
+      <span>📶 健康监测仪 X2 · 已正常在线 | 昨夜监测数据完整</span>
+      <span class="status-link">⚙️ 设备详情</span>
+    </div>
+
+    <!-- ★ 心脏健康总览 -->
+    <div class="card">
+      <div class="overview-header">
+        <span class="overview-emoji">❤️</span>
+        <span class="overview-title">心脏健康总览</span>
+        <span class="overview-date">5月30日</span>
+      </div>
+
+      <div class="cardiac-risk-section">
+        <!-- ② 自主神经调节 — 🟡 -->
+        <div class="cardiac-risk-card warning" onclick="toggleRisk(this)">
+          <div class="cr-head">
+            <span class="cr-icon">🟡</span>
+            <div class="cr-text">
+              <span class="cr-title">自主神经调节（HRV 类）</span>
+              <span class="cr-summary">HRV 持续偏低，提示长期心血管事件风险与心律失常倾向</span>
+            </div>
+            <span class="cr-arrow">▼</span>
+          </div>
+          <div class="cr-body">
+            <div class="cr-disease-tags">
+              <span class="cr-disease-tags-label">关联疾病：</span>
+              <span class="cr-disease-tag">长期心血管事件风险</span>
+              <span class="cr-disease-tag">慢性应激</span>
+              <span class="cr-disease-tag">心律失常倾向</span>
+            </div>
+            <div class="cr-detail-block">
+              <span class="cr-detail-label">📊 数据解读</span>
+              <div class="cr-detail-text">HRV 33ms 位于 20-50ms 轻度区间，提示迷走神经活性偏低。14 天均值 35ms 持续低于健康参考 &gt;50ms。</div>
+            </div>
+            <div class="cr-detail-block">
+              <span class="cr-detail-label">📋 量化依据</span>
+              <div class="cr-data-list">
+                <div class="cr-data-row low"><span class="cr-data-label">HRV 心率变异性</span><span class="cr-data-value">33ms</span><span class="cr-data-ref">正常 &gt;50ms（🟡 轻度）</span></div>
+                <div class="cr-data-row low"><span class="cr-data-label">14 天 HRV 均值</span><span class="cr-data-value">35ms</span><span class="cr-data-ref">持续低于 50ms</span></div>
+                <div class="cr-data-row ok"><span class="cr-data-label">rMSSD</span><span class="cr-data-value">892ms</span><span class="cr-data-ref">600-1200ms</span></div>
+              </div>
+            </div>
+            <div class="cr-detail-block">
+              <span class="cr-detail-label">💡 改善建议</span>
+              <div class="cr-suggestion">· 睡前 5 分钟腹式呼吸（已加入今日打卡）</div>
+              <div class="cr-suggestion">· 每周 ≥3 次中等强度有氧运动</div>
+              <div class="cr-suggestion">· 每日正念/冥想 10 分钟</div>
+            </div>
+            <div class="cr-link">查看 HRV 长期趋势 →</div>
+          </div>
+        </div>
+
+        <!-- ③ 心脏负荷 — 🟡 -->
+        <div class="cardiac-risk-card warning" onclick="toggleRisk(this)">
+          <div class="cr-head">
+            <span class="cr-icon">🟡</span>
+            <div class="cr-text">
+              <span class="cr-title">心脏负荷（前负荷 / 后负荷）</span>
+              <span class="cr-summary">夜间心脏工作负荷偏高，关联高血压与左心室肥厚风险</span>
+            </div>
+            <span class="cr-arrow">▼</span>
+          </div>
+          <div class="cr-body">
+            <div class="cr-disease-tags">
+              <span class="cr-disease-tags-label">关联疾病：</span>
+              <span class="cr-disease-tag">高血压</span>
+              <span class="cr-disease-tag">左心室肥厚</span>
+              <span class="cr-disease-tag">心力衰竭早期</span>
+            </div>
+            <div class="cr-detail-block">
+              <span class="cr-detail-label">📊 数据解读</span>
+              <div class="cr-detail-text">夜间平均心率 69bpm 接近正常上限，最长呼吸暂停 17 秒超过 10 秒观察阈值，夜间翻身 93 次远超正常 &lt;60 次。</div>
+            </div>
+            <div class="cr-detail-block">
+              <span class="cr-detail-label">📋 量化依据</span>
+              <div class="cr-data-list">
+                <div class="cr-data-row border"><span class="cr-data-label">夜间平均心率</span><span class="cr-data-value">69bpm</span><span class="cr-data-ref">正常 &lt;70bpm（🟡 边缘）</span></div>
+                <div class="cr-data-row high"><span class="cr-data-label">最长呼吸暂停</span><span class="cr-data-value">17秒</span><span class="cr-data-ref">观察阈值 ≤10秒</span></div>
+                <div class="cr-data-row high"><span class="cr-data-label">夜间翻身</span><span class="cr-data-value">93次</span><span class="cr-data-ref">正常 &lt;60次</span></div>
+                <div class="cr-data-row ok"><span class="cr-data-label">AHI</span><span class="cr-data-value">1.0次/h</span><span class="cr-data-ref">正常 &lt;5</span></div>
+              </div>
+            </div>
+            <div class="cr-detail-block">
+              <span class="cr-detail-label">💡 改善建议</span>
+              <div class="cr-suggestion">· 侧卧睡姿替代仰卧</div>
+              <div class="cr-suggestion">· 睡前 3 小时避免饮酒、饱食</div>
+              <div class="cr-suggestion">· 每周 ≥3 次有氧运动</div>
+            </div>
+            <div class="cr-link">查看心率与呼吸暂停联合趋势 →</div>
+          </div>
+        </div>
+
+        <!-- 🟢 正常项目聚合卡 -->
+        <div class="cardiac-risk-card normal-group" onclick="toggleRisk(this)">
+          <div class="cr-head">
+            <span class="cr-icon">🟢</span>
+            <div class="cr-text">
+              <span class="cr-title">正常项目</span>
+              <span class="cr-summary">2 项指标未见心脏疾病风险</span>
+            </div>
+            <span class="cr-arrow">▼</span>
+          </div>
+          <div class="cr-body">
+            <div class="normal-sub-item">
+              <span class="ng-title">心律稳定性（节律类）</span>
+              <span class="ng-summary">ECG 形态规整、R-R 间期均匀，未见节律异常</span>
+              <div class="cr-data-list">
+                <div class="cr-data-row ok"><span class="cr-data-label">ECG 形态</span><span class="cr-data-value">规整</span><span class="cr-data-ref">P-QRS-T 协调</span></div>
+                <div class="cr-data-row ok"><span class="cr-data-label">R-R 间期</span><span class="cr-data-value">均匀</span><span class="cr-data-ref">变异在正常范围</span></div>
+                <div class="cr-data-row ok"><span class="cr-data-label">夜间心率范围</span><span class="cr-data-value">55-69bpm</span><span class="cr-data-ref">健康 50-90bpm</span></div>
+              </div>
+            </div>
+            <div class="normal-sub-item">
+              <span class="ng-title">心肌供血（缺血类）</span>
+              <span class="ng-summary">ST 段平直、T 波直立，未见缺血型改变</span>
+              <div class="cr-data-list">
+                <div class="cr-data-row ok"><span class="cr-data-label">ST 段</span><span class="cr-data-value">平直</span><span class="cr-data-ref">无抬高/压低</span></div>
+                <div class="cr-data-row ok"><span class="cr-data-label">T 波形态</span><span class="cr-data-value">直立</span><span class="cr-data-ref">形态正常</span></div>
+                <div class="cr-data-row ok"><span class="cr-data-label">夜间心率应答</span><span class="cr-data-value">稳定</span><span class="cr-data-ref">无异常波动</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 今日建议打卡 -->
+      <div class="today-checkins">
+        <div class="today-checkins-head">
+          <span class="tc-head-emoji">💡</span>
+          <span class="tc-head-text">今日建议打卡</span>
+          <span class="tc-head-deadline">截至今晚 12:00</span>
+        </div>
+        <div class="today-checkin-item" onclick="this.classList.toggle('checked');">
+          <span class="tc-item-emoji">🧘</span>
+          <div class="tc-item-text">
+            <span class="tc-item-title">睡前 5 分钟腹式呼吸</span>
+            <span class="tc-item-sub">激活副交感，长期提升 HRV</span>
+          </div>
+          <div class="tc-check-box"><span class="tc-check-icon">✓</span></div>
+        </div>
+        <div class="today-checkin-item checked" onclick="this.classList.toggle('checked');">
+          <span class="tc-item-emoji">🚶</span>
+          <div class="tc-item-text">
+            <span class="tc-item-title">饭后散步 20 分钟</span>
+            <span class="tc-item-sub">规律有氧，每周 ≥3 次</span>
+          </div>
+          <div class="tc-check-box"><span class="tc-check-icon">✓</span></div>
+        </div>
+        <div class="today-checkin-item" onclick="this.classList.toggle('checked');">
+          <span class="tc-item-emoji">🌙</span>
+          <div class="tc-item-text">
+            <span class="tc-item-title">22:30 前关灯</span>
+            <span class="tc-item-sub">固定就寝时间，避免蓝光</span>
+          </div>
+          <div class="tc-check-box"><span class="tc-check-icon">✓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ★ 心脏具体数据 -->
+    <div class="card" id="card-heart">
+      <div class="card-header" onclick="toggleCard('card-heart', this)">
+        <div class="card-title">
+          <span class="card-title-emoji">❤️</span>
+          <span class="card-title-text">心脏具体数据</span>
+        </div>
+        <span class="card-collapse-btn">展开</span>
+      </div>
+      <div class="status-line" onclick="toggleCard('card-heart')">
+        <span class="sl-label">夜间心率</span>
+        <span class="status-pill normal mini">✅ 未见异常</span>
+        <span class="sl-divider">·</span>
+        <span class="sl-label">心动图</span>
+        <span class="status-pill normal mini">✅ 未见异常</span>
+      </div>
+      <div class="fold-body">
+        <!-- 心脏健康指数 -->
+        <div class="hi-compact">
+          <div class="hi-compact-title-row">
+            <span class="hi-compact-title">心脏健康指数</span>
+            <span class="status-pill normal mini">✅ 优秀</span>
+          </div>
+          <div class="hi-gauge-wrap">
+            <div class="hi-bar">
+              <span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span>
+              <span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span>
+            </div>
+            <div class="hi-pointer" style="left: 78%;">
+              <div class="hi-ptr-line"></div>
+              <div class="hi-ptr-circle"></div>
+            </div>
+          </div>
+          <div class="hi-legend">
+            <span>需要关注</span><span>正常</span><span>优秀</span>
+          </div>
+        </div>
+
+        <!-- 4 项核心指标 -->
+        <div class="metrics-grid-2x2">
+          <div class="metric-box">
+            <div class="metric-name">心率范围</div>
+            <div class="metric-number">65-72次/分</div>
+            <div class="metric-note">夜间平稳</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-name">HRV值</div>
+            <div class="metric-number">33</div>
+            <div class="metric-note">恢复中等偏好</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-name">平均心率</div>
+            <div class="metric-number">69bpm</div>
+            <div class="metric-note">参考45-70bpm</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-name">rMSSD</div>
+            <div class="metric-number">892ms</div>
+            <div class="metric-note">参考600-1200ms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 心率数据卡（展开时显示） -->
+    <div class="card" data-show-if="card-heart">
+      <div class="card-title-row">
+        <span class="card-title-bold">心率数据 <span class="status-pill normal mini">✅ 未见异常</span></span>
+        <div class="chart-range">
+          <span class="range-number">55-69</span>
+          <span class="range-unit">次/分钟</span>
+        </div>
+      </div>
+      <!-- 心率折线图 SVG -->
+      <svg class="trend-chart" viewBox="0 0 350 130" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="hrFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#58c7f5" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#58c7f5" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="30" x2="350" y2="30" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+        <line x1="0" y1="65" x2="350" y2="65" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+        <line x1="0" y1="100" x2="350" y2="100" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+        <text x="4" y="33" font-size="9" fill="#8a978f">80</text>
+        <text x="4" y="68" font-size="9" fill="#8a978f">70</text>
+        <text x="4" y="103" font-size="9" fill="#8a978f">60</text>
+        <path d="M 25 75 Q 50 80 75 70 T 125 65 T 175 70 T 225 60 T 275 65 T 325 70"
+              fill="none" stroke="#58c7f5" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 25 75 Q 50 80 75 70 T 125 65 T 175 70 T 225 60 T 275 65 T 325 70 L 325 130 L 25 130 Z"
+              fill="url(#hrFill)"/>
+      </svg>
+      <div class="chart-axis-labels"><span>01:00</span><span>03:00</span><span>05:00</span></div>
+      <div class="analysis-box">
+        <span class="analysis-headline">整夜心率维持在 <span class="bold">55-69</span> 次/分，与你设定的「夜间心率参考范围」<span class="baseline-pill">55-65</span>基本吻合，整体表现良好。</span>
+        <div class="analysis-list">
+          <div class="analysis-bullet">
+            <span class="bullet-dot">●</span>
+            <span class="bullet-text">曲线整体平滑，未见骤升骤降，提示夜间「<span class="tooltip-term">交感神经</span>」活跃度低，心脏处于充分休息状态。</span>
+          </div>
+          <div class="analysis-bullet">
+            <span class="bullet-dot">●</span>
+            <span class="bullet-text">凌晨 5 点后出现 ~<span class="bold">8bpm</span> 轻度回升，属正常觉醒前生理反应。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 心动图卡（展开时显示） -->
+    <div class="card" data-show-if="card-heart">
+      <div class="card-title-row">
+        <span class="card-title-bold">心动图 <span class="status-pill normal mini">✅ 未见异常</span></span>
+      </div>
+      <!-- 心电图 SVG -->
+      <svg class="ecg-waveform" viewBox="0 0 350 130" preserveAspectRatio="none">
+        <g stroke="#eaf1ed" stroke-width="0.5">
+          <line x1="0" y1="30" x2="350" y2="30"/>
+          <line x1="0" y1="60" x2="350" y2="60"/>
+          <line x1="0" y1="90" x2="350" y2="90"/>
+        </g>
+        <!-- 3 个 P-QRS-T -->
+        <path d="M 5 65 L 30 65 Q 35 60 40 65 L 50 65 L 55 65 L 60 30 L 65 95 L 70 65 L 80 65 Q 85 55 90 65 L 100 65
+                 L 130 65 Q 135 60 140 65 L 150 65 L 155 65 L 160 30 L 165 95 L 170 65 L 180 65 Q 185 55 190 65 L 200 65
+                 L 230 65 Q 235 60 240 65 L 250 65 L 255 65 L 260 30 L 265 95 L 270 65 L 280 65 Q 285 55 290 65 L 320 65"
+              fill="none" stroke="#f2b26b" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="ecg-axis-labels"><span>0s</span><span>1s</span><span>2s</span><span>3s</span></div>
+      <div class="analysis-box orange-variant">
+        <span class="analysis-headline">心电波形形态规整，「<span class="tooltip-term">R 波</span>」清晰锐利，节律间隔均匀。</span>
+        <div class="analysis-list">
+          <div class="analysis-bullet">
+            <span class="bullet-dot orange">●</span>
+            <span class="bullet-text">「<span class="tooltip-term">P-QRS-T</span>」各波段比例协调，反映「<span class="tooltip-term">窦性心律</span>」稳定。</span>
+          </div>
+          <div class="analysis-bullet">
+            <span class="bullet-dot orange">●</span>
+            <span class="bullet-text">未见早搏、漏搏、ST 段抬高等异常信号，「<span class="tooltip-term">R-R 间期</span>」变异在正常范围。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ★ 呼吸健康 -->
+    <div class="card" id="card-breath">
+      <div class="card-header" onclick="toggleCard('card-breath', this)">
+        <div class="card-title">
+          <span class="card-title-emoji">🌬️</span>
+          <span class="card-title-text">呼吸健康</span>
+        </div>
+        <span class="card-collapse-btn">展开</span>
+      </div>
+      <div class="status-line" onclick="toggleCard('card-breath')">
+        <span class="sl-label">健康指数</span>
+        <span class="status-pill normal mini">✅ 优秀</span>
+        <span class="sl-divider">·</span>
+        <span class="sl-label">呼吸暂停</span>
+        <span class="status-pill normal mini">✅ 未见异常</span>
+      </div>
+    </div>
+
+    <!-- 呼吸健康详情（展开时显示） -->
+    <div class="card" data-show-if="card-breath">
+      <!-- 呼吸健康指数 -->
+      <div class="hi-compact">
+        <div class="hi-compact-title-row">
+          <span class="hi-compact-title">呼吸健康指数</span>
+          <span class="status-pill normal mini">✅ 优秀</span>
+        </div>
+        <div class="hi-gauge-wrap">
+          <div class="hi-bar">
+            <span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span>
+            <span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span><span class="hi-tick"></span>
+          </div>
+          <div class="hi-pointer" style="left: 82%;">
+            <div class="hi-ptr-line"></div>
+            <div class="hi-ptr-circle"></div>
+          </div>
+        </div>
+        <div class="hi-legend">
+          <span>需要关注</span><span>正常</span><span>优秀</span>
+        </div>
+      </div>
+
+      <!-- 暂停三项统计 -->
+      <div class="breath-stats-row">
+        <div class="breath-stat-item highlight">
+          <div class="breath-stat-num">1<span class="breath-stat-unit">次</span></div>
+          <div class="breath-stat-label">呼吸暂停</div>
+        </div>
+        <div class="breath-stat-divider"></div>
+        <div class="breath-stat-item">
+          <div class="breath-stat-num">17<span class="breath-stat-unit">秒</span></div>
+          <div class="breath-stat-label">最长呼吸暂停</div>
+        </div>
+        <div class="breath-stat-divider"></div>
+        <div class="breath-stat-item">
+          <div class="breath-stat-num">12<span class="breath-stat-unit">秒</span></div>
+          <div class="breath-stat-label">平均呼吸暂停</div>
+        </div>
+      </div>
+
+      <div class="analysis-box orange-variant">
+        <span class="analysis-headline">夜间共记录到 <span class="bold">1次</span> 呼吸暂停事件，最长持续 <span class="bold">17秒</span>。</span>
+        <div class="analysis-list">
+          <div class="analysis-bullet">
+            <span class="bullet-dot orange">●</span>
+            <span class="bullet-text">同龄健康人群夜间平均呼吸暂停次数为 <span class="bold">3-8 次</span>，AHI 指数约 1.0，处于正常区间。</span>
+          </div>
+          <div class="analysis-bullet">
+            <span class="bullet-dot orange">●</span>
+            <span class="bullet-text">最长 17 秒已超过 10 秒观察阈值，单次不构成风险，但若连续 ≥3 天出现 ≥15 秒事件，建议关注睡姿。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 呼吸频率卡（展开时显示） -->
+    <div class="card" data-show-if="card-breath">
+      <div class="card-title-row">
+        <span class="card-title-bold">呼吸频率</span>
+        <div class="chart-range">
+          <span class="range-unit">平均</span>
+          <span class="range-number">16</span>
+          <span class="range-unit">次/分钟</span>
+        </div>
+      </div>
+      <svg class="trend-chart" viewBox="0 0 350 130" preserveAspectRatio="none">
+        <line x1="0" y1="30" x2="350" y2="30" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+        <line x1="0" y1="65" x2="350" y2="65" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+        <line x1="0" y1="100" x2="350" y2="100" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+        <text x="4" y="33" font-size="9" fill="#8a978f">20</text>
+        <text x="4" y="68" font-size="9" fill="#8a978f">15</text>
+        <text x="4" y="103" font-size="9" fill="#8a978f">10</text>
+        <path d="M 25 60 L 60 58 L 95 65 L 130 55 L 165 70 L 200 50 L 235 60 L 270 70 L 305 55 L 330 62"
+              fill="none" stroke="#58c7f5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="chart-axis-labels"><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>09:00</span></div>
+      <div class="analysis-box">
+        <span class="analysis-headline">整夜呼吸频率维持在 <span class="bold">12-19</span> 次/分钟，平均 <span class="bold">16</span> 次，处于健康成人参考区间。</span>
+        <div class="analysis-list">
+          <div class="analysis-bullet">
+            <span class="bullet-dot">●</span>
+            <span class="bullet-text">曲线整体平稳，未见骤升骤降，提示夜间呼吸节律稳定。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🛌 睡眠健康 -->
+    <div class="card" id="card-sleep">
+      <div class="fold-head" onclick="toggleCard('card-sleep', this)">
+        <span class="section-title">🛌 睡眠健康</span>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line status-line--one-row" onclick="toggleCard('card-sleep')">
+        <span class="sl-label">时长</span>
+        <span class="sl-value">8h36m</span>
+        <span class="status-pill normal mini">✅ 足够</span>
+        <span class="sl-divider">·</span>
+        <span class="sl-label">深睡</span>
+        <span class="sl-value">18%</span>
+        <span class="status-pill normal mini">✅ 充足</span>
+        <span class="sl-divider">·</span>
+        <span class="sl-label">翻身</span>
+        <span class="sl-value">93次</span>
+        <span class="status-pill warning mini">⚠️ 较多</span>
+      </div>
+      <div class="fold-body">
+        <!-- 身体 + 精神 双环 -->
+        <div class="recovery-rings-row">
+          <div class="recovery-ring-box body">
+            <div class="recovery-ring">
+              <div class="ring-inner">
+                <span class="ring-score">75</span>
+                <span class="ring-unit">/ 100</span>
+              </div>
+            </div>
+            <span class="ring-label">身体恢复度</span>
+            <div class="ring-status-pill">良好</div>
+          </div>
+          <div class="recovery-ring-box mind">
+            <div class="recovery-ring">
+              <div class="ring-inner">
+                <span class="ring-score">69</span>
+                <span class="ring-unit">/ 100</span>
+              </div>
+            </div>
+            <span class="ring-label">精神恢复度</span>
+            <div class="ring-status-pill">中等</div>
+          </div>
+        </div>
+
+        <!-- 核心 5 项 -->
+        <div class="core-metrics-grid">
+          <div class="core-metric">
+            <span class="core-metric-label">上床时间</span>
+            <span class="core-metric-value">23:15</span>
+          </div>
+          <div class="core-metric">
+            <span class="core-metric-label">入睡时长</span>
+            <span class="core-metric-value">28<span class="core-metric-unit">min</span></span>
+          </div>
+          <div class="core-metric">
+            <span class="core-metric-label">入睡时间</span>
+            <span class="core-metric-value">23:43</span>
+          </div>
+          <div class="core-metric">
+            <span class="core-metric-label">起床时间</span>
+            <span class="core-metric-value">08:35</span>
+          </div>
+          <div class="core-metric">
+            <span class="core-metric-label">睡眠时长</span>
+            <span class="core-metric-value">7h33m</span>
+          </div>
+        </div>
+
+        <!-- 今晚医学建议 -->
+        <div class="sleep-suggestion-grid">
+          <div class="sleep-suggestion">
+            <span class="ss-icon">🌙</span>
+            <div class="ss-text">
+              <span class="ss-label">建议今晚入睡</span>
+              <span class="ss-value">22:50</span>
+              <span class="ss-sub">比昨晚提前 25 分钟</span>
+            </div>
+          </div>
+          <div class="sleep-suggestion">
+            <span class="ss-icon">☀️</span>
+            <div class="ss-text">
+              <span class="ss-label">建议明早起床</span>
+              <span class="ss-value">06:30</span>
+              <span class="ss-sub">保证 7h40m 优质睡眠</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 睡眠分期 -->
+        <div class="sleep-section-title">🛏️ 睡眠分期</div>
+        <div class="sub-title">整夜分期节律清晰，深睡与梦境切换有序，恢复效率稳定。</div>
+        <div class="phase-time-row"><span>入睡23:15</span><span>起床08:35</span></div>
+        <!-- 睡眠分期堆叠条 SVG -->
+        <svg class="phase-chart" viewBox="0 0 350 120" preserveAspectRatio="none">
+          <!-- 简化的分期条带 -->
+          <rect x="5" y="20" width="20" height="20" fill="#cfd9e8"/>
+          <rect x="25" y="60" width="40" height="40" fill="#71bfd1"/>
+          <rect x="65" y="20" width="20" height="20" fill="#cfd9e8"/>
+          <rect x="85" y="80" width="50" height="20" fill="#00a6a0"/>
+          <rect x="135" y="60" width="30" height="40" fill="#71bfd1"/>
+          <rect x="165" y="40" width="30" height="20" fill="#b15dff"/>
+          <rect x="195" y="80" width="35" height="20" fill="#00a6a0"/>
+          <rect x="230" y="60" width="30" height="40" fill="#71bfd1"/>
+          <rect x="260" y="40" width="25" height="20" fill="#b15dff"/>
+          <rect x="285" y="60" width="35" height="40" fill="#71bfd1"/>
+          <rect x="320" y="20" width="25" height="20" fill="#cfd9e8"/>
+          <!-- 阶段标签 -->
+          <text x="4" y="32" font-size="8" fill="#8a978f">清醒</text>
+          <text x="4" y="52" font-size="8" fill="#8a978f">REM</text>
+          <text x="4" y="72" font-size="8" fill="#8a978f">浅睡</text>
+          <text x="4" y="92" font-size="8" fill="#8a978f">深睡</text>
+        </svg>
+        <div class="phase-time-axis">
+          <span>23:15</span><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>08:35</span>
+        </div>
+        <div class="phase-legend-grid">
+          <div class="phase-legend-item">
+            <span class="phase-dot" style="background: #cfd9e8;"></span>
+            <span class="phase-text">清醒时间 0小时35分钟 <span class="phase-pct">8.0%</span></span>
+          </div>
+          <div class="phase-legend-item">
+            <span class="phase-dot" style="background: #b15dff;"></span>
+            <span class="phase-text">梦 1小时31分钟 <span class="phase-pct">20.8%</span></span>
+          </div>
+          <div class="phase-legend-item">
+            <span class="phase-dot" style="background: #71bfd1;"></span>
+            <span class="phase-text">浅睡眠 3小时50分钟 <span class="phase-pct">52.6%</span></span>
+          </div>
+          <div class="phase-legend-item">
+            <span class="phase-dot" style="background: #00a6a0;"></span>
+            <span class="phase-text">深睡眠 1小时21分钟 <span class="phase-pct">18.5%</span></span>
+          </div>
+        </div>
+
+        <!-- 体动健康 -->
+        <div class="sleep-section-title">🏃 体动健康</div>
+        <div class="sub-title">体动与翻身节律整体稳定，后半夜翻身略有增加</div>
+        <div class="movement-head">
+          <span class="movement-title">体动数据</span>
+          <div>
+            <span class="movement-count-label">翻身</span>
+            <span class="movement-count-value">93</span>
+            <span class="movement-count-unit">次</span>
+          </div>
+        </div>
+        <svg class="movement-chart" viewBox="0 0 350 100" preserveAspectRatio="none">
+          <line x1="0" y1="50" x2="350" y2="50" stroke="#eaf1ed" stroke-dasharray="3 3"/>
+          <!-- 体动柱（蓝色） -->
+          <g fill="#58c7f5">
+            <rect x="20" y="40" width="6" height="10"/>
+            <rect x="40" y="35" width="6" height="15"/>
+            <rect x="80" y="42" width="6" height="8"/>
+            <rect x="130" y="38" width="6" height="12"/>
+            <rect x="180" y="30" width="6" height="20"/>
+            <rect x="220" y="38" width="6" height="12"/>
+            <rect x="270" y="32" width="6" height="18"/>
+            <rect x="310" y="36" width="6" height="14"/>
+          </g>
+          <!-- 翻身柱（橙色） -->
+          <g fill="#f2b26b">
+            <rect x="60" y="50" width="6" height="20"/>
+            <rect x="100" y="50" width="6" height="25"/>
+            <rect x="150" y="50" width="6" height="18"/>
+            <rect x="200" y="50" width="6" height="32"/>
+            <rect x="250" y="50" width="6" height="28"/>
+            <rect x="290" y="50" width="6" height="35"/>
+            <rect x="330" y="50" width="6" height="40"/>
+          </g>
+        </svg>
+        <div class="chart-axis-labels">
+          <span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>09:00</span>
+        </div>
+        <div class="movement-legend">
+          <div class="movement-legend-item">
+            <span class="movement-dot movement-dot-activity"></span>
+            <span>体动</span>
+          </div>
+          <div class="movement-legend-item">
+            <span class="movement-dot movement-dot-turnover"></span>
+            <span>翻身</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔊 声音监测 -->
+    <div class="card" id="card-sound">
+      <div class="fold-head" onclick="toggleCard('card-sound', this)">
+        <span class="section-title">🔊 声音监测</span>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line" onclick="toggleCard('card-sound')">
+        <span class="sl-label">鼾声</span>
+        <span class="sl-value">3次</span>
+        <span class="status-pill normal mini">✅ 较少</span>
+        <span class="sl-divider">·</span>
+        <span class="sl-label">梦话</span>
+        <span class="sl-value">4次</span>
+        <span class="status-pill warning mini">⚠️ 较多</span>
+        <span class="sl-divider">·</span>
+        <span class="sl-label">噪音峰值</span>
+        <span class="sl-value">62dB</span>
+        <span class="status-pill orange mini">🔸 偏高</span>
+      </div>
+      <div class="fold-body">
+        <!-- 声音 8 项 -->
+        <div class="sound-grid">
+          <div class="sound-box tappable">
+            <div class="sb-label">鼾声总次数</div>
+            <div class="sb-value">5次</div>
+            <div class="sb-level">轻度频发</div>
+            <div class="sb-hint">▶ 点击查看声音数据</div>
+          </div>
+          <div class="sound-box tappable">
+            <div class="sb-label">梦话总次数</div>
+            <div class="sb-value">2次</div>
+            <div class="sb-level">-</div>
+            <div class="sb-hint">▶ 点击查看声音数据</div>
+          </div>
+          <div class="sound-box tappable">
+            <div class="sb-label">咳嗽声总次数</div>
+            <div class="sb-value">0次</div>
+            <div class="sb-level">无异常</div>
+            <div class="sb-hint">▶ 点击查看声音数据</div>
+          </div>
+          <div class="sound-box">
+            <div class="sb-label">睡眠影响占比</div>
+            <div class="sb-value">12%</div>
+            <div class="sb-level">影响较低</div>
+          </div>
+          <div class="sound-box">
+            <div class="sb-label">最长鼾声时长</div>
+            <div class="sb-value">18秒</div>
+            <div class="sb-level">需关注</div>
+          </div>
+          <div class="sound-box">
+            <div class="sb-label">噪音干扰时长</div>
+            <div class="sb-value">8分钟</div>
+            <div class="sb-level">正常范围</div>
+          </div>
+          <div class="sound-box">
+            <div class="sb-label">环境平均噪音</div>
+            <div class="sb-value">32分贝</div>
+            <div class="sb-level">超安静</div>
+          </div>
+          <div class="sound-box">
+            <div class="sb-label">峰值噪音</div>
+            <div class="sb-value">62分贝</div>
+            <div class="sb-level">轻度干扰</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底部 tabbar -->
+  <div class="tabbar">
+    <div class="tab-item active"><span class="tab-emoji">📅</span><span>每日</span></div>
+    <div class="tab-item"><span class="tab-emoji">📊</span><span>长期</span></div>
+    <div class="tab-item"><span class="tab-emoji">👤</span><span>我的</span></div>
+  </div>
+</div>
+
+<script>
+  // 心脏风险卡展开/折叠
+  function toggleRisk(card) {
+    card.classList.toggle('expanded');
+    const arrow = card.querySelector('.cr-arrow');
+    if (arrow) arrow.textContent = card.classList.contains('expanded') ? '▲' : '▼';
+  }
+
+  // 通用折叠卡展开/折叠（心脏具体/呼吸/睡眠/声音）
+  function toggleCard(cardId, headerEl) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.classList.toggle('expanded');
+    const expanded = card.classList.contains('expanded');
+
+    // 更新按钮文字
+    const btn = card.querySelector('.card-collapse-btn, .fold-action');
+    if (btn) btn.textContent = expanded ? '收起' : '展开';
+
+    // 显示/隐藏依赖卡（如心率/心动图属于心脏；呼吸频率属于呼吸）
+    document.querySelectorAll(`[data-show-if="${cardId}"]`).forEach(el => {
+      el.style.display = expanded ? 'block' : 'none';
+    });
+  }
+
+  // 初始隐藏所有 data-show-if 卡
+  document.querySelectorAll('[data-show-if]').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  // 阻止 status-line 点击冒泡造成双重切换
+  document.querySelectorAll('.status-line').forEach(line => {
+    line.addEventListener('click', e => e.stopPropagation());
+  });
+</script>
+</body>
+</html>

@@ -10,7 +10,7 @@
     "backgroundColor": "#F4FBF9",
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#F4FBF9",
-    "navigationBarTitleText": "话好眠",
+    "navigationBarTitleText": "护心宝",
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
@@ -26,10 +26,6 @@
       {
         "pagePath": "pages/longterm/index",
         "text": "长期"
-      },
-      {
-        "pagePath": "pages/advice/index",
-        "text": "建议"
       },
       {
         "pagePath": "pages/my/index",

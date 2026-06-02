@@ -1,28 +1,24 @@
 <view class="page">
-  <!-- 星期选择器 -->
+  <!-- 星期选择器（右上角集成日历入口） -->
   <view class="week-selector">
     <view class="week-header">
       <view class="week-title">星期{{currentWeekDay}}</view>
       <view class="week-subtitle">{{currentDateRange}}</view>
+      <view class="week-calendar-btn" bindtap="showCalendar" hover-class="week-cal-hover">
+        <text class="icon-calendar">🗓</text>
+      </view>
     </view>
     <view class="week-days">
-      <view class="day-item {{selectedDay === index ? 'active' : ''}}" 
-            wx:for="{{weekDays}}" 
-            wx:key="index"
+      <view class="day-item {{selectedDay === index ? 'active' : ''}}"
+            wx:for="{{weekDays}}"
+            wx:key="dateStr"
             bindtap="selectDay"
             data-index="{{index}}">
         <view class="day-circle {{selectedDay === index ? 'active' : ''}}">
           <text class="day-text">{{item.short}}</text>
+          <text class="day-num">{{item.date}}</text>
         </view>
       </view>
-    </view>
-  </view>
-
-  <!-- 日期条 -->
-  <view class="date-bar" bindtap="showCalendar">
-    <view class="date-left">
-      <text class="icon-calendar">🗓</text>
-      <text class="date-text">{{currentDate}}</text>
     </view>
   </view>
 
@@ -31,15 +27,16 @@
     <view class="modal-mask" bindtap="hideCalendar"></view>
     <view class="modal-content">
       <view class="modal-header">
-        <view class="modal-title">睡眠日报</view>
+        <view class="modal-month-nav" bindtap="prevCalendarMonth">‹</view>
         <view class="modal-subtitle">{{calendarYearMonth}}</view>
+        <view class="modal-month-nav" bindtap="nextCalendarMonth">›</view>
         <view class="modal-close" bindtap="hideCalendar">
           <text>✕</text>
         </view>
       </view>
       <view class="calendar-grid">
-        <view class="calendar-day {{item.isToday ? 'today' : ''}} {{item.hasData ? 'has-data' : ''}}" 
-              wx:for="{{calendarDays}}" 
+        <view class="calendar-day {{item.isToday ? 'today' : ''}} {{item.hasData ? 'has-data' : ''}}"
+              wx:for="{{calendarDays}}"
               wx:key="index"
               bindtap="selectCalendarDay"
               data-day="{{item.day}}">
@@ -54,228 +51,279 @@
     <text class="status-link">⚙️ 设备详情</text>
   </view>
 
-  <view class="temple-icon-entry" bindtap="goTemplePage">
-    <text class="temple-icon-emoji">🏮</text>
-    <text class="temple-icon-text">好眠寺</text>
-  </view>
+  <!-- ★ 心脏健康总览（页面顶部，始终展开） -->
+  <view class="card overview-card heart-overview-card">
+    <view class="overview-header">
+      <text class="overview-emoji">❤️</text>
+      <text class="overview-title">心脏健康总览</text>
+      <text class="overview-date">{{currentDateLabel}}</text>
+    </view>
 
-  <view class="card hero-card">
-    <view class="hero-top">
-      <view class="axis-panel">
-        <view class="axis-chart-row">
-          <view class="axis-ticks">
-            <text class="axis-tick" wx:for="{{timeAxisTicks}}" wx:key="index">{{item}}</text>
-          </view>
-          <view class="axis-rows">
-            <view class="axis-col">
-              <text class="axis-time-top">{{sleepTimeline.previousNight.wakeTime}}</text>
-              <canvas type="2d" id="timeAxis0" class="axis-canvas"></canvas>
-              <text class="axis-time-bottom">{{sleepTimeline.previousNight.bedTime}}</text>
-              <text class="axis-day">前晚</text>
-              <text class="axis-duration">{{sleepTimeline.previousNight.duration}}</text>
-            </view>
-            <view class="axis-col">
-              <text class="axis-time-top highlight">{{sleepTimeline.lastNight.wakeTime}}</text>
-              <canvas type="2d" id="timeAxis1" class="axis-canvas"></canvas>
-              <text class="axis-time-bottom highlight">{{sleepTimeline.lastNight.bedTime}}</text>
-              <text class="axis-day">昨晚</text>
-              <text class="axis-duration highlight">{{sleepTimeline.lastNight.duration}}</text>
-            </view>
-            <view class="axis-col">
-              <text class="axis-time-top">{{sleepTimeline.suggestedTonight.wakeTime}}</text>
-              <canvas type="2d" id="timeAxis2" class="axis-canvas"></canvas>
-              <text class="axis-time-bottom">{{sleepTimeline.suggestedTonight.bedTime}}</text>
-              <text class="axis-day">建议今晚</text>
-              <text class="axis-duration">{{sleepTimeline.suggestedTonight.duration}}</text>
-            </view>
-          </view>
-        </view>
+    <!-- 1. 9 项心肺功能风险评估（基于夜间数据；非医学诊断） -->
+    <view class="cardiac-risk-section">
+      <view class="cr-disclaimer">
+        <text class="cr-disc-icon">ℹ️</text>
+        <text class="cr-disc-text">以下为基于夜间数据信号的健康风险评估，仅供日常参考，不构成医学诊断。</text>
       </view>
-
-      <!-- 双环形进度条区域 -->
-      <view class="recovery-rings-section">
-        <view class="recovery-ring-box">
-          <view class="recovery-ring" style="background: conic-gradient(#4cd964 0 {{recoveryScores.body.score * 3.6}}deg, #e8f5e9 {{recoveryScores.body.score * 3.6}}deg 360deg);">
-            <view class="ring-inner">
-              <text class="ring-score">{{recoveryScores.body.score}}</text>
-              <text class="ring-unit">分</text>
-            </view>
-          </view>
-          <text class="ring-label">身体恢复度</text>
-          <text class="ring-status">{{recoveryScores.body.label}}</text>
-        </view>
-        <view class="recovery-ring-box">
-          <view class="recovery-ring" style="background: conic-gradient(#4cd964 0 {{recoveryScores.mind.score * 3.6}}deg, #e8f5e9 {{recoveryScores.mind.score * 3.6}}deg 360deg);">
-            <view class="ring-inner">
-              <text class="ring-score">{{recoveryScores.mind.score}}</text>
-              <text class="ring-unit">分</text>
-            </view>
-          </view>
-          <text class="ring-label">精神恢复度</text>
-          <text class="ring-status">{{recoveryScores.mind.label}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 简短睡眠评价 -->
-    <view class="evaluation-section">
-      <view class="evaluation-box">
-        <text class="evaluation-text">{{sleepEvaluation}}</text>
-      </view>
-    </view>
-
-    <view class="wins-section">
-      <view class="wins-grid">
-        <view class="win-card" wx:for="{{sleepWins}}" wx:key="title">
-          <text class="win-icon">{{item.icon}}</text>
-          <text class="win-title">{{item.title}}</text>
-          <text class="win-desc">{{item.desc}}</text>
-        </view>
-      </view>
-      <view class="wins-share">分享我的睡眠小确幸 →</view>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">睡眠分期</view>
-    <view class="sub-title">{{phaseSummary}}</view>
-  </view>
-
-  <view class="card sleep-phase-card">
-    <view class="time-row phase-time-row">
-      <text>{{sleepPhaseMeta.startLabel}}</text>
-      <text>{{sleepPhaseMeta.endLabel}}</text>
-    </view>
-    <canvas type="2d" id="sleepCycle" class="chart-lg phase-chart"></canvas>
-    <view class="phase-time-axis">
-      <text
-        wx:for="{{phaseTimeTicks}}"
-        wx:key="index"
-        class="phase-time-tick"
-      >
-        {{item.label}}
-      </text>
-    </view>
-    <view class="phase-legend-grid">
+      <!-- 红/黄 子项目（默认折叠，可点开看数据依据） -->
       <view
-        class="phase-legend-item {{activeStageKey === item.key ? 'active' : ''}} {{activeStageKey && activeStageKey !== item.key ? 'inactive' : ''}}"
-        wx:for="{{phaseLegend}}"
-        wx:key="key"
-        bindtap="onTapStageLegend"
-        data-key="{{item.key}}"
+        class="cardiac-risk-card {{item.level}} {{item.expanded ? 'expanded' : ''}}"
+        wx:for="{{criticalRisks}}"
+        wx:key="id"
+        bindtap="toggleCardiacRisk"
+        data-id="{{item.id}}"
+        hover-class="cr-hover"
+        hover-stay-time="100"
       >
-        <text class="phase-dot" style="background: {{item.color}};"></text>
-        <text class="phase-text">{{item.label}} {{item.duration}}</text>
+        <view class="cr-head">
+          <text class="cr-icon">{{item.icon}}</text>
+          <view class="cr-text">
+            <text class="cr-title">{{item.title}}</text>
+            <text class="cr-summary">{{item.summary}}</text>
+          </view>
+          <text class="cr-arrow">{{item.expanded ? '▲' : '▼'}}</text>
+        </view>
+        <view class="cr-body" wx:if="{{item.expanded}}" catchtap="">
+          <view class="cr-disease-tags" wx:if="{{item.diseaseTags && item.diseaseTags.length > 0}}">
+            <text class="cr-disease-tags-label">关联疾病：</text>
+            <text class="cr-disease-tag" wx:for="{{item.diseaseTags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+          <view class="cr-detail-block">
+            <text class="cr-detail-label">📊 数据解读</text>
+            <text class="cr-detail-text">{{item.assessment}}</text>
+          </view>
+          <view class="cr-detail-block" wx:if="{{item.dataPoints && item.dataPoints.length > 0}}">
+            <text class="cr-detail-label">📋 量化依据</text>
+            <view class="cr-data-list">
+              <view class="cr-data-row {{dp.status}}" wx:for="{{item.dataPoints}}" wx:for-item="dp" wx:key="label">
+                <text class="cr-data-label">{{dp.label}}</text>
+                <text class="cr-data-value">{{dp.value}}</text>
+                <text class="cr-data-ref">{{dp.ref}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="cr-detail-block">
+            <text class="cr-detail-label">💡 改善建议</text>
+            <view class="cr-suggestion" wx:for="{{item.suggestions}}" wx:for-item="sug" wx:key="*this">
+              <text>· {{sug}}</text>
+            </view>
+          </view>
+          <view class="cr-link" catchtap="gotoRiskTrend" data-id="{{item.id}}">
+            <text>{{item.linkText}}</text>
+            <text class="cr-link-arrow">→</text>
+          </view>
+        </view>
       </view>
-    </view>
 
-    <view class="cycle-analysis-wrap">
-      <view class="cycle-analysis-title">睡眠循环与累计恢复分析</view>
-      <view class="cycle-item" wx:for="{{sleepCycles}}" wx:key="index" wx:for-item="cycle">
-        <text class="cycle-item-title">第{{cycle.index}}个循环（{{cycle.start}} - {{cycle.end}}）</text>
-        <view class="cycle-segment-row">
-          <view class="cycle-segment-track">
-            <view
-              class="cycle-segment"
-              wx:for="{{cycle.segments}}"
-              wx:key="key"
-              wx:for-item="seg"
-              style="width: {{seg.pct}}%; background: {{seg.color}};"
-            >
-              <text class="cycle-segment-text">{{seg.displayText}}</text>
+      <!-- 绿色正常分割线：点击折/展全部，展开后每项独立成卡（与服务器 web 版统一） -->
+      <view
+        class="cr-normal-divider"
+        wx:if="{{normalRisks.length > 0}}"
+        bindtap="toggleNormalGroup"
+      >
+        <text>{{showNormalGroup ? '▲ 收起' : '▼'}} 以下 {{normalRisks.length}} 项正常</text>
+      </view>
+
+      <!-- 展开后：每个正常项目渲染为完整风险卡（normal 配色） -->
+      <block wx:if="{{showNormalGroup}}">
+        <view
+          class="cardiac-risk-card normal {{item.expanded ? 'expanded' : ''}}"
+          wx:for="{{normalRisks}}"
+          wx:key="id"
+          bindtap="toggleCardiacRisk"
+          data-id="{{item.id}}"
+          hover-class="cr-hover"
+          hover-stay-time="100"
+        >
+          <view class="cr-head">
+            <text class="cr-icon">{{item.icon}}</text>
+            <view class="cr-text">
+              <text class="cr-title">{{item.title}}</text>
+              <text class="cr-summary">{{item.summary}}</text>
+            </view>
+            <text class="cr-arrow">{{item.expanded ? '▲' : '▼'}}</text>
+          </view>
+          <view class="cr-body" wx:if="{{item.expanded}}" catchtap="">
+            <view class="cr-disease-tags" wx:if="{{item.diseaseTags && item.diseaseTags.length > 0}}">
+              <text class="cr-disease-tags-label">关联疾病：</text>
+              <text class="cr-disease-tag" wx:for="{{item.diseaseTags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+            </view>
+            <view class="cr-detail-block">
+              <text class="cr-detail-label">📊 数据解读</text>
+              <text class="cr-detail-text">{{item.assessment}}</text>
+            </view>
+            <view class="cr-detail-block" wx:if="{{item.dataPoints && item.dataPoints.length > 0}}">
+              <text class="cr-detail-label">📋 量化依据</text>
+              <view class="cr-data-list">
+                <view class="cr-data-row {{dp.status}}" wx:for="{{item.dataPoints}}" wx:for-item="dp" wx:key="label">
+                  <text class="cr-data-label">{{dp.label}}</text>
+                  <text class="cr-data-value">{{dp.value}}</text>
+                  <text class="cr-data-ref">{{dp.ref}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="cr-detail-block" wx:if="{{item.suggestions && item.suggestions.length > 0}}">
+              <text class="cr-detail-label">💡 改善建议</text>
+              <view class="cr-suggestion" wx:for="{{item.suggestions}}" wx:for-item="sug" wx:key="*this">
+                <text>· {{sug}}</text>
+              </view>
+            </view>
+            <view class="cr-link" catchtap="gotoRiskTrend" data-id="{{item.id}}">
+              <text>{{item.linkText}}</text>
+              <text class="cr-link-arrow">→</text>
             </view>
           </view>
         </view>
-        <text class="cycle-recovery-text">身体恢复至{{cycle.bodyRecovery}}%，精神恢复至{{cycle.mindRecovery}}%</text>
-      </view>
-    </view>
-  </view>
+      </block>
 
-  <view class="card">
-    <view class="fold-head" bindtap="toggleBreathing">
-      <view class="section-title">🌬️ 呼吸健康</view>
-      <text class="fold-action">{{showBreathing ? '收起' : '展开'}}</text>
-    </view>
-    <view class="sub-title">整夜呼吸节奏稳定，AHI指数保持健康区间</view>
-    <block wx:if="{{showBreathing}}">
-      <view class="metric-grid">
-        <view class="metric-box" wx:for="{{breathingCards}}" wx:key="label">
-          <view class="m-label">{{item.label}}</view>
-          <view class="m-value">{{item.value}}</view>
-          <view class="m-level">{{item.level}}</view>
-        </view>
-      </view>
-      <view class="mini-title">呼吸频率（次每分钟）</view>
-      <canvas type="2d" id="breathingTrend" class="chart-sm"></canvas>
-      <view class="trend-axis">
-        <text wx:for="{{trendTimeTicks}}" wx:key="index">{{item}}</text>
-      </view>
-    </block>
-  </view>
-
-  <!-- ★ 心脏健康卡片（包含指数仪表 + 四指标） -->
-  <view class="card heart-main-card">
-    <!-- 心脏健康指数仪表（卡片顶部） -->
-    <view class="hp-score-inline">
-      <view class="hp-score-head">
-        <text class="hp-score-label">心脏健康指数</text>
-        <text class="hp-score-pill {{heartIndexLevel === '优秀' ? 'ok' : 'normal'}}">{{heartIndexLevel}}</text>
-      </view>
-      <view class="hp-score-display">
-        <text class="hp-score-value">{{heartIndexValue}}</text>
-        <text class="hp-score-unit">分</text>
-      </view>
-      <view class="hp-score-bar-wrap">
-        <view class="hp-score-bar">
-          <view class="hp-score-bar-fill" style="width: {{heartIndexValue}}%;"></view>
-          <view class="hp-score-ticks">
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
-            <text class="hp-tick"></text>
+      <!-- (旧聚合卡：保留 wx:if=false 容器避免破坏 normal-group class 依赖) -->
+      <view
+        class="cardiac-risk-card normal-group {{showNormalGroup ? 'expanded' : ''}}"
+        wx:if="{{false}}"
+        bindtap="toggleNormalGroup"
+        hover-class="cr-hover"
+        hover-stay-time="100"
+      >
+        <view class="cr-head">
+          <text class="cr-icon">🟢</text>
+          <view class="cr-text">
+            <text class="cr-title">正常项目</text>
+            <text class="cr-summary">{{normalRisks.length}} 项指标未见心肺疾病风险</text>
           </view>
+          <text class="cr-arrow">{{showNormalGroup ? '▲' : '▼'}}</text>
         </view>
-        <view class="hp-score-marker" style="left: {{heartIndexValue}}%;"></view>
+        <view class="cr-body" wx:if="{{showNormalGroup}}" catchtap="">
+          <block wx:for="{{normalRisks}}" wx:for-item="ng" wx:key="id">
+            <view class="normal-sub-item">
+              <view class="ng-head">
+                <text class="ng-title">{{ng.icon}} {{ng.title}}</text>
+                <text class="ng-summary">{{ng.summary}}</text>
+              </view>
+              <view class="cr-disease-tags" wx:if="{{ng.diseaseTags && ng.diseaseTags.length > 0}}">
+                <text class="cr-disease-tags-label">关联疾病：</text>
+                <text class="cr-disease-tag" wx:for="{{ng.diseaseTags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+              </view>
+              <view class="cr-detail-block" wx:if="{{ng.assessment}}">
+                <text class="cr-detail-label">📊 数据解读</text>
+                <text class="cr-detail-text">{{ng.assessment}}</text>
+              </view>
+              <view class="cr-data-list" wx:if="{{ng.dataPoints && ng.dataPoints.length > 0}}">
+                <view class="cr-data-row {{dp.status}}" wx:for="{{ng.dataPoints}}" wx:for-item="dp" wx:key="label">
+                  <text class="cr-data-label">{{dp.label}}</text>
+                  <text class="cr-data-value">{{dp.value}}</text>
+                  <text class="cr-data-ref">{{dp.ref}}</text>
+                </view>
+              </view>
+              <view class="cr-detail-block" wx:if="{{ng.suggestions && ng.suggestions.length > 0}}">
+                <text class="cr-detail-label">💡 改善建议</text>
+                <view class="cr-suggestion" wx:for="{{ng.suggestions}}" wx:for-item="sug" wx:key="*this">
+                  <text>· {{sug}}</text>
+                </view>
+              </view>
+              <view class="cr-link" catchtap="gotoRiskTrend" data-id="{{ng.id}}">
+                <text>{{ng.linkText}}</text>
+                <text class="cr-link-arrow">→</text>
+              </view>
+            </view>
+          </block>
+        </view>
       </view>
-      <view class="hp-score-labels">
+    </view>
+
+    <!-- 2. 今日心脏打卡 3 项（高度关联心脏 + 当日可执行） -->
+    <view class="today-checkins">
+      <view class="today-checkins-head">
+        <text class="tc-head-emoji">💡</text>
+        <text class="tc-head-text">今日建议打卡</text>
+        <text class="tc-head-deadline">截至今晚 12:00</text>
+      </view>
+      <view
+        class="today-checkin-item {{item.checked ? 'checked' : ''}}"
+        hover-class="today-checkin-item-hover"
+        hover-stay-time="120"
+        wx:for="{{todayCheckIns}}"
+        wx:key="id"
+        bindtap="toggleTodayCheckIn"
+        data-id="{{item.id}}"
+      >
+        <text class="tc-item-emoji">{{item.emoji}}</text>
+        <view class="tc-item-text">
+          <text class="tc-item-title">{{item.title}}</text>
+          <text class="tc-item-sub">{{item.sub}}</text>
+        </view>
+        <view class="tc-check-box">
+          <text class="tc-check-icon" wx:if="{{item.checked}}">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ★ 心脏具体数据（默认折叠：展开查看心率折线图 + 心动图） -->
+  <view class="card heart-main-card">
+    <view class="card-header" bindtap="toggleHeart">
+      <view class="card-title">
+        <text class="card-title-emoji">❤️</text>
+        <text class="card-title-text">心脏具体数据</text>
+      </view>
+      <text class="card-collapse-btn">{{showHeart ? '收起' : '展开'}}</text>
+    </view>
+
+    <view class="status-line" bindtap="toggleHeart">
+      <text class="sl-label">夜间心率</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">未见异常</text></view>
+      <text class="sl-divider">·</text>
+      <text class="sl-label">心动图</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">未见异常</text></view>
+    </view>
+
+    <!-- 展开内容：心脏健康指数 + 4 项核心指标 + 心率数据 + 心动图 -->
+    <block wx:if="{{showHeart}}">
+    <!-- 心脏健康指数渐变条 -->
+    <view class="hi-compact heart-detail-gauge">
+      <view class="hi-compact-title-row">
+        <text class="hi-compact-title">心脏健康指数</text>
+        <view class="status-pill normal mini">
+          <text class="pill-icon">✅</text>
+          <text class="pill-text">{{heartIndexLevel}}</text>
+        </view>
+      </view>
+      <view class="hi-gauge-wrap">
+        <view class="hi-bar">
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+        </view>
+        <view class="hi-pointer" style="left: {{heartIndexValue}}%;">
+          <view class="hi-ptr-line"></view>
+          <view class="hi-ptr-circle"></view>
+        </view>
+      </view>
+      <view class="hi-legend">
         <text>需要关注</text>
         <text>正常</text>
         <text>优秀</text>
       </view>
     </view>
 
-    <!-- 分割线 -->
-    <view class="card-divider"></view>
-
-    <!-- 心脏健康指标部分 -->
-    <view class="card-header">
-      <view class="card-title">
-        <text class="card-title-emoji">❤️</text>
-        <text class="card-title-text">心脏健康</text>
+    <!-- 4 项核心心脏指标 -->
+    <view class="metrics-grid-2x2 heart-detail-metrics">
+      <view class="metric-box" wx:for="{{heartCards}}" wx:key="label">
+        <view class="metric-name">{{item.label}}</view>
+        <view class="metric-number">{{item.value}}</view>
+        <view class="metric-note">{{item.level}}</view>
       </view>
-      <text class="card-collapse-btn" bindtap="toggleHeart">{{showHeart ? '收起' : '展开'}}</text>
     </view>
-    <view class="card-subtitle">整夜心率平稳，心脏休息充分，自主神经调节表现良好</view>
-    
-    <block wx:if="{{showHeart}}">
-      <view class="metrics-grid-2x2">
-        <view class="metric-box" wx:for="{{heartCards}}" wx:key="label">
-          <view class="metric-name">{{item.label}}</view>
-          <view class="metric-number">{{item.value}}</view>
-          <view class="metric-note">{{item.level}}</view>
-        </view>
-      </view>
     </block>
   </view>
 
-  <!-- ★ 3. 心率数据卡 -->
+  <!-- 心率数据卡 -->
   <view class="card heart-rate-card" wx:if="{{showHeart}}">
     <view class="card-title-row">
       <text class="card-title-bold">心率数据</text>
@@ -293,7 +341,7 @@
     </view>
 
     <canvas type="2d" id="heartTrendChart" class="trend-chart"></canvas>
-    
+
     <view class="chart-axis-labels">
       <text>01:00</text>
       <text>03:00</text>
@@ -317,7 +365,7 @@
     </view>
   </view>
 
-  <!-- ★ 4. 心动图卡 -->
+  <!-- 心动图卡 -->
   <view class="card ecg-card" wx:if="{{showHeart}}">
     <view class="card-title-row">
       <text class="card-title-bold">心动图</text>
@@ -328,7 +376,7 @@
     </view>
 
     <canvas type="2d" id="ecgChart" class="ecg-waveform"></canvas>
-    
+
     <view class="ecg-axis-labels">
       <text>0s</text>
       <text>1s</text>
@@ -353,17 +401,271 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="fold-head" bindtap="toggleMovement">
-      <view class="section-title">🏃 体动健康</view>
-      <text class="fold-action">{{showMovement ? '收起' : '展开'}}</text>
+  <!-- ★ 呼吸健康主卡（状态行常驻，详情折叠） -->
+  <view class="card heart-main-card">
+    <view class="card-header">
+      <view class="card-title">
+        <text class="card-title-emoji">🌬️</text>
+        <text class="card-title-text">呼吸健康</text>
+      </view>
+      <text class="card-collapse-btn" bindtap="toggleBreathing">{{showBreathing ? '收起' : '展开'}}</text>
     </view>
-    <view class="sub-title">体动与翻身节律整体稳定，后半夜翻身略有增加</view>
-    <block wx:if="{{showMovement}}">
+
+    <view class="status-line">
+      <text class="sl-label">健康指数</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">优秀</text></view>
+      <text class="sl-divider">·</text>
+      <text class="sl-label">呼吸暂停</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">未见异常</text></view>
+    </view>
+  </view>
+
+  <!-- 呼吸健康详情卡（默认折叠：渐变条 + 暂停统计 + 详细分析） -->
+  <view class="card ecg-card" wx:if="{{showBreathing}}">
+    <!-- 呼吸健康指数渐变条（详情区顶部） -->
+    <view class="hi-compact breath-overview-gauge">
+      <view class="hi-compact-title-row">
+        <text class="hi-compact-title">呼吸健康指数</text>
+        <view class="status-pill normal mini">
+          <text class="pill-icon">✅</text>
+          <text class="pill-text">{{breathHealthLabel}}</text>
+        </view>
+      </view>
+      <view class="hi-gauge-wrap">
+        <view class="hi-bar">
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+          <view class="hi-tick"></view>
+        </view>
+        <view class="hi-pointer" style="left: {{breathHealthValue}}%;">
+          <view class="hi-ptr-line"></view>
+          <view class="hi-ptr-circle"></view>
+        </view>
+      </view>
+      <view class="hi-legend">
+        <text>需要关注</text>
+        <text>正常</text>
+        <text>优秀</text>
+      </view>
+    </view>
+
+    <!-- 呼吸暂停三项统计 -->
+    <view class="breath-stats-row">
+      <view class="breath-stat-item highlight">
+        <view class="breath-stat-num">{{breathApneaStats.count}}<text class="breath-stat-unit">次</text></view>
+        <view class="breath-stat-label">呼吸暂停</view>
+      </view>
+      <view class="breath-stat-divider"></view>
+      <view class="breath-stat-item">
+        <view class="breath-stat-num">{{breathApneaStats.longest}}<text class="breath-stat-unit">秒</text></view>
+        <view class="breath-stat-label">最长呼吸暂停</view>
+      </view>
+      <view class="breath-stat-divider"></view>
+      <view class="breath-stat-item">
+        <view class="breath-stat-num">{{breathApneaStats.average}}<text class="breath-stat-unit">秒</text></view>
+        <view class="breath-stat-label">平均呼吸暂停</view>
+      </view>
+    </view>
+
+    <view class="analysis-box orange-variant">
+      <text class="analysis-headline">
+        夜间共记录到 <text class="bold">{{breathApneaStats.count}}次</text> 呼吸暂停事件，最长持续 <text class="bold">{{breathApneaStats.longest}}秒</text>。
+      </text>
+      <view class="analysis-list">
+        <view class="analysis-bullet">
+          <text class="bullet-dot orange">●</text>
+          <text class="bullet-text">同龄健康人群夜间平均呼吸暂停次数为 <text class="bold">3-8 次</text>，你处于正常区间，AHI 指数约为 1.0，属于轻微范围。</text>
+        </view>
+        <view class="analysis-bullet">
+          <text class="bullet-dot orange">●</text>
+          <text class="bullet-text">最长 17 秒已超过 10 秒观察阈值，单次不构成风险，但若连续 ≥3 天出现 ≥15 秒事件，建议关注睡姿与是否存在轻度气道阻塞。</text>
+        </view>
+        <view class="analysis-bullet">
+          <text class="bullet-dot orange">●</text>
+          <text class="bullet-text">暂停事件未集中出现在深睡阶段，对夜间心脏负荷影响有限，整体呼吸健康表现良好。</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 呼吸频率卡 -->
+  <view class="card heart-rate-card" wx:if="{{showBreathing}}">
+    <view class="card-title-row">
+      <text class="card-title-bold">呼吸频率</text>
+      <view class="chart-range">
+        <text class="range-unit">平均</text>
+        <text class="range-number">{{breathAvgRate}}</text>
+        <text class="range-unit">次/分钟</text>
+      </view>
+    </view>
+
+    <canvas type="2d" id="breathingTrend" class="trend-chart"></canvas>
+
+    <view class="chart-axis-labels">
+      <text wx:for="{{breathTimeTicks}}" wx:key="index">{{item}}</text>
+    </view>
+
+    <view class="analysis-box blue-variant">
+      <text class="analysis-headline">
+        整夜呼吸频率维持在 <text class="bold">{{breathRateRangeText}}</text> 次/分钟，平均 <text class="bold">{{breathAvgRate}}</text> 次，处于健康成人参考区间（12-20次/分钟）。
+      </text>
+      <view class="analysis-list">
+        <view class="analysis-bullet">
+          <text class="bullet-dot">●</text>
+          <text class="bullet-text">曲线整体平稳，未见骤升骤降，提示夜间呼吸节律稳定，气道通畅度良好。</text>
+        </view>
+        <view class="analysis-bullet">
+          <text class="bullet-dot">●</text>
+          <text class="bullet-text">凌晨 3-4 点与 7 点出现两次轻度波动，与睡眠周期切换吻合，属于正常生理反应。</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 🛌 睡眠健康（双环常驻 + 详情折叠） -->
+  <view class="card">
+    <view class="fold-head" bindtap="toggleSleepHealth">
+      <view class="section-title">🛌 睡眠健康</view>
+      <text class="fold-action">{{showSleepHealth ? '收起' : '展开'}}</text>
+    </view>
+
+    <!-- 状态行常驻（一行排满 时长/深睡/翻身 三项） -->
+    <view class="status-line status-line--one-row">
+      <text class="sl-label">时长</text>
+      <text class="sl-value">8h36m</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">足够</text></view>
+      <text class="sl-divider">·</text>
+      <text class="sl-label">深睡</text>
+      <text class="sl-value">18%</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">充足</text></view>
+      <text class="sl-divider">·</text>
+      <text class="sl-label">翻身</text>
+      <text class="sl-value">{{movementCount}}次</text>
+      <view class="status-pill warning mini"><text class="pill-icon">⚠️</text><text class="pill-text">较多</text></view>
+    </view>
+
+    <block wx:if="{{showSleepHealth}}">
+      <!-- 详情顶部：身体 + 精神 双环 -->
+      <view class="recovery-rings-row">
+        <view class="recovery-ring-box body">
+          <view class="recovery-ring-outer">
+            <view class="recovery-ring" style="background: conic-gradient(from -90deg, #1f8a6f 0deg, #4cd964 {{recoveryScores.body.score * 3.6}}deg, #ebf4ef {{recoveryScores.body.score * 3.6}}deg, #ebf4ef 360deg);">
+              <view class="ring-inner">
+                <text class="ring-score">{{recoveryScores.body.score}}</text>
+                <text class="ring-unit">/ 100</text>
+              </view>
+            </view>
+          </view>
+          <text class="ring-label">身体恢复度</text>
+          <view class="ring-status-pill">
+            <text>{{recoveryScores.body.label}}</text>
+          </view>
+        </view>
+        <view class="recovery-ring-box mind">
+          <view class="recovery-ring-outer">
+            <view class="recovery-ring" style="background: conic-gradient(from -90deg, #3aa0e2 0deg, #6c8cff {{recoveryScores.mind.score * 3.6}}deg, #eaeef7 {{recoveryScores.mind.score * 3.6}}deg, #eaeef7 360deg);">
+              <view class="ring-inner">
+                <text class="ring-score">{{recoveryScores.mind.score}}</text>
+                <text class="ring-unit">/ 100</text>
+              </view>
+            </view>
+          </view>
+          <text class="ring-label">精神恢复度</text>
+          <view class="ring-status-pill">
+            <text>{{recoveryScores.mind.label}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 核心睡眠数据 5 项 -->
+      <view class="core-metrics-grid">
+        <view class="core-metric" wx:for="{{coreSleepMetrics}}" wx:key="label">
+          <text class="core-metric-label">{{item.label}}</text>
+          <view class="core-metric-value-wrap">
+            <text class="core-metric-value">{{item.value}}</text>
+            <text class="core-metric-unit" wx:if="{{item.unit}}">{{item.unit}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 今晚医学建议 2 项 -->
+      <view class="sleep-suggestion-grid">
+        <view class="sleep-suggestion" wx:for="{{sleepSuggestions}}" wx:key="label">
+          <text class="ss-icon">{{item.icon}}</text>
+          <view class="ss-text">
+            <text class="ss-label">{{item.label}}</text>
+            <text class="ss-value">{{item.value}}</text>
+            <text class="ss-sub">{{item.sub}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 睡眠分期 -->
+      <view class="sleep-section-title sleep-section-title--first">🛏️ 睡眠分期</view>
+      <view class="sub-title">{{phaseSummary}}</view>
+      <view class="sleep-phase-card-inner">
+        <view class="time-row phase-time-row">
+          <text>{{sleepPhaseMeta.startLabel}}</text>
+          <text>{{sleepPhaseMeta.endLabel}}</text>
+        </view>
+        <canvas type="2d" id="sleepCycle" class="chart-lg phase-chart"></canvas>
+        <view class="phase-time-axis">
+          <text
+            wx:for="{{phaseTimeTicks}}"
+            wx:key="index"
+            class="phase-time-tick"
+          >
+            {{item.label}}
+          </text>
+        </view>
+        <view class="phase-legend-grid">
+          <view
+            class="phase-legend-item {{activeStageKey === item.key ? 'active' : ''}} {{activeStageKey && activeStageKey !== item.key ? 'inactive' : ''}}"
+            wx:for="{{phaseLegend}}"
+            wx:key="key"
+            bindtap="onTapStageLegend"
+            data-key="{{item.key}}"
+          >
+            <text class="phase-dot" style="background: {{item.color}};"></text>
+            <text class="phase-text">{{item.label}} {{item.duration}} <text class="phase-pct">{{item.pct}}</text></text>
+          </view>
+        </view>
+
+        <view class="cycle-analysis-wrap">
+          <view class="cycle-analysis-title">睡眠循环与累计恢复分析</view>
+          <view class="cycle-item" wx:for="{{sleepCycles}}" wx:key="index" wx:for-item="cycle">
+            <text class="cycle-item-title">第{{cycle.index}}个循环（{{cycle.start}} - {{cycle.end}}）</text>
+            <view class="cycle-segment-row">
+              <view class="cycle-segment-track">
+                <view
+                  class="cycle-segment"
+                  wx:for="{{cycle.segments}}"
+                  wx:key="key"
+                  wx:for-item="seg"
+                  style="width: {{seg.pct}}%; background: {{seg.color}};"
+                >
+                  <text class="cycle-segment-text">{{seg.displayText}}</text>
+                </view>
+              </view>
+            </view>
+            <text class="cycle-recovery-text">身体恢复至{{cycle.bodyRecovery}}%，精神恢复至{{cycle.mindRecovery}}%</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 体动健康 -->
+      <view class="sleep-section-title">🏃 体动健康</view>
+      <view class="sub-title">体动与翻身节律整体稳定，后半夜翻身略有增加</view>
       <view class="movement-head">
         <view class="movement-title-wrap">
           <text class="movement-title">体动数据</text>
-          <text class="movement-help">ⓘ</text>
         </view>
         <view class="movement-count-wrap">
           <text class="movement-count-label">翻身</text>
@@ -388,15 +690,40 @@
     </block>
   </view>
 
+  <!-- 声音监测（状态行常驻，详情折叠） -->
   <view class="card">
-    <view class="fold-head">
+    <view class="fold-head" bindtap="toggleAdvanced">
       <view class="section-title">🔊 声音监测</view>
-      <text class="expand-link" bindtap="toggleAdvanced">{{showAdvanced ? '收起声音专业监测数据' : '展开查看声音专业监测数据'}} →</text>
+      <text class="fold-action">{{showAdvanced ? '收起' : '展开'}}</text>
     </view>
-    <view class="sub-title">查看更细粒度的声音事件与睡眠联动分析</view>
+    <view class="status-line">
+      <text class="sl-label">鼾声</text>
+      <text class="sl-value">3次</text>
+      <view class="status-pill normal mini"><text class="pill-icon">✅</text><text class="pill-text">较少</text></view>
+      <text class="sl-divider">·</text>
+      <text class="sl-label">梦话</text>
+      <text class="sl-value">4次</text>
+      <view class="status-pill warning mini"><text class="pill-icon">⚠️</text><text class="pill-text">较多</text></view>
+      <text class="sl-divider">·</text>
+      <text class="sl-label">噪音峰值</text>
+      <text class="sl-value">62dB</text>
+      <view class="status-pill orange mini"><text class="pill-icon">🔸</text><text class="pill-text">偏高</text></view>
+    </view>
   </view>
 
   <block wx:if="{{showAdvanced}}">
+    <!-- 非会员示例数据提示横幅 -->
+    <view class="sound-demo-banner" wx:if="{{!isMember}}" bindtap="openSoundPaywall">
+      <view class="sdb-left">
+        <text class="sdb-icon">✨</text>
+        <view class="sdb-text">
+          <text class="sdb-title">以下为示例数据</text>
+          <text class="sdb-sub">开通会员后查看你的真实声音监测数据</text>
+        </view>
+      </view>
+      <text class="sdb-cta">开通会员 ›</text>
+    </view>
+
     <view class="card">
       <view class="section-title">🔊 睡眠声音监测 · 进阶分析版</view>
       <view class="sub-title">与硬件睡眠监测同步启停，所有声音仅本地识别，不上传任何原始录音，全力保护隐私</view>
@@ -407,19 +734,20 @@
       <view class="tip">* 仅睡眠时段启用麦克风，锁屏后台可正常运行，原始音频100%留存用户本地</view>
     </view>
 
+    <!-- 声音监测 8 项指标（2 列网格，前 3 项可点击查看录音） -->
     <view class="card">
-      <view class="metric-grid">
-        <view class="metric-box" wx:for="{{soundEnvCards}}" wx:key="label">
-          <view class="m-label">{{item.label}}</view>
-          <view class="m-value">{{item.value}}</view>
-          <view class="m-level">{{item.level}}</view>
-        </view>
-      </view>
-      <view class="metric-grid mt12">
-        <view class="metric-box" wx:for="{{soundEventCards}}" wx:key="label">
-          <view class="m-label">{{item.label}}</view>
-          <view class="m-value">{{item.value}}</view>
-          <view class="m-level">{{item.level}}</view>
+      <view class="sound-grid">
+        <view
+          class="sound-box {{item.tappable ? 'tappable' : ''}}"
+          wx:for="{{soundCards}}"
+          wx:key="key"
+          bindtap="openSoundDetail"
+          data-key="{{item.key}}"
+        >
+          <view class="sb-label">{{item.label}}</view>
+          <view class="sb-value">{{item.value}}</view>
+          <view class="sb-level">{{item.level}}</view>
+          <view class="sb-hint" wx:if="{{item.tappable}}">▶ 点击查看声音数据</view>
         </view>
       </view>
     </view>
@@ -450,10 +778,6 @@
       <view class="list-item">1. 针对交通噪音：建议关闭卧室窗户，或使用隔音耳塞</view>
       <view class="list-item">2. 针对轻度鼾声：优先采用侧卧位，减少气道阻塞</view>
       <view class="list-item">3. 长期优化：固定睡前10分钟关闭门窗，营造稳定安静睡眠环境</view>
-      <view class="link-row">
-        <text>查看近1个月声音健康趋势 →</text>
-        <text>查看异常声音完整记录 →</text>
-      </view>
       <view class="sound-collapse-row in-improve-card">
         <view class="sound-collapse-btn" bindtap="toggleAdvanced">
           <text class="sound-collapse-icon {{showAdvanced ? 'expanded' : ''}}">▼</text>
@@ -462,28 +786,75 @@
     </view>
   </block>
 
-  <view class="card end-card">
-    <view class="section-title">⚠️ 风险提示</view>
-    <view class="risk-item">1. 入睡时间轻微延长：入睡耗时31分钟（超过30分钟），属于入睡潜伏期偏长，可能影响整体睡眠效率，与睡前状态或活动有关。</view>
-    <view class="risk-item">2. 呼吸暂停需关注：最长呼吸暂停时长为13秒（超过10秒的观察阈值），虽然整体暂停频率在正常范围，但需要持续留意是否有加重趋势。</view>
-    <view class="risk-item">3. 睡眠时长略超上限：总睡眠时长8小时36分，略超出成人推荐的7-9小时范围上限，可能带来晨起昏沉感（因人而异）。</view>
+  <!-- 声音录音弹窗（点击鼾声/梦话/咳嗽 类卡片时打开） -->
+  <view class="sound-modal" wx:if="{{soundDetailModal.visible}}" catchtap="closeSoundDetail">
+    <view class="sound-modal-card" catchtap="">
+      <view class="sm-head">
+        <text class="sm-title">{{soundDetailModal.title}}</text>
+        <text class="sm-close" bindtap="closeSoundDetail">✕</text>
+      </view>
+      <view class="sm-body">
+        <block wx:if="{{soundDetailModal.recordings.length === 0}}">
+          <view class="sm-empty">本时段未记录到对应声音</view>
+        </block>
+        <block wx:else>
+          <view
+            class="sm-rec-item"
+            wx:for="{{soundDetailModal.recordings}}"
+            wx:key="time"
+          >
+            <view class="sm-rec-left">
+              <text class="sm-rec-time">{{item.time}}</text>
+              <text class="sm-rec-label">{{item.label}} · {{item.durationSec}}秒</text>
+            </view>
+            <view class="sm-rec-play" bindtap="playSoundClip" data-time="{{item.time}}">
+              <text class="sm-rec-play-icon">▶</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
   </view>
 
-  <view class="card end-card">
-    <view class="section-title">💡 改进建议</view>
-    <view class="advice-item">1. 优化入睡效率</view>
-    <view class="advice-sub">- 睡前1小时避免使用手机、电脑等蓝光设备。</view>
-    <view class="advice-sub">- 可通过阅读、冥想等方式放松，缩短入睡时间。</view>
-
-    <view class="advice-item">2. 呼吸暂停相关建议</view>
-    <view class="advice-sub">- 优先采用侧卧睡姿，减少气道阻塞风险。</view>
-    <view class="advice-sub">- 避免睡前饮酒、服用镇静类药物。</view>
-    <view class="advice-sub">- 若每周出现≥3次鼾声中断、或白天嗜睡乏力，需就医排查睡眠呼吸暂停综合征。</view>
-
-    <view class="advice-item">3. 作息微调</view>
-    <view class="advice-sub">- 若晨起无疲劳感，可保持当前作息；若感觉懒散昏沉，可尝试提前30分钟起床，避免睡眠过量。</view>
-
-    <view class="advice-item">4. 长期健康追踪</view>
-    <view class="advice-sub">- 定期记录呼吸暂停频率、心率变化趋势，若出现异常波动，及时咨询医生。</view>
+  <!-- ============================================== -->
+  <!-- 付费弹窗（声音监测触发，与长期页共用样式）        -->
+  <!-- ============================================== -->
+  <view class="pw-mask" wx:if="{{paywall.visible}}" catchtap="closePaywall">
+    <view class="pw-card" catchtap="">
+      <view class="pw-header">
+        <view class="pw-icon-circle">{{paywall.icon}}</view>
+        <view class="pw-title">{{paywall.title}}</view>
+        <view class="pw-sub">{{paywall.sub}}</view>
+      </view>
+      <view class="pw-body">
+        <view class="pw-feature" wx:for="{{paywall.features}}" wx:key="title">
+          <view class="pw-feature-icon">{{item.icon}}</view>
+          <view class="pw-feature-text">
+            <view class="pw-feature-title">{{item.title}}</view>
+            <view class="pw-feature-sub">{{item.sub}}</view>
+          </view>
+        </view>
+        <view class="pw-price-row">
+          <view class="pw-price-card recommended" bindtap="paywallSubscribeYearly">
+            <view class="pw-price-badge">⭐ 限时新人价</view>
+            <view class="pw-price-name">年付</view>
+            <view class="pw-price-num">¥98</view>
+            <view class="pw-price-orig">原价 ¥168</view>
+            <view class="pw-price-equiv">约 ¥8.2 / 月</view>
+          </view>
+          <view class="pw-price-card" bindtap="paywallSubscribeMonthly">
+            <view class="pw-price-name">月付</view>
+            <view class="pw-price-num">¥19.9</view>
+            <view class="pw-price-orig">&nbsp;</view>
+            <view class="pw-price-equiv">/ 月</view>
+          </view>
+        </view>
+      </view>
+      <view class="pw-actions">
+        <view class="pw-btn-primary" bindtap="paywallTrial">🎁 立即开启 7 天免费试用</view>
+        <view class="pw-btn-ghost" bindtap="closePaywall">暂不开通</view>
+      </view>
+    </view>
   </view>
+
 </view>

@@ -1,103 +1,414 @@
-.page { padding: 16rpx 18rpx 56rpx; background: #f4fbf9; min-height: 100vh; }
-.card { background:#fff; border-radius:18rpx; padding:20rpx; margin-bottom:14rpx; box-shadow:0 4rpx 14rpx rgba(37,114,93,0.06); }
-.section-title { font-size:28rpx; font-weight:700; color:#1f443c; margin-bottom:10rpx; }
-
-.overview-card { background: linear-gradient(145deg,#ecfaf5 0%,#fff 70%); }
-.overview-head { display:flex; align-items:center; justify-content:space-between; }
-.overview-title { font-size:30rpx; color:#1f8a6f; font-weight:700; }
-.overview-summary { margin-top: 8rpx; font-size:24rpx; color:#4f7269; line-height:1.55; }
-
-.risk-group-card { border:1rpx solid #e2eee9; border-radius:12rpx; margin-top:10rpx; overflow:hidden; }
-.risk-group-head { display:flex; align-items:center; gap:10rpx; padding:12rpx; background:#fbfefd; }
-.risk-level-tag { font-size:20rpx; color:#fff; border-radius:999rpx; padding:4rpx 12rpx; flex-shrink:0; }
-.risk-group-card.level-mild .risk-level-tag { background:#4caf50; }
-.risk-group-card.level-moderate .risk-level-tag { background:#ff9800; }
-.risk-group-card.level-severe .risk-level-tag { background:#ef5350; }
-.risk-head-text { flex:1; font-size:22rpx; color:#466a61; line-height:1.45; }
-.risk-toggle { font-size:20rpx; color:#1f8a6f; }
-
-.risk-group-body { padding:10rpx 12rpx 12rpx; border-top:1rpx solid #edf5f2; }
-.risk-factor-line { display:flex; flex-wrap:wrap; gap:8rpx; }
-.risk-factor-chip { font-size:19rpx; color:#5d7f76; background:#f0f7f4; border-radius:999rpx; padding:4rpx 10rpx; }
-.risk-evidence-link { margin-top:10rpx; font-size:21rpx; color:#1f8a6f; }
-
-.action-item { margin-top:10rpx; display:flex; align-items:flex-start; gap:10rpx; }
-.action-checkbox {
-  width:32rpx;
-  height:32rpx;
-  line-height:32rpx;
-  border:2rpx solid #c8ddd7;
-  border-radius:8rpx;
-  text-align:center;
-  font-size:21rpx;
-  color:#fff;
-  flex-shrink:0;
-  margin-top:2rpx;
-}
-.action-checkbox.checked { background:#1f8a6f; border-color:#1f8a6f; }
-.action-text { font-size:23rpx; color:#3f645b; line-height:1.55; }
-.action-text.done { color:#89a39d; text-decoration: line-through; }
-
-.upgrade-tip {
-  margin-top: 4rpx;
-  padding: 8rpx 6rpx;
-  text-align:center;
-  color:#7e9790;
-  font-size:20rpx;
+.page {
+  padding: 16rpx 18rpx 56rpx;
+  background: #f4fbf9;
+  min-height: 100vh;
 }
 
-.heart-health-card { padding-bottom: 22rpx; }
-.heart-block-title {
+/* ========== 顶部进度卡 ========== */
+.progress-card {
+  background: linear-gradient(135deg, #e9f7ef 0%, #f4faf3 100%);
+  border-radius: 18rpx;
+  padding: 24rpx 22rpx 20rpx;
+  margin-bottom: 18rpx;
+  border: 1rpx solid #d6ecde;
+}
+
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14rpx;
+}
+
+.progress-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.progress-icon {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.progress-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1a4a3a;
+}
+
+.progress-count {
+  display: flex;
+  align-items: baseline;
+}
+
+.progress-done {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1d8a5c;
+  line-height: 1;
+}
+
+.progress-total {
+  font-size: 24rpx;
+  color: #6a857a;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12rpx;
+  background: rgba(127, 212, 179, 0.25);
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4cd964 0%, #1d8a5c 100%);
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-sub {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #5d7770;
+}
+
+/* ========== 板块标题 ========== */
+.section-head-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin: 22rpx 4rpx 14rpx;
+}
+
+.section-head-spaced {
+  margin-top: 32rpx;
+}
+
+.section-emoji {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.section-head-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a4a3a;
+}
+
+.section-head-sub {
+  margin-left: auto;
+  font-size: 20rpx;
+  color: #8aa39c;
+}
+
+/* ========== 风险卡 ========== */
+.risk-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 12rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+  border-left: 6rpx solid #d8e2dd;
+}
+
+.risk-card.severity-warn {
+  border-left-color: #e8b653;
+}
+
+.risk-card.severity-alert {
+  border-left-color: #d85a30;
+}
+
+.risk-card.severity-info {
+  border-left-color: #6ba8d5;
+}
+
+.risk-head {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.risk-severity-icon {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.risk-title {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f443c;
+}
+
+.risk-arrow {
+  font-size: 22rpx;
+  color: #6e837b;
+}
+
+/* 内部分块 */
+.risk-block {
+  margin-top: 16rpx;
+  padding: 14rpx 14rpx;
+  background: #f8fcfb;
+  border-radius: 10rpx;
+}
+
+.risk-block-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #1f443c;
+  margin-bottom: 10rpx;
+}
+
+.risk-data-line {
+  display: flex;
+  align-items: baseline;
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
+.risk-data-arrow {
+  color: #1d8a5c;
+  margin-right: 6rpx;
+  font-size: 20rpx;
+}
+
+.risk-data-label {
+  color: #5d7770;
+}
+
+.risk-data-value {
+  color: #1f443c;
+  font-weight: 600;
+  margin-left: 4rpx;
+}
+
+.risk-long-intro {
+  font-size: 23rpx;
+  color: #4f6c63;
+  line-height: 1.6;
+  margin-bottom: 8rpx;
+}
+
+.risk-long-bullet {
+  display: flex;
+  align-items: baseline;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.risk-bullet-dot {
+  color: #c47d1c;
+  margin-right: 8rpx;
+  font-size: 20rpx;
+}
+
+.risk-bullet-text {
+  color: #4f6c63;
+  flex: 1;
+}
+
+.risk-source {
+  margin-top: 10rpx;
+  font-size: 19rpx;
+  color: #8aa39c;
+  font-style: italic;
+}
+
+.risk-evidence-link {
+  margin-top: 14rpx;
+  padding: 10rpx 0;
+  font-size: 23rpx;
+  color: #1d8a5c;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ========== 打卡分组 ========== */
+.checkin-group {
+  margin-bottom: 8rpx;
+}
+
+.checkin-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin: 14rpx 4rpx 10rpx;
+}
+
+.checkin-group-icon {
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.checkin-group-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #4a6058;
+}
+
+.checkin-group-divider {
+  flex: 1;
+  height: 1rpx;
+  background: #d8e2dd;
+  margin-left: 8rpx;
+}
+
+/* 打卡卡片 */
+.checkin-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 10rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid #ebf3ee;
+}
+
+.checkin-card.done {
+  background: #f3faf6;
+  border-color: #c4e6d2;
+}
+
+.checkin-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+
+.checkin-icon-wrap {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 14rpx;
+  background: #fbe4c4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkin-card.done .checkin-icon-wrap {
+  background: #c4e6d2;
+}
+
+.checkin-emoji {
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.checkin-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkin-title {
+  display: block;
   font-size: 28rpx;
   font-weight: 700;
   color: #1f443c;
   line-height: 1.4;
 }
-.heart-block-title-spaced { margin-top: 22rpx; }
-.heart-block-sub {
-  margin-top: 10rpx;
-  font-size: 22rpx;
-  color: #577970;
-  line-height: 1.55;
-}
-.heart-risk-item {
-  margin-top: 14rpx;
-  font-size: 23rpx;
-  color: #3f645b;
-  line-height: 1.58;
-}
-.heart-risk-num { font-weight: 700; color: #1f443c; }
-.heart-risk-strong { font-weight: 700; color: #1f443c; }
-.heart-risk-text { color: #4f7269; }
 
-.heart-advice-block { margin-top: 14rpx; }
-.heart-advice-heading {
-  font-size: 23rpx;
-  font-weight: 700;
-  color: #1f443c;
+.checkin-card.done .checkin-title {
+  color: #1d8a5c;
+}
+
+.checkin-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #6a857a;
   line-height: 1.45;
 }
-.heart-advice-line {
-  margin-top: 8rpx;
-  padding-left: 8rpx;
+
+.checkin-checkbox {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 2rpx solid #c8ddd7;
   display: flex;
-  align-items: flex-start;
-  gap: 4rpx;
-}
-.heart-advice-dash {
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
   flex-shrink: 0;
-  font-size: 22rpx;
-  color: #5d7f76;
+  background: #fff;
+}
+
+.checkin-checkbox.checked {
+  background: #1d8a5c;
+  border-color: #1d8a5c;
+}
+
+/* 已记录提示行 */
+.checkin-logged {
+  margin-top: 12rpx;
+  padding: 8rpx 12rpx;
+  background: #e3f3ea;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 21rpx;
+  color: #1d6e54;
+}
+
+.logged-dot {
+  color: #1d8a5c;
+  font-size: 16rpx;
+}
+
+.logged-text {
+  flex: 1;
+}
+
+/* 关联风险 + 预期改善 */
+.checkin-meta {
+  margin-top: 10rpx;
+  padding-top: 10rpx;
+  border-top: 1rpx dashed #e0ece7;
+}
+
+.meta-line {
+  display: flex;
+  align-items: baseline;
+  margin-top: 6rpx;
+  font-size: 21rpx;
   line-height: 1.55;
 }
-.heart-advice-text {
-  flex: 1;
-  font-size: 22rpx;
-  color: #4f7269;
-  line-height: 1.58;
+
+.meta-label {
+  flex-shrink: 0;
+  color: #8aa39c;
+  margin-right: 8rpx;
 }
-.heart-evidence-link {
-  margin-top: 16rpx;
+
+.meta-line.meta-benefit .meta-label {
+  color: #1d6e54;
+  font-weight: 600;
+}
+
+.meta-value {
+  color: #4f6c63;
+  flex: 1;
+}
+
+.meta-line.meta-benefit .meta-value {
+  color: #1d6e54;
+}
+
+/* 底部说明 */
+.footer-note {
+  margin-top: 24rpx;
+  padding: 16rpx 12rpx;
+  text-align: center;
+  color: #8aa39c;
   font-size: 21rpx;
-  color: #1f8a6f;
+  line-height: 1.7;
 }

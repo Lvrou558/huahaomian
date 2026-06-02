@@ -1,71 +1,127 @@
 <view class="page">
-  <view class="card overview-card">
-    <view class="overview-head">
-      <text class="overview-title">今夜风险：{{overviewRisk.level}}</text>
-    </view>
-    <view class="overview-summary">{{overviewRisk.summary}}</view>
-  </view>
-
-  <view class="card heart-health-card">
-    <view class="heart-block-title">⚠️ 心脏健康潜在关注项</view>
-    <view class="heart-block-sub">{{heartHealthIntro}}</view>
-    <view class="heart-risk-item" wx:for="{{heartRisks}}" wx:key="title">
-      <text class="heart-risk-num">{{index + 1}}.</text>
-      <text class="heart-risk-strong">{{item.title}}：</text>
-      <text class="heart-risk-text">{{item.detail}}</text>
-    </view>
-
-    <view class="heart-block-title heart-block-title-spaced">💡 心脏健康优化建议</view>
-    <view class="heart-advice-block" wx:for="{{heartAdviceBlocks}}" wx:key="heading">
-      <view class="heart-advice-heading">{{item.heading}}</view>
-      <view class="heart-advice-line" wx:for="{{item.bullets}}" wx:for-item="line" wx:key="*this">
-        <text class="heart-advice-dash">- </text>
-        <text class="heart-advice-text">{{line}}</text>
+  <!-- 顶部进度卡 -->
+  <view class="progress-card">
+    <view class="progress-head">
+      <view class="progress-title-wrap">
+        <text class="progress-icon">💚</text>
+        <text class="progress-title">今日建议打卡</text>
+      </view>
+      <view class="progress-count">
+        <text class="progress-done">{{progress.done}}</text>
+        <text class="progress-total"> / {{progress.total}}</text>
       </view>
     </view>
+    <view class="progress-bar">
+      <view class="progress-fill" style="width: {{progress.total > 0 ? (progress.done / progress.total * 100) : 0}}%;"></view>
+    </view>
+    <view class="progress-sub">已记录 {{progress.done}} 条 · {{progress.hint}}</view>
+  </view>
+
+  <!-- 风险提示板块 -->
+  <view class="section-head-row">
+    <text class="section-emoji">⚠️</text>
+    <text class="section-head-text">风险提示</text>
+    <text class="section-head-sub">心脏 · 呼吸 · 睡眠</text>
+  </view>
+
+  <view class="risk-card severity-{{item.severityKey}}" wx:for="{{riskCards}}" wx:key="id">
+    <view class="risk-head" bindtap="toggleRiskCard" data-id="{{item.id}}">
+      <text class="risk-severity-icon">{{item.severityIcon}}</text>
+      <text class="risk-title">{{item.title}}</text>
+      <text class="risk-arrow">{{item.expanded ? '▲' : '▼'}}</text>
+    </view>
+
+    <block wx:if="{{item.expanded}}">
+      <!-- 数据解读 -->
+      <view class="risk-block">
+        <view class="risk-block-title">📊 数据解读</view>
+        <view class="risk-data-line" wx:for="{{item.dataItems}}" wx:for-item="d" wx:key="label">
+          <text class="risk-data-arrow">▸</text>
+          <text class="risk-data-label">{{d.label}}：</text>
+          <text class="risk-data-value">{{d.value}}</text>
+        </view>
+      </view>
+
+      <!-- 长期风险因素 -->
+      <view class="risk-block">
+        <view class="risk-block-title">⏳ 长期风险因素</view>
+        <view class="risk-long-intro">{{item.longTermIntro}}</view>
+        <view class="risk-long-bullet" wx:for="{{item.longTermBullets}}" wx:for-item="b" wx:key="*this">
+          <text class="risk-bullet-dot">•</text>
+          <text class="risk-bullet-text">{{b}}</text>
+        </view>
+        <view class="risk-source">来源：{{item.source}}</view>
+      </view>
+
+      <!-- 长期页跳转 -->
+      <view
+        class="risk-evidence-link"
+        bindtap="onTapRiskEvidence"
+        data-module="{{item.linkTarget.module}}"
+        data-metric="{{item.linkTarget.metric}}"
+        catchtap="onTapRiskEvidence"
+      >
+        查看长期页「{{item.linkTarget.label}}」趋势 →
+      </view>
+    </block>
+  </view>
+
+  <!-- 今日打卡板块 -->
+  <view class="section-head-row section-head-spaced">
+    <text class="section-emoji">💚</text>
+    <text class="section-head-text">今日建议打卡</text>
+    <text class="section-head-sub">关联心率 · HRV · 睡眠质量</text>
+  </view>
+
+  <view class="checkin-group" wx:for="{{checkInGroups}}" wx:key="key">
+    <view class="checkin-group-head">
+      <text class="checkin-group-icon">{{item.icon}}</text>
+      <text class="checkin-group-title">{{item.title}}</text>
+      <view class="checkin-group-divider"></view>
+    </view>
+
     <view
-      class="heart-evidence-link"
-      bindtap="onTapRiskEvidence"
-      data-module="heart"
-      data-metric="heartRate"
+      class="checkin-card {{ci.checked ? 'done' : ''}}"
+      wx:for="{{item.items}}"
+      wx:for-item="ci"
+      wx:key="id"
+      bindtap="toggleCheckIn"
+      data-gkey="{{item.key}}"
+      data-id="{{ci.id}}"
     >
-      查看长期页「夜间平均心率」趋势 →
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">风险分类</view>
-    <view class="risk-group-card level-{{item.levelKey}}" wx:for="{{riskGroups}}" wx:key="id">
-      <view class="risk-group-head" bindtap="toggleRiskGroup" data-id="{{item.id}}">
-        <text class="risk-level-tag">{{item.level}}</text>
-        <text class="risk-head-text">{{item.triggerReason}}</text>
-        <text class="risk-toggle">{{item.expanded ? "收起" : "展开"}}</text>
-      </view>
-      <view class="risk-group-body" wx:if="{{item.expanded}}">
-        <view class="risk-factor-line">
-          <text class="risk-factor-chip" wx:for="{{item.factors}}" wx:key="*this">{{item}}</text>
+      <view class="checkin-head">
+        <view class="checkin-icon-wrap">
+          <text class="checkin-emoji">{{ci.emoji}}</text>
         </view>
-        <view
-          class="risk-evidence-link"
-          bindtap="onTapRiskEvidence"
-          data-module="{{item.source.module}}"
-          data-metric="{{item.source.metric}}"
-        >
-          查看趋势证据（{{item.source.label}}） →
+        <view class="checkin-text">
+          <text class="checkin-title">{{ci.title}}</text>
+          <text class="checkin-sub">{{ci.sub}}</text>
+        </view>
+        <view class="checkin-checkbox {{ci.checked ? 'checked' : ''}}">
+          <text wx:if="{{ci.checked}}">✓</text>
         </view>
       </view>
+
+      <view class="checkin-logged" wx:if="{{ci.checked && ci.loggedNote}}">
+        <text class="logged-dot">●</text>
+        <text class="logged-text">{{ci.loggedNote}}</text>
+      </view>
+
+      <view class="checkin-meta">
+        <view class="meta-line meta-risk">
+          <text class="meta-label">关联风险</text>
+          <text class="meta-value">{{ci.riskRelation}}</text>
+        </view>
+        <view class="meta-line meta-benefit">
+          <text class="meta-label">📈 预期改善</text>
+          <text class="meta-value">{{ci.expectedBenefit}}</text>
+        </view>
+      </view>
     </view>
   </view>
 
-  <view class="card">
-    <view class="section-title">今晚先做这 2 件事</view>
-    <view class="action-item" wx:for="{{prioritizedActions}}" wx:key="id" bindtap="toggleAdviceCheck" data-id="{{item.id}}">
-      <text class="action-checkbox {{item.checked ? 'checked' : ''}}">{{item.checked ? "✓" : ""}}</text>
-      <text class="action-text {{item.checked ? 'done' : ''}}">{{item.text}}</text>
-    </view>
-  </view>
-
-  <view class="upgrade-tip">
-    <text>{{upgradeReminder}}</text>
+  <view class="footer-note">
+    <view>打卡数据将与心率、HRV、睡眠质量等指标做关联分析</view>
+    <view>连续 7 天打卡可在「健康趋势」页查看效果报告</view>
   </view>
 </view>

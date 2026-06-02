@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会员订阅设计草图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #2a2d3a 0%, #1a1d2a 100%);
+    padding: 32px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    min-height: 100vh;
+    color: #1a2c24;
+  }
+  .label {
+    width: 380px;
+    font-size: 13px;
+    color: #aab;
+    font-weight: 600;
+    padding: 0 4px;
+    text-align: center;
+  }
+  .phone {
+    width: 380px;
+    background: #F4FBF9;
+    border-radius: 32px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    position: relative;
+  }
+  .status-bar {
+    height: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 18px;
+    font-size: 12px;
+    color: #2a3a3a;
+    font-weight: 600;
+  }
+  .nav-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    position: relative;
+  }
+  .nav-bar .dots {
+    position: absolute;
+    right: 18px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 2px 12px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    letter-spacing: 4px;
+  }
+
+  /* ============ 弹窗设计 ============ */
+  .paywall-modal-bg {
+    background: rgba(20, 30, 26, 0.6);
+    padding: 60px 24px;
+    min-height: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .paywall-card {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 20rpx 50rpx rgba(0,0,0,0.18);
+  }
+  .pw-header {
+    background: linear-gradient(135deg, #f6e8c3 0%, #f3d990 100%);
+    padding: 28px 22px 24px;
+    text-align: center;
+    position: relative;
+  }
+  .pw-icon-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff, #fef3d3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    margin: 0 auto 12px;
+    box-shadow: 0 6px 14px rgba(180, 130, 30, 0.18);
+  }
+  .pw-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #5a3a0e;
+    margin-bottom: 4px;
+  }
+  .pw-sub {
+    font-size: 13px;
+    color: #8a6a3a;
+  }
+  .pw-body {
+    padding: 22px 24px 18px;
+  }
+  .pw-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed #f0e5cf;
+  }
+  .pw-feature:last-child { border-bottom: none; }
+  .pw-feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #faf3e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .pw-feature-text { flex: 1; }
+  .pw-feature-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a2c24;
+    margin-bottom: 2px;
+  }
+  .pw-feature-sub {
+    font-size: 12px;
+    color: #7a8a83;
+    line-height: 1.45;
+  }
+  .pw-price {
+    margin-top: 16px;
+    background: linear-gradient(135deg, #fef9e8 0%, #fff 100%);
+    border: 1px solid #f0e5cf;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pw-price-left { display: flex; flex-direction: column; gap: 2px; }
+  .pw-price-tag {
+    font-size: 11px;
+    color: #b07a1f;
+    font-weight: 600;
+    background: #fff3d3;
+    padding: 2px 8px;
+    border-radius: 999px;
+    display: inline-block;
+    width: fit-content;
+  }
+  .pw-price-text { display: flex; align-items: baseline; gap: 4px; }
+  .pw-price-num {
+    font-size: 24px;
+    font-weight: 800;
+    color: #c0850f;
+  }
+  .pw-price-orig {
+    font-size: 12px;
+    color: #b0aea2;
+    text-decoration: line-through;
+  }
+  .pw-price-period {
+    font-size: 12px;
+    color: #7a8a83;
+  }
+  .pw-actions {
+    padding: 16px 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pw-btn-primary {
+    background: linear-gradient(135deg, #d4a548, #b3851e);
+    color: #fff;
+    text-align: center;
+    padding: 14px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(180, 130, 30, 0.35);
+  }
+  .pw-btn-ghost {
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    color: #7a8a83;
+  }
+
+  /* ============ 我的页 - 会员订阅页 ============ */
+  .membership-page {
+    background: #F4FBF9;
+    min-height: 700px;
+  }
+  .mp-hero {
+    background: linear-gradient(135deg, #1a1d2a 0%, #2d3245 50%, #3d2e0e 100%);
+    color: #fff;
+    padding: 30px 24px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mp-hero::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 215, 100, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .mp-back {
+    color: #fff;
+    font-size: 24px;
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+  .mp-crown {
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
+  .mp-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .mp-brand-name {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff5c4 0%, #f3d990 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .mp-brand-pro {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f3d990;
+  }
+  .mp-tagline {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.5;
+  }
+  .mp-features {
+    margin: -40px 18px 0;
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    position: relative;
+    z-index: 2;
+  }
+  .mp-features-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a2c24;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mp-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f3f7f5;
+  }
+  .mp-feature-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .mp-feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fef9e8, #faf3e0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .mp-feature-text { flex: 1; }
+  .mp-feature-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a2c24;
+    margin-bottom: 4px;
+  }
+  .mp-feature-cmp {
+    font-size: 12px;
+    color: #7a8a83;
+    line-height: 1.5;
+  }
+  .mp-feature-cmp .free { color: #aab; }
+  .mp-feature-cmp .pro { color: #c0850f; font-weight: 600; }
+
+  /* 定价卡片 */
+  .mp-pricing {
+    margin: 18px 18px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .mp-price-card {
+    background: #fff;
+    border: 2px solid #eef4f1;
+    border-radius: 16px;
+    padding: 18px 14px;
+    text-align: center;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .mp-price-card.recommended {
+    border-color: #d4a548;
+    background: linear-gradient(135deg, #fff9e8 0%, #fff 100%);
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px rgba(180, 130, 30, 0.15);
+  }
+  .mp-price-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #d4a548, #b3851e);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(180, 130, 30, 0.3);
+  }
+  .mp-price-name {
+    font-size: 13px;
+    color: #7a8a83;
+    margin-bottom: 6px;
+  }
+  .mp-price-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a2c24;
+    line-height: 1;
+  }
+  .mp-price-card.recommended .mp-price-num {
+    color: #c0850f;
+  }
+  .mp-price-period {
+    font-size: 12px;
+    color: #7a8a83;
+    margin-top: 2px;
+  }
+  .mp-price-orig {
+    font-size: 11px;
+    color: #b0aea2;
+    text-decoration: line-through;
+    margin-top: 4px;
+  }
+  .mp-price-equiv {
+    font-size: 11px;
+    color: #1f8a6f;
+    margin-top: 2px;
+  }
+
+  /* 信任标签 */
+  .mp-trust {
+    margin: 16px 18px 0;
+    background: #ecfaf3;
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .mp-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #1f8a6f;
+    font-weight: 600;
+  }
+
+  /* 底部 CTA */
+  .mp-cta {
+    margin: 18px 18px 12px;
+    background: linear-gradient(135deg, #d4a548, #b3851e);
+    color: #fff;
+    text-align: center;
+    padding: 16px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(180, 130, 30, 0.35);
+  }
+  .mp-cta-sub {
+    text-align: center;
+    font-size: 11px;
+    color: #7a8a83;
+    margin-bottom: 16px;
+  }
+
+  /* FAQ */
+  .mp-faq {
+    margin: 16px 18px 24px;
+    padding: 16px 18px;
+    background: #fff;
+    border-radius: 14px;
+  }
+  .mp-faq-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a2c24;
+    margin-bottom: 10px;
+  }
+  .mp-faq-item {
+    font-size: 11px;
+    color: #7a8a83;
+    line-height: 1.6;
+    padding: 4px 0;
+  }
+  .mp-faq-item b { color: #1a2c24; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ===== 草图 A: 长期视图付费弹窗 ===== -->
+<div class="label">草图 A · 长期页用户点"月"或"全周期"时弹窗</div>
+<div class="phone">
+  <div class="paywall-modal-bg">
+    <div class="paywall-card">
+      <div class="pw-header">
+        <div class="pw-icon-circle">📊</div>
+        <div class="pw-title">解锁完整长期趋势</div>
+        <div class="pw-sub">看到你的健康指标真实变化</div>
+      </div>
+      <div class="pw-body">
+        <div class="pw-feature">
+          <div class="pw-feature-icon">📈</div>
+          <div class="pw-feature-text">
+            <div class="pw-feature-title">30 / 90 天 / 全周期 完整趋势</div>
+            <div class="pw-feature-sub">免费版仅 7 天，开通后看到你 3 个月以来的真实改善</div>
+          </div>
+        </div>
+        <div class="pw-feature">
+          <div class="pw-feature-icon">🎯</div>
+          <div class="pw-feature-text">
+            <div class="pw-feature-title">14 天均值 + 同龄人对比</div>
+            <div class="pw-feature-sub">不只是看数字，而是知道自己处于什么水平</div>
+          </div>
+        </div>
+        <div class="pw-feature">
+          <div class="pw-feature-icon">💡</div>
+          <div class="pw-feature-text">
+            <div class="pw-feature-title">行为见效分析</div>
+            <div class="pw-feature-sub">看到你打卡的腹式呼吸真的让 HRV 提升了多少</div>
+          </div>
+        </div>
+        <div class="pw-price">
+          <div class="pw-price-left">
+            <span class="pw-price-tag">⭐ 限时新人价</span>
+            <div class="pw-price-text">
+              <span class="pw-price-num">¥98</span>
+              <span class="pw-price-orig">¥168</span>
+              <span class="pw-price-period">/ 年</span>
+            </div>
+          </div>
+          <div style="text-align: right; font-size: 11px; color: #7a8a83;">
+            约 <b style="color: #c0850f;">¥8.2</b>/月<br>
+            一杯奶茶
+          </div>
+        </div>
+      </div>
+      <div class="pw-actions">
+        <div class="pw-btn-primary">立即开通 Pro 会员</div>
+        <div class="pw-btn-ghost">暂不开通</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 草图 B: 声音监测付费弹窗 ===== -->
+<div class="label">草图 B · 长期页点开"睡眠声音"模块时弹窗</div>
+<div class="phone">
+  <div class="paywall-modal-bg">
+    <div class="paywall-card">
+      <div class="pw-header">
+        <div class="pw-icon-circle">🔊</div>
+        <div class="pw-title">解锁睡眠声音监测</div>
+        <div class="pw-sub">听见昨晚发生的一切</div>
+      </div>
+      <div class="pw-body">
+        <div class="pw-feature">
+          <div class="pw-feature-icon">🎙️</div>
+          <div class="pw-feature-text">
+            <div class="pw-feature-title">鼾声 / 梦话 / 咳嗽 录音回放</div>
+            <div class="pw-feature-sub">每条事件可点击试听，标注准确发生时间</div>
+          </div>
+        </div>
+        <div class="pw-feature">
+          <div class="pw-feature-icon">🌙</div>
+          <div class="pw-feature-text">
+            <div class="pw-feature-title">整夜声音事件详细记录</div>
+            <div class="pw-feature-sub">8 项核心指标 + 联动趋势图，看声音对睡眠的影响</div>
+          </div>
+        </div>
+        <div class="pw-feature">
+          <div class="pw-feature-icon">📈</div>
+          <div class="pw-feature-text">
+            <div class="pw-feature-title">长期声音趋势</div>
+            <div class="pw-feature-sub">鼾声 / 梦话 30 天 / 90 天频次变化，看到改善效果</div>
+          </div>
+        </div>
+        <div class="pw-price">
+          <div class="pw-price-left">
+            <span class="pw-price-tag">⭐ 限时新人价</span>
+            <div class="pw-price-text">
+              <span class="pw-price-num">¥98</span>
+              <span class="pw-price-orig">¥168</span>
+              <span class="pw-price-period">/ 年</span>
+            </div>
+          </div>
+          <div style="text-align: right; font-size: 11px; color: #7a8a83;">
+            约 <b style="color: #c0850f;">¥8.2</b>/月<br>
+            一杯奶茶
+          </div>
+        </div>
+      </div>
+      <div class="pw-actions">
+        <div class="pw-btn-primary">立即开通 Pro 会员</div>
+        <div class="pw-btn-ghost">暂不开通</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 草图 C: 我的页 - 会员订阅页（完整版） ===== -->
+<div class="label">草图 C · 我的页 → 会员订阅完整页面</div>
+<div class="phone">
+  <div class="status-bar">
+    <span>12:47</span>
+    <span>📶 5G ▮▮▮</span>
+  </div>
+  <div class="nav-bar"></div>
+
+  <div class="membership-page">
+    <!-- 顶部 hero -->
+    <div class="mp-hero">
+      <span class="mp-back">‹</span>
+      <div class="mp-crown">👑</div>
+      <div class="mp-brand">
+        <span class="mp-brand-name">话好眠</span>
+        <span class="mp-brand-pro">Pro 会员</span>
+      </div>
+      <div class="mp-tagline">解锁完整健康监测能力，<br>看到你心脏长期改善的每一步</div>
+    </div>
+
+    <!-- 功能对比 -->
+    <div class="mp-features">
+      <div class="mp-features-title">
+        <span>✨</span>
+        <span>开通后立享 4 大特权</span>
+      </div>
+
+      <div class="mp-feature-item">
+        <div class="mp-feature-icon">📊</div>
+        <div class="mp-feature-text">
+          <div class="mp-feature-title">长期趋势 30 / 90 天 / 全周期</div>
+          <div class="mp-feature-cmp">
+            <span class="free">免费版：仅 7 天</span> · <span class="pro">Pro：完整 90 天 + 全周期</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mp-feature-item">
+        <div class="mp-feature-icon">🎯</div>
+        <div class="mp-feature-text">
+          <div class="mp-feature-title">同龄人对比 + 14 天均值</div>
+          <div class="mp-feature-cmp">
+            <span class="pro">看到自己在同龄人中的位置，以及自身改善趋势</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mp-feature-item">
+        <div class="mp-feature-icon">🔊</div>
+        <div class="mp-feature-text">
+          <div class="mp-feature-title">睡眠声音完整监测</div>
+          <div class="mp-feature-cmp">
+            <span class="pro">鼾声 / 梦话 / 咳嗽 录音回放 + 长期频次趋势</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mp-feature-item">
+        <div class="mp-feature-icon">💡</div>
+        <div class="mp-feature-text">
+          <div class="mp-feature-title">行为见效分析</div>
+          <div class="mp-feature-cmp">
+            <span class="pro">长期图上自动标注：哪些打卡真的让你的健康指标改善</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 价格 -->
+    <div class="mp-pricing">
+      <div class="mp-price-card">
+        <div class="mp-price-name">月付</div>
+        <div class="mp-price-num">¥19.9</div>
+        <div class="mp-price-period">/ 月</div>
+      </div>
+      <div class="mp-price-card recommended">
+        <div class="mp-price-badge">⭐ 限时新人价</div>
+        <div class="mp-price-name">年付</div>
+        <div class="mp-price-num">¥98</div>
+        <div class="mp-price-period">首年（原价 ¥168）</div>
+        <div class="mp-price-equiv">约 ¥8.2 / 月</div>
+      </div>
+    </div>
+
+    <!-- 信任标签 -->
+    <div class="mp-trust">
+      <div class="mp-trust-item">🛡️ 隐私加密</div>
+      <div class="mp-trust-item">↩️ 7 天无理由退款</div>
+      <div class="mp-trust-item">💬 7×24 客服</div>
+    </div>
+
+    <!-- CTA -->
+    <div class="mp-cta">立即开通 ¥98 / 年</div>
+    <div class="mp-cta-sub">订阅自动续费 · 可随时取消</div>
+
+    <!-- FAQ -->
+    <div class="mp-faq">
+      <div class="mp-faq-title">📋 服务说明</div>
+      <div class="mp-faq-item"><b>· 自动续费：</b>到期前 24 小时自动续费下一周期，可在「账号与服务」中关闭</div>
+      <div class="mp-faq-item"><b>· 取消订阅：</b>取消后已生效的订阅会持续到当前周期结束</div>
+      <div class="mp-faq-item"><b>· 数据隐私：</b>所有声音录音仅本地识别，不上传任何原始音频</div>
+      <div class="mp-faq-item"><b>· 客服支持：</b>遇到问题可在「联系我们」中反馈</div>
+    </div>
+  </div>
+</div>
+
+<div class="label" style="opacity: 0.7; padding: 0 40px; line-height: 1.6;">
+  说明：草图 A / B 是付费触发弹窗（点月/全周期 + 点开声音模块）<br>
+  草图 C 是「我的页 → 会员订阅」完整页面，可从弹窗或我的页菜单进入
+</div>
+
+</body>
+</html>

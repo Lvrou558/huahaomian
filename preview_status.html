@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>话好眠 · 状态行新方案预览</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  :root {
+    --primary: #1f8a6f;
+    --bg: #f4fbf9;
+    --text: #1a2c24;
+    --text-sub: #7B928C;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #2a2d3a;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 16px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .compare-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .col-label {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.1);
+    padding: 6px 16px;
+    border-radius: 999px;
+  }
+  .col-label.new { background: rgba(31, 138, 111, 0.85); }
+  .phone {
+    width: 390px;
+    background: var(--bg);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    overflow: hidden;
+    padding: 14px;
+  }
+  .top-status {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #2a4a43;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .status-link { color: var(--primary); font-weight: 600; }
+
+  /* 心脏总览（顶部，保持不变） */
+  .overview-card {
+    background: linear-gradient(165deg, #fff5f5 0%, #ffffff 50%, #f5fbf9 100%);
+    border: 1px solid #ffe1e1;
+    border-radius: 16px;
+    padding: 14px 14px;
+    margin-bottom: 10px;
+  }
+  .overview-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .overview-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #14443a;
+    flex: 1;
+  }
+  .overview-date {
+    font-size: 11px;
+    color: var(--text-sub);
+    background: rgba(255,255,255,0.7);
+    padding: 2px 10px;
+    border-radius: 8px;
+    border: 1px solid #e6f0ea;
+  }
+
+  /* 心脏健康指数渐变条 */
+  .hi-compact-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #14443a;
+    margin-bottom: 6px;
+  }
+  .hi-bar-wrap {
+    background: #fafcfb;
+    border-radius: 10px;
+    border: 1px solid #eef2f0;
+    padding: 8px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .hi-bar {
+    height: 14px;
+    border-radius: 7px;
+    background: linear-gradient(90deg, #ef9a9a 0%, #f4c5bd 22%, #f6e1da 42%, #f0ece9 50%, #d4e2ea 58%, #b6d4e6 78%, #8ec2dc 100%);
+    position: relative;
+  }
+  .hi-pointer {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hi-pointer::before {
+    content: '';
+    width: 2px;
+    height: 100%;
+    background: #2c3a3a;
+  }
+  .hi-pointer::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border: 2px solid #2c3a3a;
+    border-radius: 50%;
+  }
+  .hi-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 10px;
+    color: #8a99a3;
+  }
+
+  /* 心脏 4 项核心指标 2x2 */
+  .metrics-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .metric-box {
+    background: #fafffd;
+    border: 1px solid #eaf3ef;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .metric-name { font-size: 11px; color: #6a8b82; margin-bottom: 4px; }
+  .metric-number { font-size: 17px; font-weight: 700; color: #14443a; }
+  .metric-note { font-size: 10px; color: #2e9f82; margin-top: 2px; }
+
+  .heart-overview-text {
+    font-size: 12px;
+    color: #2e4a44;
+    line-height: 1.6;
+    padding: 10px 4px 0;
+    border-top: 1px dashed #eef4f1;
+  }
+
+  /* ===== ★ 关键：折叠卡 + 状态行 ===== */
+  .fold-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(37,114,93,0.05);
+  }
+  .fold-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .fold-head-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fold-emoji { font-size: 18px; }
+  .fold-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #14443a;
+  }
+  .fold-action {
+    font-size: 13px;
+    color: var(--primary);
+  }
+
+  /* ★ 状态行 — 关键新设计 */
+  .status-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 4px;
+    font-size: 11px;
+    color: #577970;
+    line-height: 1.7;
+  }
+  .status-line .label { color: #577970; font-weight: 500; }
+  .status-line .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  /* 3 色编码 */
+  .pill.green {
+    background: #e7f7ee;
+    color: #0F6E56;
+  }
+  .pill.yellow {
+    background: #fbf3dc;
+    color: #8C6C12;
+  }
+  .pill.orange {
+    background: #fdecde;
+    color: #b86518;
+  }
+  .pill.red {
+    background: #fceae5;
+    color: #b5391a;
+  }
+  .pill-icon { font-size: 11px; }
+  .status-sep {
+    color: #b5c4d0;
+    font-weight: 600;
+    margin: 0 1px;
+  }
+
+  /* 整体说明栏 */
+  .summary-tip {
+    background: rgba(255,255,255,0.6);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #4a6a60;
+    border: 1px dashed #d9efe3;
+    line-height: 1.6;
+  }
+  .summary-tip b { color: var(--primary); }
+
+  /* 今日打卡 */
+  .today-checkins {
+    margin-top: 12px;
+    background: #fff;
+    border: 1px solid #e6f0ea;
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .today-checkins-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #eef4f1;
+  }
+  .tc-head-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #14443a;
+    flex: 1;
+  }
+  .tc-head-deadline {
+    font-size: 10px;
+    color: var(--primary);
+    background: #ecfaf3;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    border: 1px solid #c8e8d6;
+  }
+  .today-checkin-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    gap: 10px;
+  }
+  .tc-emoji { font-size: 20px; }
+  .tc-text { flex: 1; }
+  .tc-title { font-size: 13px; font-weight: 600; color: #14443a; display: block; }
+  .tc-sub { font-size: 11px; color: var(--text-sub); display: block; margin-top: 2px; }
+  .tc-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #c8e8d6;
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="compare-col">
+  <div class="col-label new">📱 状态行新方案（推荐）</div>
+  <div class="phone">
+    <div class="top-status">
+      <span>📶 健康监测仪 X2 · 在线 · 数据完整</span>
+      <span class="status-link">⚙️ 详情</span>
+    </div>
+
+    <!-- 心脏总览（顶部主角，保持不变） -->
+    <div class="overview-card">
+      <div class="overview-header">
+        <span style="font-size:18px;">❤️</span>
+        <span class="overview-title">昨夜心脏总览</span>
+        <span class="overview-date">5月25日</span>
+      </div>
+
+      <div class="hi-compact-title">心脏健康指数</div>
+      <div class="hi-bar-wrap">
+        <div class="hi-bar">
+          <div class="hi-pointer" style="left:78%;"></div>
+        </div>
+        <div class="hi-legend">
+          <span>需要关注</span>
+          <span>正常</span>
+          <span>优秀</span>
+        </div>
+      </div>
+
+      <div class="metrics-2x2">
+        <div class="metric-box">
+          <div class="metric-name">心率范围</div>
+          <div class="metric-number">65-72 次/分</div>
+          <div class="metric-note">夜间平稳</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-name">HRV值</div>
+          <div class="metric-number">33</div>
+          <div class="metric-note">恢复中等偏好</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-name">平均心率</div>
+          <div class="metric-number">69 bpm</div>
+          <div class="metric-note">参考45-70bpm</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-name">rMSSD</div>
+          <div class="metric-number">892ms</div>
+          <div class="metric-note">参考600-1200ms</div>
+        </div>
+      </div>
+
+      <div class="heart-overview-text">
+        夜间平均心率 65 bpm，HRV 33 ms（低于健康参考 >50ms，提示自主神经调节偏弱）。
+      </div>
+    </div>
+
+    <!-- ★ 4 个折叠卡 · 新状态行设计 -->
+
+    <!-- 心脏具体数据 -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">❤️</span>
+          <span class="fold-title">心脏具体数据</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line">
+        <span class="label">夜间心率</span>
+        <span class="pill green"><span class="pill-icon">✅</span>未见异常</span>
+        <span class="status-sep">·</span>
+        <span class="label">心动图</span>
+        <span class="pill green"><span class="pill-icon">✅</span>未见异常</span>
+      </div>
+    </div>
+
+    <!-- 呼吸健康 -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">🌬️</span>
+          <span class="fold-title">呼吸健康</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line">
+        <span class="label">健康指数</span>
+        <span class="pill green"><span class="pill-icon">✅</span>优秀</span>
+        <span class="status-sep">·</span>
+        <span class="label">呼吸暂停</span>
+        <span class="pill green"><span class="pill-icon">✅</span>未见</span>
+      </div>
+    </div>
+
+    <!-- 睡眠健康 - 带具体数据 -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">🛌</span>
+          <span class="fold-title">睡眠健康</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line">
+        <span class="label">时长</span><span style="font-weight:700;color:#14443a;">8h36m</span>
+        <span class="pill green"><span class="pill-icon">✅</span>足够</span>
+        <span class="status-sep">·</span>
+        <span class="label">深睡</span><span style="font-weight:700;color:#14443a;">18%</span>
+        <span class="pill green"><span class="pill-icon">✅</span>充足</span>
+        <span class="status-sep">·</span>
+        <span class="label">循环</span><span style="font-weight:700;color:#14443a;">4.5次</span>
+        <span class="pill green"><span class="pill-icon">✅</span>达标</span>
+        <span class="status-sep">·</span>
+        <span class="label">翻身</span><span style="font-weight:700;color:#14443a;">35次</span>
+        <span class="pill yellow"><span class="pill-icon">⚠️</span>较多</span>
+      </div>
+    </div>
+
+    <!-- 声音监测 - 带具体数据 -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">🔊</span>
+          <span class="fold-title">声音监测</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line">
+        <span class="label">鼾声</span><span style="font-weight:700;color:#14443a;">3次</span>
+        <span class="pill green"><span class="pill-icon">✅</span>较少</span>
+        <span class="status-sep">·</span>
+        <span class="label">梦话</span><span style="font-weight:700;color:#14443a;">4次</span>
+        <span class="pill yellow"><span class="pill-icon">⚠️</span>较多</span>
+        <span class="status-sep">·</span>
+        <span class="label">噪音峰值</span><span style="font-weight:700;color:#14443a;">62dB</span>
+        <span class="pill orange"><span class="pill-icon">🔸</span>偏高</span>
+      </div>
+    </div>
+
+    <!-- 今日打卡保留 -->
+    <div class="today-checkins">
+      <div class="today-checkins-head">
+        <span style="font-size:18px;">💡</span>
+        <span class="tc-head-text">今日建议打卡</span>
+        <span class="tc-head-deadline">截至今晚 12:00</span>
+      </div>
+      <div class="today-checkin-item">
+        <span class="tc-emoji">🚶</span>
+        <div class="tc-text">
+          <span class="tc-title">饭后散步 15 分钟</span>
+          <span class="tc-sub">降低静息心率（针对夜间平均心率偏高）</span>
+        </div>
+        <div class="tc-check"></div>
+      </div>
+      <div class="today-checkin-item">
+        <span class="tc-emoji">🌬️</span>
+        <div class="tc-text">
+          <span class="tc-title">睡前 5 分钟腹式呼吸</span>
+          <span class="tc-sub">吸 4 秒·屏 4 秒·呼 6 秒（直接提升 HRV）</span>
+        </div>
+        <div class="tc-check"></div>
+      </div>
+      <div class="today-checkin-item">
+        <span class="tc-emoji">☕</span>
+        <div class="tc-text">
+          <span class="tc-title">下午 3 点后不喝咖啡 / 浓茶</span>
+          <span class="tc-sub">稳定夜间心率，避免自主神经过度活跃</span>
+        </div>
+        <div class="tc-check"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="compare-col">
+  <div class="col-label">📱 当前方案（渐变条 + 双环）</div>
+  <div class="phone">
+    <div class="top-status">
+      <span>📶 健康监测仪 X2 · 在线 · 数据完整</span>
+      <span class="status-link">⚙️ 详情</span>
+    </div>
+
+    <!-- 心脏总览相同 -->
+    <div class="overview-card">
+      <div class="overview-header">
+        <span style="font-size:18px;">❤️</span>
+        <span class="overview-title">昨夜心脏总览</span>
+        <span class="overview-date">5月25日</span>
+      </div>
+
+      <div class="hi-compact-title">心脏健康指数</div>
+      <div class="hi-bar-wrap">
+        <div class="hi-bar">
+          <div class="hi-pointer" style="left:78%;"></div>
+        </div>
+        <div class="hi-legend">
+          <span>需要关注</span>
+          <span>正常</span>
+          <span>优秀</span>
+        </div>
+      </div>
+
+      <div class="metrics-2x2">
+        <div class="metric-box">
+          <div class="metric-name">心率范围</div>
+          <div class="metric-number">65-72 次/分</div>
+          <div class="metric-note">夜间平稳</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-name">HRV值</div>
+          <div class="metric-number">33</div>
+          <div class="metric-note">恢复中等偏好</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-name">平均心率</div>
+          <div class="metric-number">69 bpm</div>
+          <div class="metric-note">参考45-70bpm</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-name">rMSSD</div>
+          <div class="metric-number">892ms</div>
+          <div class="metric-note">参考600-1200ms</div>
+        </div>
+      </div>
+
+      <div class="heart-overview-text">
+        夜间平均心率 65 bpm，HRV 33 ms（低于健康参考 >50ms，提示自主神经调节偏弱）。
+      </div>
+    </div>
+
+    <!-- 心脏具体数据（已有状态行） -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">❤️</span>
+          <span class="fold-title">心脏具体数据</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div class="status-line">
+        <span class="label">夜间心率</span>
+        <span class="pill green"><span class="pill-icon">✅</span>未见异常</span>
+        <span class="status-sep">·</span>
+        <span class="label">心动图</span>
+        <span class="pill green"><span class="pill-icon">✅</span>未见异常</span>
+      </div>
+    </div>
+
+    <!-- 呼吸健康 (旧：渐变条) -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">🌬️</span>
+          <span class="fold-title">呼吸健康</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:12px;font-weight:700;color:#14443a;">呼吸健康指数</span>
+        <span class="pill green"><span class="pill-icon">✅</span>优秀</span>
+      </div>
+      <div class="hi-bar-wrap" style="margin-bottom:0;">
+        <div class="hi-bar">
+          <div class="hi-pointer" style="left:82%;"></div>
+        </div>
+        <div class="hi-legend">
+          <span>需要关注</span>
+          <span>正常</span>
+          <span>优秀</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 睡眠健康 (旧：双环) -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">🛌</span>
+          <span class="fold-title">睡眠健康</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div style="display:flex;justify-content:space-evenly;background:rgba(255,255,255,0.85);border:1px solid #e6f0ea;border-radius:12px;padding:14px 8px;gap:10px;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(145deg,#d9f4e3,#f7fcf9);box-shadow:0 4px 10px rgba(31,138,111,0.18);padding:4px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:conic-gradient(from -90deg,#1f8a6f 0deg,#4cd964 calc(92 * 3.6deg),#ebf4ef calc(92 * 3.6deg),#ebf4ef 360deg);display:flex;align-items:center;justify-content:center;position:relative;">
+              <div style="position:absolute;inset:6px;background:#fff;border-radius:50%;"></div>
+              <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+                <span style="font-size:18px;font-weight:800;color:#14443a;line-height:1;">92</span>
+                <span style="font-size:9px;color:#7a8c84;">/ 100</span>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:11px;color:#14443a;margin-top:6px;font-weight:600;">身体恢复度</span>
+          <span style="font-size:10px;color:#0F6E56;background:#e6f5ee;padding:2px 8px;border-radius:8px;margin-top:3px;font-weight:600;">充分恢复</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(145deg,#d9e8f9,#f7faff);box-shadow:0 4px 10px rgba(58,108,219,0.18);padding:4px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:conic-gradient(from -90deg,#3aa0e2 0deg,#6c8cff calc(66 * 3.6deg),#eaeef7 calc(66 * 3.6deg),#eaeef7 360deg);display:flex;align-items:center;justify-content:center;position:relative;">
+              <div style="position:absolute;inset:6px;background:#fff;border-radius:50%;"></div>
+              <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+                <span style="font-size:18px;font-weight:800;color:#14443a;line-height:1;">66</span>
+                <span style="font-size:9px;color:#7a8c84;">/ 100</span>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:11px;color:#14443a;margin-top:6px;font-weight:600;">精神恢复度</span>
+          <span style="font-size:10px;color:#3a6cdb;background:#ebf1fd;padding:2px 8px;border-radius:8px;margin-top:3px;font-weight:600;">部分恢复</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 声音监测 (旧：长文字) -->
+    <div class="fold-card">
+      <div class="fold-head">
+        <div class="fold-head-left">
+          <span class="fold-emoji">🔊</span>
+          <span class="fold-title">声音监测</span>
+        </div>
+        <span class="fold-action">展开</span>
+      </div>
+      <div style="font-size:11px;color:#4a6a60;line-height:1.7;">
+        整夜环境噪音平均 32 分贝，处于安静范围；轻度鼾声 3 次、咳嗽 2 次，未对睡眠周期造成中断，对心脏负荷影响极小。
+      </div>
+    </div>
+
+    <!-- 今日打卡相同 -->
+    <div class="today-checkins">
+      <div class="today-checkins-head">
+        <span style="font-size:18px;">💡</span>
+        <span class="tc-head-text">今日建议打卡</span>
+        <span class="tc-head-deadline">截至今晚 12:00</span>
+      </div>
+      <div class="today-checkin-item">
+        <span class="tc-emoji">🚶</span>
+        <div class="tc-text">
+          <span class="tc-title">饭后散步 15 分钟</span>
+          <span class="tc-sub">降低静息心率（针对夜间平均心率偏高）</span>
+        </div>
+        <div class="tc-check"></div>
+      </div>
+      <div class="today-checkin-item">
+        <span class="tc-emoji">🌬️</span>
+        <div class="tc-text">
+          <span class="tc-title">睡前 5 分钟腹式呼吸</span>
+          <span class="tc-sub">吸 4 秒·屏 4 秒·呼 6 秒（直接提升 HRV）</span>
+        </div>
+        <div class="tc-check"></div>
+      </div>
+      <div class="today-checkin-item">
+        <span class="tc-emoji">☕</span>
+        <div class="tc-text">
+          <span class="tc-title">下午 3 点后不喝咖啡 / 浓茶</span>
+          <span class="tc-sub">稳定夜间心率，避免自主神经过度活跃</span>
+        </div>
+        <div class="tc-check"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="width:100%;text-align:center;color:#aab;font-size:13px;margin-top:20px;line-height:1.7;">
+  <b style="color:#fff;">左侧</b>：状态行新方案 — 4 个板块共占约 240rpx，2-3 秒扫完<br>
+  <b style="color:#fff;">右侧</b>：当前方案 — 4 个板块共占约 600rpx，需要看图理解<br>
+  <br>
+  3 色编码：<span style="background:#e7f7ee;color:#0F6E56;padding:2px 8px;border-radius:4px;">✅ 绿色 正常</span>
+  &nbsp;<span style="background:#fbf3dc;color:#8C6C12;padding:2px 8px;border-radius:4px;">⚠️ 黄色 较多 / 略偏</span>
+  &nbsp;<span style="background:#fdecde;color:#b86518;padding:2px 8px;border-radius:4px;">🔸 橙色 需关注</span>
+</div>
+
+</body>
+</html>

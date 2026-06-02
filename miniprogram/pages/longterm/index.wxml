@@ -1,385 +1,667 @@
 <view class="page">
-  <view class="card top-status">
-    <view class="status-left">
-      <text class="status-icon">📶</text>
-      <text class="status-text">健康监测仪 X2 · 已正常在线 | 昨夜监测数据完整</text>
-    </view>
-    <text class="status-link">⚙️ 设备详情</text>
+  <!-- 全局交互提示（左侧💡 + 文字） -->
+  <view class="global-tip-card">
+    <text class="tip-icon">💡</text>
+    <text class="tip-text">点击数据点查看当日详情 · 月/全周期视图可拖动查看任意日期</text>
   </view>
 
-  <view class="card summary-card">
-    <view class="summary-text">近7天睡眠整体稳定向好，睡眠效率全程保持优秀，仅入睡时长波动略大，整体无需过度干预</view>
-  </view>
+  <!-- ============================================== -->
+  <!-- 重排：顶部小徽章 → 评分焦点 → 好转亮点 → 模块       -->
+  <!-- ============================================== -->
 
-  <view class="card kline-card">
-    <view class="kline-title">长期睡眠趋势 · K线式作息走势图</view>
-    <view class="toolbar-row">
-      <view class="toolbar-tabs">
-        <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">本周</text>
-        <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">本月</text>
-        <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-      </view>
-      <view class="toolbar-ops">
-        <text class="op-btn {{!klineControlState.canJumpStart ? 'disabled' : ''}}" bindtap="jumpToStart">«</text>
-        <text class="op-btn {{!klineControlState.canPrev ? 'disabled' : ''}}" bindtap="panLeft">‹</text>
-        <text class="op-hint">左右滑动查看</text>
-        <text class="op-btn {{!klineControlState.canNext ? 'disabled' : ''}}" bindtap="panRight">›</text>
-        <text class="op-btn {{!klineControlState.canJumpEnd ? 'disabled' : ''}}" bindtap="jumpToEnd">»</text>
-        <text class="op-btn {{!klineControlState.canZoomIn ? 'disabled' : ''}}" bindtap="zoomIn">🔍+</text>
-        <text class="op-btn {{!klineControlState.canZoomOut ? 'disabled' : ''}}" bindtap="zoomOut">🔍-</text>
-      </view>
+  <!-- ① 顶部 Hero 卡（合并原徽章条 + 87 分焦点卡：大数字主导 + 3 芯片浓缩关键指标） -->
+  <view class="lt-hero-v2">
+    <text class="lt-hero-v2-title">坚持有回报</text>
+    <view class="lt-hero-v2-streak">
+      <text class="lt-hero-v2-num">{{rewardHero.streakDays}}</text>
+      <text class="lt-hero-v2-unit">天</text>
     </view>
-
-    <view class="kline-wrap" bindtouchstart="onKlineTouchStart" bindtouchmove="onKlineTouchMove" bindtouchend="onKlineTouchEnd">
-      <canvas type="2d" id="klineChart" class="kline-canvas"></canvas>
-    </view>
-
-    <view class="chart-axis axis-days">
-      <text wx:for="{{visibleLabels}}" wx:key="*this">{{item}}</text>
-    </view>
-
-    <view class="kline-scrollbar" id="klineScrollbarTrack" bindtap="onScrollbarTrackTap">
-      <view
-        class="kline-scrollbar-thumb"
-        style="width: {{klineScrollbarWidth}}%; margin-left: {{klineScrollbarOffset}}%;"
-        bindtouchstart="onScrollbarTouchStart"
-        bindtouchmove="onScrollbarTouchMove"
-        bindtouchend="onScrollbarTouchEnd"
-        bindtouchcancel="onScrollbarTouchEnd"
-      ></view>
-    </view>
-
-    <view class="avg-panel">
-      <view class="avg-row">
-        <text class="avg-label">平均上床</text>
-        <view class="avg-divider"></view>
-        <text class="avg-value">{{klineSummary.avgBed}}</text>
+    <text class="lt-hero-v2-sub">{{weekScore.trendText}} · {{weekScore.summary}}</text>
+    <view class="lt-hero-v2-chips">
+      <view class="lt-hero-v2-chip">
+        <text class="lt-hero-v2-chip-icon">📈</text>
+        <text class="lt-hero-v2-chip-label">评分</text>
+        <text class="lt-hero-v2-chip-num">{{weekScore.value}}</text>
+        <text class="lt-hero-v2-chip-unit">分</text>
       </view>
-      <view class="avg-row">
-        <text class="avg-label">平均起床</text>
-        <view class="avg-divider"></view>
-        <text class="avg-value">{{klineSummary.avgWake}}</text>
+      <view class="lt-hero-v2-chip">
+        <text class="lt-hero-v2-chip-icon">📊</text>
+        <text class="lt-hero-v2-chip-label">进步</text>
+        <text class="lt-hero-v2-chip-num">{{rewardHero.improvedCount}}</text>
+        <text class="lt-hero-v2-chip-unit">项</text>
       </view>
-    </view>
-
-    <view class="kpi-strip">
-      <view class="kpi-item">
-        <text class="kpi-label">平均上床</text>
-        <text class="kpi-value">{{klineSummary.avgBed}}</text>
-      </view>
-      <view class="kpi-item">
-        <text class="kpi-label">平均起床</text>
-        <text class="kpi-value">{{klineSummary.avgWake}}</text>
-      </view>
-      <view class="kpi-item">
-        <text class="kpi-label">健康窗口入睡</text>
-        <text class="kpi-value">{{klineSummary.healthyBedRate}}%</text>
-      </view>
-      <view class="kpi-item">
-        <text class="kpi-label">作息规律度</text>
-        <text class="kpi-value">{{klineSummary.regularity}}%</text>
-      </view>
-    </view>
-
-    <view class="insight-block">
-      <view class="insight-line">✨ 本周有多天在健康早睡窗口入睡，作息越来越稳定</view>
-      <view class="insight-line tip">💡 如果把上床时间再提前15分钟，固定23:00前入睡，深睡会更充足</view>
-      <view class="insight-source">（数据由健康监测仪X2无感自动采集，全周期数据完整可追溯）</view>
-    </view>
-  </view>
-
-  <view class="module-card {{expanded.sleep ? 'expanded' : ''}}">
-    <view class="module-header" bindtap="toggleModule" data-module="sleep">
-      <view class="module-left">
-        <text class="module-index">1.</text>
-        <view>
-          <view class="module-title">睡眠趋势</view>
-          <view class="module-desc">全周期睡眠质量持续改善，作息稳定性、睡眠时长稳步上升</view>
-        </view>
-      </view>
-      <text class="module-link">{{expanded.sleep ? '收起' : '点击查看详细趋势 →'}}</text>
-    </view>
-
-    <view class="module-body" wx:if="{{expanded.sleep}}">
-      <view class="metric-section {{focusMetric === 'duration' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">睡眠时长</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="metric-subline">近7天平均7.9h，稳定在健康范围</view>
-        <view class="chart-container">
-          <canvas type="2d" id="durationChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="duration"></canvas>
-        </view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.duration}}</view>
-        <view class="metric-insight">全周期睡眠时长持续上升，较首次使用提升1.2h，长期作息稳定性提升60%</view>
-      </view>
-
-      <view class="metric-section {{focusMetric === 'efficiency' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">睡眠效率</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="metric-subline">近7天平均84.6%，保持优秀水平</view>
-        <view class="chart-container">
-          <canvas type="2d" id="efficiencyChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="efficiency"></canvas>
-        </view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.efficiency}}</view>
-        <view class="metric-insight">全周期睡眠效率稳步提升，较初期平均提升7.2%，卧床时间利用效率持续优化</view>
-      </view>
-
-      <view class="metric-section {{focusMetric === 'prep' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">入睡准备时长</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="metric-subline">近7天波动15-40分钟，规律性待提升</view>
-        <view class="chart-container">
-          <canvas type="2d" id="prepChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="prep"></canvas>
-        </view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.prep}}</view>
-        <view class="metric-insight">全周期入睡时长呈波动下降趋势，较初期平均缩短12分钟，入睡能力逐步改善</view>
-      </view>
-
-      <view class="metric-section {{focusMetric === 'deep' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">深睡占比</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="metric-subline">近7天平均20%，处于健康区间</view>
-        <view class="chart-container">
-          <canvas type="2d" id="deepChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="deep"></canvas>
-        </view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.deep}}</view>
-        <view class="metric-insight">全周期深睡占比长期稳定在15-25%理想区间，无异常下滑，身体恢复能力持续稳定</view>
+      <view class="lt-hero-v2-chip">
+        <text class="lt-hero-v2-chip-icon">✅</text>
+        <text class="lt-hero-v2-chip-label">达标</text>
+        <text class="lt-hero-v2-chip-num">{{rewardHero.goalDays}}/7</text>
       </view>
     </view>
   </view>
 
-  <view class="module-card {{expanded.breath ? 'expanded' : ''}}">
-    <view class="module-header" bindtap="toggleModule" data-module="breath">
-      <view class="module-left">
-        <text class="module-index">2.</text>
-        <view>
-          <view class="module-title">呼吸健康</view>
-          <view class="module-desc">全周期AHI指数长期低于健康警戒线，呼吸暂停时长持续下降，气道状态稳定</view>
-        </view>
+  <!-- ③ 好转亮点（卡片色彩区分但保持和谐） -->
+  <view class="lt-h">你的坚持正在见效</view>
+  <view class="lt-win lt-win-{{item.accent}}" wx:for="{{rewardWins}}" wx:key="id">
+    <view class="lt-win-top">
+      <view class="lt-win-ic-wrap lt-win-ic-{{item.accent}}">
+        <text class="lt-win-ic">{{item.icon}}</text>
       </view>
-      <text class="module-link">{{expanded.breath ? '收起' : '点击查看详细趋势 →'}}</text>
+      <text class="lt-win-ti">{{item.title}}</text>
+      <text class="lt-win-badge lt-win-badge-{{item.accent}}">{{item.deltaText}}</text>
     </view>
-
-    <view class="module-body" wx:if="{{expanded.breath}}">
-      <view class="metric-section {{focusMetric === 'breathRate' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">平均夜间呼吸频率</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="chart-container"><canvas type="2d" id="breathRateChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="breathRate"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.breathRate}}</view>
-        <view class="metric-insight">全周期呼吸频率稳定在12-15次/分，无异常波动，呼吸节奏平稳</view>
-      </view>
-
-      <view class="metric-section {{focusMetric === 'ahi' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">AHI呼吸暂停指数</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="chart-container"><canvas type="2d" id="ahiChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="ahi"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.ahi}}</view>
-        <view class="metric-insight">全周期AHI指数长期低于5次/小时的健康警戒线，无睡眠呼吸暂停风险</view>
-      </view>
-
-      <view class="metric-section {{focusMetric === 'apnea' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">最长呼吸暂停时长</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
-        </view>
-        <view class="chart-container"><canvas type="2d" id="apneaChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="apnea"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.apnea}}</view>
-        <view class="metric-insight">全周期最长呼吸暂停时长呈持续下降趋势，较初期缩短8秒，气道阻塞风险持续降低</view>
-      </view>
+    <view class="lt-win-flow">你坚持<text class="lt-win-act">{{item.action}}</text> → {{item.flowText}}</view>
+    <view class="lt-win-bar"><view class="lt-win-bar-fill lt-win-bar-{{item.accent}}" style="width:{{item.progressPct}}%"></view></view>
+    <view class="lt-win-meta">
+      <text>目标 {{item.goalText}}</text>
+      <text class="lt-win-now lt-win-now-{{item.accent}}">当前 {{item.currentText}} · 已完成 {{item.progressPct}}%</text>
     </view>
   </view>
 
+  <!-- ④ 板块状态区分组标题 -->
+  <view class="lt-h">板块状态</view>
+
+  <!-- ★ 1. 心脏健康（默认展开） -->
   <view class="module-card {{expanded.heart ? 'expanded' : ''}}">
     <view class="module-header" bindtap="toggleModule" data-module="heart">
-      <view class="module-left">
-        <text class="module-index">3.</text>
-        <view>
-          <view class="module-title">心肺健康</view>
-          <view class="module-desc">全周期静息心率持续降低，HRV稳定在健康区间，心脏休息效率与自主调节能力稳步提升</view>
+      <view class="module-icon-circle heart">❤️</view>
+      <view class="module-info">
+        <view class="module-title-row">
+          <text class="module-title">心脏健康</text>
+          <text class="module-score-pill {{moduleSummaries.heart.statusKey}}">{{moduleSummaries.heart.score}} 分 · {{moduleSummaries.heart.status}}</text>
         </view>
+        <view class="module-focus">{{moduleSummaries.heart.focus}}</view>
       </view>
-      <text class="module-link">{{expanded.heart ? '收起' : '点击查看详细趋势 →'}}</text>
+      <view class="module-right">
+        <text class="module-arrow-new">›</text>
+      </view>
     </view>
 
     <view class="module-body" wx:if="{{expanded.heart}}">
-      <view class="metric-section {{focusMetric === 'heartRate' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">夜间平均心率</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
+      <!-- 心脏年龄总览卡 -->
+      <view class="heart-age-card">
+        <view class="ha-head">
+          <view class="ha-title-row">
+            <text class="ha-leaf">🌿</text>
+            <text class="ha-label">心脏年龄</text>
+            <text class="ha-age">{{heartAgeSummary.age}}</text>
+            <text class="ha-unit">岁</text>
+            <text class="ha-actual">实际 {{heartAgeSummary.actualAge}} 岁</text>
+          </view>
+          <view class="ha-badge {{heartAgeSummary.youngerThanActual ? '' : 'warn'}}">
+            <text wx:if="{{heartAgeSummary.youngerThanActual}}">↓ 年轻 {{heartAgeSummary.diff}} 岁</text>
+            <text wx:elif="{{heartAgeSummary.diff > 0}}">↑ 偏老 {{heartAgeSummary.diff}} 岁</text>
+            <text wx:else>= 与实际一致</text>
           </view>
         </view>
-        <view class="chart-container"><canvas type="2d" id="heartRateChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="heartRate"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.heartRate}}</view>
-        <view class="metric-insight">全周期夜间平均心率呈缓慢下降趋势，较初期降低5bpm，心脏休息效率持续提升</view>
+        <view class="ha-metrics">
+          <view class="ha-metric">
+            <text class="ha-mname">本周 HRV 均值</text>
+            <view class="ha-mvalue-row">
+              <text class="ha-mnum">{{heartAgeSummary.hrvAvg}}</text>
+              <text class="ha-munit">ms</text>
+              <text class="ha-mdelta up">↑ {{heartAgeSummary.hrvDelta}}</text>
+            </view>
+          </view>
+          <view class="ha-metric">
+            <text class="ha-mname">本周静息心率</text>
+            <view class="ha-mvalue-row">
+              <text class="ha-mnum">{{heartAgeSummary.restingHr}}</text>
+              <text class="ha-munit">bpm</text>
+              <text class="ha-mdelta down">↓ {{heartAgeSummary.hrDelta}}</text>
+            </view>
+          </view>
+        </view>
       </view>
 
-      <view class="metric-section {{focusMetric === 'hrv' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">HRV心率变异性</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
+      <!-- 夜间平均心率 -->
+      <view class="hc-card {{focusMetric === 'heartRate' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">夜间平均心率</text>
+            <text class="hc-healthy">本周 {{heartRateHealthDays}} 天健康</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.heartRate === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="heartRate" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.heartRate === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="heartRate" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.heartRate === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="heartRate" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="heartRate">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="heartRate">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="heartRate">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="heartRate">»</text>
+            </view>
           </view>
         </view>
-        <view class="chart-container"><canvas type="2d" id="hrvChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="hrv"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.hrv}}</view>
-        <view class="metric-insight">全周期HRV长期稳定在健康区间，身体压力水平持续下降，自主神经调节能力良好</view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="heartRate">
+          <canvas type="2d" id="heartRateChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="heartRate"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.heartRate.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.heartRate.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.heartRate.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.heartRate.peer}}</text></view>
+        </view>
+        <view class="hc-summary">本周夜间平均心率整体平稳，多数处于健康区间。5/30 受多重因素影响短暂升高，建议保持规律作息，持续优化生活习惯。</view>
       </view>
 
-      <view class="metric-section {{focusMetric === 'heartIndex' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">心脏健康指数</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
+      <!-- HRV心率变异性 -->
+      <view class="hc-card {{focusMetric === 'hrv' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">HRV 心率变异性</text>
+            <text class="hc-healthy">本周 {{hrvHealthDays}} 天健康</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.hrv === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="hrv" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.hrv === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="hrv" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.hrv === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="hrv" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="hrv">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="hrv">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="hrv">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="hrv">»</text>
+            </view>
           </view>
         </view>
-        <view class="chart-container"><canvas type="2d" id="heartIndexChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="heartIndex"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.heartIndex}}</view>
-        <view class="metric-insight">全周期心脏健康指数全程稳定在90分以上，无异常下滑，心脏健康状态持续稳定</view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="hrv">
+          <canvas type="2d" id="hrvChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="hrv"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.hrv.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.hrv.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.hrv.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.hrv.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.hrv[period]}}</view>
+      </view>
+
+      <!-- 心脏健康指数 -->
+      <view class="hc-card {{focusMetric === 'heartIndex' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">心脏健康指数</text>
+            <text class="hc-healthy">本周 6/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.heartIndex === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="heartIndex" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.heartIndex === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="heartIndex" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.heartIndex === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="heartIndex" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="heartIndex">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="heartIndex">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="heartIndex">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="heartIndex">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="heartIndex">
+          <canvas type="2d" id="heartIndexChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="heartIndex"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.heartIndex.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.heartIndex.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.heartIndex.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.heartIndex.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.heartIndex[period]}}</view>
       </view>
     </view>
   </view>
 
-  <view class="module-card {{expanded.sound ? 'expanded' : ''}}">
-    <view class="module-header" bindtap="toggleModule" data-module="sound">
-      <view class="module-left">
-        <text class="module-index">4.</text>
-        <view>
-          <view class="module-title">睡眠声音趋势 <text class="vip-badge">会员专属</text></view>
-          <view class="module-desc">全周期睡眠环境噪音持续降低，鼾声频次逐步减少，睡眠环境稳定性持续提升</view>
+  <!-- ★ 2. 呼吸健康（默认展开） -->
+  <view class="module-card {{expanded.breath ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="breath">
+      <view class="module-icon-circle breath">🫁</view>
+      <view class="module-info">
+        <view class="module-title-row">
+          <text class="module-title">呼吸健康</text>
+          <text class="module-score-pill {{moduleSummaries.breath.statusKey}}">{{moduleSummaries.breath.score}} 分 · {{moduleSummaries.breath.status}}</text>
+        </view>
+        <view class="module-focus">{{moduleSummaries.breath.focus}}</view>
+      </view>
+      <view class="module-right">
+        <text class="module-arrow-new">›</text>
+      </view>
+    </view>
+
+    <view class="module-body" wx:if="{{expanded.breath}}">
+      <!-- 平均夜间呼吸频率（升级为区间柱形图） -->
+      <view class="hc-card {{focusMetric === 'breathRate' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">平均夜间呼吸频率</text>
+            <text class="hc-healthy">本周 6/7 天健康</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.breathRate === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="breathRate" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.breathRate === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="breathRate" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.breathRate === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="breathRate" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="breathRate">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="breathRate">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="breathRate">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="breathRate">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="breathRate">
+          <canvas type="2d" id="breathRateChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="breathRate"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.breathRate.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.breathRate.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.breathRate.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.breathRate.peer}}</text></view>
+        </view>
+        <view class="hc-summary">本周呼吸频率维持在 11-18 次/分钟，14 天均值 14.5 次/分，整体处于健康成人区间</view>
+      </view>
+
+      <!-- AHI 呼吸暂停指数 -->
+      <view class="hc-card {{focusMetric === 'ahi' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">AHI 呼吸暂停指数</text>
+            <text class="hc-healthy">本周 5/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.ahi === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="ahi" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.ahi === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="ahi" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.ahi === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="ahi" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="ahi">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="ahi">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="ahi">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="ahi">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="ahi">
+          <canvas type="2d" id="ahiChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="ahi"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.ahi.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.ahi.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.ahi.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.ahi.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.ahi[period]}}</view>
+      </view>
+
+      <!-- 最长呼吸暂停时长 -->
+      <view class="hc-card {{focusMetric === 'apnea' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">最长呼吸暂停时长</text>
+            <text class="hc-healthy hc-healthy-warn">本周 4/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.apnea === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="apnea" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.apnea === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="apnea" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.apnea === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="apnea" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="apnea">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="apnea">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="apnea">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="apnea">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="apnea">
+          <canvas type="2d" id="apneaChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="apnea"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.apnea.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.apnea.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.apnea.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.apnea.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.apnea[period]}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ★ 3. 睡眠板块（默认折叠） -->
+  <view class="module-card {{expanded.sleep ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="sleep">
+      <view class="module-icon-circle sleep">🛏️</view>
+      <view class="module-info">
+        <view class="module-title-row">
+          <text class="module-title">睡眠板块</text>
+          <text class="module-score-pill {{moduleSummaries.sleep.statusKey}}">{{moduleSummaries.sleep.score}} 分 · {{moduleSummaries.sleep.status}}</text>
+        </view>
+        <view class="module-focus">{{moduleSummaries.sleep.focus}}</view>
+      </view>
+      <view class="module-right">
+        <text class="module-arrow-new">›</text>
+      </view>
+    </view>
+
+    <view class="module-body" wx:if="{{expanded.sleep}}">
+      <!-- 0. 长期睡眠趋势 · 作息走势（柱形图） -->
+      <view class="hc-card schedule-card">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">长期睡眠趋势</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.schedule === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="schedule" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.schedule === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="schedule" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.schedule === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="schedule" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="schedule">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="schedule">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="schedule">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="schedule">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap schedule-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="schedule">
+          <canvas type="2d" id="scheduleBarChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="schedule"></canvas>
+        </view>
+
+        <!-- 底部 KPI 与洞察 -->
+        <view class="kpi-strip">
+          <view class="kpi-item">
+            <text class="kpi-label">平均上床</text>
+            <text class="kpi-value">{{klineSummary.avgBed}}</text>
+          </view>
+          <view class="kpi-item">
+            <text class="kpi-label">平均起床</text>
+            <text class="kpi-value">{{klineSummary.avgWake}}</text>
+          </view>
+          <view class="kpi-item">
+            <text class="kpi-label">健康窗口入睡</text>
+            <text class="kpi-value">{{klineSummary.healthyBedRate}}%</text>
+          </view>
+          <view class="kpi-item">
+            <text class="kpi-label">作息规律度</text>
+            <text class="kpi-value">{{klineSummary.regularity}}%</text>
+          </view>
+        </view>
+
+        <view class="insight-block">
+          <view class="insight-line">✨ 本周有多天在健康早睡窗口入睡，作息越来越稳定</view>
+          <view class="insight-line tip">💡 如果把上床时间再提前 15 分钟，固定 23:00 前入睡，深睡会更充足</view>
+          <view class="insight-source">（数据由健康监测仪 X2 无感自动采集，全周期数据完整可追溯）</view>
         </view>
       </view>
-      <text class="module-link">{{expanded.sound ? '收起' : '点击查看详细趋势 →'}}</text>
+
+      <!-- 1. 睡眠时长 -->
+      <view class="hc-card {{focusMetric === 'duration' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">睡眠时长</text>
+            <text class="hc-healthy">本周 7/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.duration === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="duration" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.duration === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="duration" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.duration === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="duration" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="duration">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="duration">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="duration">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="duration">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="duration">
+          <canvas type="2d" id="durationChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="duration"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.duration.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.duration.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.duration.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.duration.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.duration[period]}}</view>
+      </view>
+
+      <!-- 2. 睡眠效率 -->
+      <view class="hc-card {{focusMetric === 'efficiency' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">睡眠效率</text>
+            <text class="hc-healthy">本周 5/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.efficiency === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="efficiency" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.efficiency === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="efficiency" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.efficiency === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="efficiency" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="efficiency">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="efficiency">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="efficiency">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="efficiency">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="efficiency">
+          <canvas type="2d" id="efficiencyChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="efficiency"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.efficiency.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.efficiency.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.efficiency.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.efficiency.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.efficiency[period]}}</view>
+      </view>
+
+      <!-- 3. 入睡准备时长（区间柱） -->
+      <view class="hc-card {{focusMetric === 'prep' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">入睡准备时长</text>
+            <text class="hc-healthy hc-healthy-warn">本周 3/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.prep === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="prep" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.prep === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="prep" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.prep === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="prep" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="prep">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="prep">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="prep">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="prep">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="prep">
+          <canvas type="2d" id="prepChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="prep"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.prep.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.prep.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.prep.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.prep.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.prep[period]}}</view>
+      </view>
+
+      <!-- 4. 深睡占比 -->
+      <view class="hc-card {{focusMetric === 'deep' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">深睡占比</text>
+            <text class="hc-healthy">本周 7/7 天达标</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.deep === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="deep" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.deep === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="deep" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.deep === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="deep" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="deep">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="deep">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="deep">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="deep">»</text>
+            </view>
+          </view>
+        </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="deep">
+          <canvas type="2d" id="deepChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="deep"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.deep.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.deep.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.deep.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.deep.peer}}</text></view>
+        </view>
+        <view class="hc-summary">{{trendTexts.deep[period]}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ★ 4. 睡眠声音（默认折叠） -->
+  <view class="module-card {{expanded.sound ? 'expanded' : ''}}">
+    <view class="module-header" bindtap="toggleModule" data-module="sound">
+      <view class="module-icon-circle sound">🎧</view>
+      <view class="module-info">
+        <view class="module-title-row">
+          <text class="module-title">睡眠声音</text>
+          <text class="module-score-pill {{moduleSummaries.sound.statusKey}}">{{moduleSummaries.sound.score}} 分 · {{moduleSummaries.sound.status}}</text>
+        </view>
+        <view class="module-focus">{{moduleSummaries.sound.focus}}</view>
+      </view>
+      <view class="module-right">
+        <text class="module-arrow-new">›</text>
+      </view>
     </view>
 
     <view class="module-body" wx:if="{{expanded.sound}}">
-      <view class="metric-section {{focusMetric === 'noise' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">环境平均噪音</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
+      <!-- 鼾声总频次 -->
+      <view class="hc-card {{focusMetric === 'snore' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">鼾声总频次</text>
+            <text class="hc-healthy">本周 5/7 天健康</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.snore === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="snore" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.snore === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="snore" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.snore === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="snore" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="snore">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="snore">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="snore">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="snore">»</text>
+            </view>
           </view>
         </view>
-        <view class="chart-container"><canvas type="2d" id="noiseChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="noise"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.noise}}</view>
-        <view class="metric-insight">全周期环境平均噪音持续降低，较初期下降8分贝，睡眠环境持续优化</view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="snore">
+          <canvas type="2d" id="snoreChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="snore"></canvas>
+        </view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.snore.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.snore.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.snore.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.snore.peer}}</text></view>
+        </view>
+        <view class="hc-tip">💡 点击数据点查看当日详情 · 绿色点代表建议见效日 · 红色点为警示日</view>
+        <view class="hc-summary">本周鼾声频次稳定在 3-6 次/晚，14 天均值 4 次，处于健康区下沿，与呼吸暂停改善趋势匹配</view>
       </view>
 
-      <view class="metric-section {{focusMetric === 'snore' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">鼾声总频次</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
+      <!-- 梦话总频次 -->
+      <view class="hc-card {{focusMetric === 'sleeptalk' ? 'focused' : ''}}">
+        <view class="hc-head">
+          <view class="hc-title-row">
+            <text class="hc-title">梦话总频次</text>
+            <text class="hc-healthy">本周 7/7 天健康</text>
+          </view>
+          <view class="hc-toolbar">
+            <view class="hc-tabs">
+              <text class="hc-tab {{chartPeriods.sleeptalk === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="sleeptalk" data-period="7">周</text>
+              <text class="hc-tab {{chartPeriods.sleeptalk === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="sleeptalk" data-period="30">月</text>
+              <text class="hc-tab {{chartPeriods.sleeptalk === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-chart="sleeptalk" data-period="90">全周期</text>
+            </view>
+            <view class="hc-nav">
+              <text class="hc-nav-btn" bindtap="jumpToStart" data-chart="sleeptalk">«</text>
+              <text class="hc-nav-btn" bindtap="panLeft" data-chart="sleeptalk">‹</text>
+              <text class="hc-nav-btn" bindtap="panRight" data-chart="sleeptalk">›</text>
+              <text class="hc-nav-btn" bindtap="jumpToEnd" data-chart="sleeptalk">»</text>
+            </view>
           </view>
         </view>
-        <view class="chart-container"><canvas type="2d" id="snoreChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="snore"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.snore}}</view>
-        <view class="metric-insight">全周期鼾声频次呈持续下降趋势，月均减少3次/晚，与呼吸暂停改善趋势匹配</view>
-      </view>
-
-      <view class="metric-section {{focusMetric === 'noiseImpact' ? 'focused' : ''}}">
-        <view class="metric-row">
-          <text class="metric-title">噪音睡眠影响占比</text>
-          <view class="metric-toolbar">
-            <text class="tab-chip {{period === '7' ? 'active' : ''}}" bindtap="switchPeriod" data-period="7">周</text>
-            <text class="tab-chip {{period === '30' ? 'active' : ''}}" bindtap="switchPeriod" data-period="30">月</text>
-            <text class="tab-chip {{period === '90' ? 'active' : ''}}" bindtap="switchPeriod" data-period="90">全周期</text>
-            <text class="op-btn" bindtap="panLeft">‹</text>
-            <text class="op-btn" bindtap="panRight">›</text>
-          </view>
+        <view class="hc-canvas-wrap" bindtouchstart="onChartDragStart" bindtouchmove="onChartDragMove" bindtouchend="onChartDragEnd" data-chart="sleeptalk">
+          <canvas type="2d" id="sleeptalkChart" class="hc-canvas" bindtap="onTapChartPoint" data-chart="sleeptalk"></canvas>
         </view>
-        <view class="chart-container"><canvas type="2d" id="noiseImpactChart" class="trend-canvas" bindtap="onTapChartPoint" data-chart="noiseImpact"></canvas></view>
-        <view class="chart-axis"><text wx:for="{{lineAxisLabels}}" wx:key="index">{{item}}</text></view>
-        <view class="point-tip">{{pointTips.noiseImpact}}</view>
-        <view class="metric-insight">全周期噪音对睡眠的影响占比持续下降，较初期降低18%，睡眠连续性持续提升</view>
+        <view class="hc-legend">
+          <view class="hc-legend-item"><view class="hc-dot green"></view><text>{{chartLegends.sleeptalk.h}}</text></view>
+          <view class="hc-legend-item"><view class="hc-dot yellow"></view><text>{{chartLegends.sleeptalk.sh}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line dark"></view><text>{{chartLegends.sleeptalk.avg}}</text></view>
+          <view class="hc-legend-item"><view class="hc-line gray"></view><text>{{chartLegends.sleeptalk.peer}}</text></view>
+        </view>
+        <view class="hc-tip">💡 点击数据点查看当日详情 · 绿色点代表建议见效日</view>
+        <view class="hc-summary">本周梦话频次 1-3 次/晚，14 天均值 2 次，整体稳定，未对睡眠连续性造成影响</view>
       </view>
     </view>
   </view>
 
   <view class="bottom-space"></view>
+
+  <!-- ============================================== -->
+  <!-- 付费弹窗（长期视图 / 声音监测共用）              -->
+  <!-- ============================================== -->
+  <view class="pw-mask" wx:if="{{paywall.visible}}" catchtap="closePaywall">
+    <view class="pw-card" catchtap="">
+      <view class="pw-header">
+        <view class="pw-icon-circle">{{paywall.icon}}</view>
+        <view class="pw-title">{{paywall.title}}</view>
+        <view class="pw-sub">{{paywall.sub}}</view>
+      </view>
+      <view class="pw-body">
+        <view class="pw-feature" wx:for="{{paywall.features}}" wx:key="title">
+          <view class="pw-feature-icon">{{item.icon}}</view>
+          <view class="pw-feature-text">
+            <view class="pw-feature-title">{{item.title}}</view>
+            <view class="pw-feature-sub">{{item.sub}}</view>
+          </view>
+        </view>
+
+        <!-- 价格对比 -->
+        <view class="pw-price-row">
+          <view class="pw-price-card recommended" bindtap="paywallSubscribeYearly">
+            <view class="pw-price-badge">⭐ 限时新人价</view>
+            <view class="pw-price-name">年付</view>
+            <view class="pw-price-num">¥98</view>
+            <view class="pw-price-orig">原价 ¥168</view>
+            <view class="pw-price-equiv">约 ¥8.2 / 月</view>
+          </view>
+          <view class="pw-price-card" bindtap="paywallSubscribeMonthly">
+            <view class="pw-price-name">月付</view>
+            <view class="pw-price-num">¥19.9</view>
+            <view class="pw-price-orig">&nbsp;</view>
+            <view class="pw-price-equiv">/ 月</view>
+          </view>
+        </view>
+      </view>
+      <view class="pw-actions">
+        <view class="pw-btn-primary" bindtap="paywallTrial">🎁 立即开启 7 天免费试用</view>
+        <view class="pw-btn-ghost" bindtap="closePaywall">暂不开通</view>
+      </view>
+    </view>
+  </view>
 </view>

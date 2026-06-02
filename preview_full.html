@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>护心宝 — 心脏健康 × 睡眠监测</title>
+<script src="/web/api.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<style>
+/* ===== 全局重置 ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:#f4fbf9;color:#14443a}
+.page{max-width:420px;margin:0 auto;padding:44px 9px 180px;min-height:100vh}
+.hidden{display:none!important}
+
+/* ===== Tab Bar — 浮岛 ===== */
+.tab-bar{position:fixed;bottom:var(--safe-bottom, max(env(safe-area-inset-bottom, 0px), 84px));left:50%;transform:translateX(-50%);z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-around;padding:6px 8px;border-radius:20px;box-shadow:0 4px 24px rgba(13,58,48,0.12),0 1px 3px rgba(13,58,48,0.08);width:calc(100% - 32px);max-width:388px;border:1px solid rgba(255,255,255,0.6)}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:10px;color:#7B928C;cursor:pointer;flex:1;border-radius:12px;transition:background 0.2s}
+.tab-item.active{color:#1F8A6F;background:rgba(31,138,111,0.08)}
+.tab-icon{font-size:22px;line-height:1}
+.tab-label{font-size:11px;font-weight:600}
+
+/* ===== 通用卡片 ===== */
+.card{background:#fff;border-radius:9px;padding:10px;margin-bottom:7px;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.fold-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:2px 0}
+.section-title{font-size:14px;font-weight:700;color:#1f443c;margin-bottom:4px}
+.fold-action{color:#1f8a6f;font-size:13px}
+.sub-title{font-size:12px;color:#577970;line-height:1.6}
+.status-line{display:flex;flex-wrap:wrap;align-items:center;gap:3px 2px;margin-top:5px;font-size:11px;line-height:1.8}
+.sl-label{color:#6a8b82;font-weight:500;font-size:11px}
+.sl-value{color:#14443a;font-weight:700;font-size:11px;margin-left:1px}
+.sl-divider{color:#c5d4ce;margin:0 3px;font-weight:600}
+.status-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 5px;border-radius:3px;font-size:13px;line-height:1.2}
+.status-pill.normal{background:#E7F7EE;color:#0F6E56}
+.status-pill.warning{background:#FBF3DC;color:#8C6C12}
+.status-pill.orange{background:#fdecde;color:#b86518}
+.status-pill.mini{padding:1px 5px;font-size:11px;border-radius:3px}
+.pill-icon{font-size:13px;line-height:1}
+.pill-text{font-weight:500}
+
+/* ===== 星期选择器 ===== */
+.week-selector{background:#1a2a3a;border-radius:9px;padding:12px 10px;margin-bottom:7px}
+.week-header{display:flex;align-items:center;margin-bottom:12px}
+.week-title{font-size:24px;font-weight:700;color:#fff}
+.week-subtitle{font-size:12px;color:#8a9baa;margin-left:8px;flex:1}
+.week-calendar-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);cursor:pointer}
+.week-calendar-btn:hover{background:rgba(255,255,255,0.18)}
+.week-days{display:flex;justify-content:space-between;align-items:center}
+.day-item{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.day-circle{width:40px;height:40px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);gap:1px}
+.day-circle.active{border-color:#ff8a65;background:conic-gradient(from 0deg,#ff8a65 0deg,rgba(255,138,101,0.3) 0deg,rgba(255,255,255,0.1) 360deg)}
+.day-text{font-size:14px;color:#8a9baa;line-height:1}
+.day-num{font-size:14px;color:#b5c4d0;line-height:1;font-weight:600}
+.day-circle.active .day-text,.day-circle.active .day-num{color:#fff}
+
+/* ===== 日历弹窗 ===== */
+.calendar-modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;display:flex;align-items:center;justify-content:center}
+.modal-mask{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6)}
+.modal-content{position:relative;background:#2a3a4a;border-radius:12px;padding:16px;width:85%;max-width:300px}
+.modal-header{display:flex;align-items:center;margin-bottom:16px;gap:6px}
+.modal-subtitle{font-size:12px;color:#8a9baa;flex:1;text-align:center}
+.modal-month-nav{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;background:rgba(255,255,255,0.08);border-radius:50%;cursor:pointer;border:none}
+.modal-month-nav:hover{background:rgba(255,255,255,0.18)}
+.modal-close{width:28px;height:28px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;cursor:pointer;border:none}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.calendar-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:14px;color:#fff;cursor:pointer}
+.calendar-day.has-data{background:rgba(255,255,255,0.1)}
+.calendar-day.today{background:#ff8a65;font-weight:700}
+
+/* ===== 顶部状态栏 ===== */
+.top-status{background:#fff;border-radius:7px;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#2a4a43;margin-bottom:7px}
+.status-link{color:#1f8a6f;cursor:pointer}
+
+/* ===== 心脏总览卡 ===== */
+.overview-card{background:linear-gradient(165deg,#fff5f5 0%,#ffffff 50%,#f5fbf9 100%);border:1px solid #ffe1e1;padding:12px 11px}
+.overview-header{display:flex;align-items:center;gap:5px;margin-bottom:9px}
+.overview-emoji{font-size:16px;line-height:1}
+.overview-title{font-size:17px;font-weight:800;color:#14443a;letter-spacing:0.5px;flex:1}
+.overview-date{font-size:11px;color:#7a8c84;background:rgba(255,255,255,0.7);padding:2px 7px;border-radius:5px;border:1px solid #e6f0ea}
+
+/* ===== 风险卡 ===== */
+.cr-disclaimer{display:flex;align-items:flex-start;gap:3px;padding:5px 7px;margin-bottom:6px;background:#f3f8f6;border-radius:5px;border-left:2px solid #c5d4ce;font-size:11px;color:#5a6f6a}
+.cr-disc-icon{font-size:11px;flex-shrink:0;line-height:1.5}
+.cardiac-risk-card{background:#fff;border-radius:8px;padding:10px 11px;margin-bottom:6px;border-left:4px solid #d9b35c;box-shadow:0 2px 6px rgba(0,0,0,0.05);cursor:pointer}
+.cardiac-risk-card.warning{border-left-color:#d9b35c;background:#fffbf3}
+.cardiac-risk-card.normal-group{border-left-color:#4caf84;background:#f5fdf8}
+.cardiac-risk-card.normal{border-left-color:#4caf84;background:#f5fdf8}
+.cardiac-risk-card.normal .cr-disease-tag{color:#1f5e3a;background:#e0f5e9}
+.cardiac-risk-card.normal .cr-data-list{border-color:rgba(76,175,132,0.25);background:rgba(245,253,248,0.6)}
+.cardiac-risk-card.normal .cr-data-row{border-bottom-color:rgba(76,175,132,0.15)}
+.cardiac-risk-card.normal .cr-body{border-top-color:#c8e4d2}
+.cardiac-risk-card.normal .cr-link{background:rgba(31,138,111,0.07);color:#1a6e4a}
+.cr-normal-divider{display:flex;align-items:center;gap:6px;padding:8px 0;margin:4px 0;cursor:pointer;border-top:1px dashed #d0dcd6;font-size:11px;color:#8a9baa;font-weight:500}
+.cr-normal-divider:hover{color:#1F8A6F}
+.cr-normal-divider::after{content:'';flex:1;height:1px;background:linear-gradient(to right,#d0dcd6,transparent)}
+.cr-head{display:flex;align-items:center;gap:7px}
+.cr-icon{font-size:20px;flex-shrink:0}
+.cr-text{flex:1;display:flex;flex-direction:column;gap:2px}
+.cr-title{font-size:15px;font-weight:800;color:#14443a;line-height:1.35}
+.cr-summary{font-size:12px;color:#5a6f6a;font-weight:500;line-height:1.4}
+.cr-arrow{font-size:11px;color:#9aa8a2;font-weight:600}
+.cr-body{margin-top:6px;padding-top:6px;border-top:1px dashed #ede1c8}
+.cr-detail-block{margin-bottom:6px;display:flex;flex-direction:column;gap:2px}
+.cr-detail-label{font-size:12px;font-weight:700;color:#14443a}
+.cr-detail-text{font-size:12px;color:#4a5a63;line-height:1.65}
+.cr-disease-tags{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px dashed #e8e4d8}
+.cr-disease-tag{display:inline-block;font-size:10px;color:#8c6c12;background:#fbf3dc;padding:2px 5px;border-radius:3px;font-weight:600}
+.cr-data-list{margin-top:2px;border:1px solid rgba(217,179,92,0.25);border-radius:5px;overflow:hidden;background:rgba(255,251,240,0.6)}
+.cr-data-row{display:flex;align-items:center;padding:5px 7px;font-size:10px;line-height:1.4;border-bottom:1px solid rgba(217,179,92,0.15)}
+.cr-data-row:last-child{border-bottom:none}
+.cr-data-label{flex:0 0 38%;color:#5a6a63}
+.cr-data-value{flex:0 0 24%;font-weight:700;color:#14443a}
+.cr-data-ref{flex:1;text-align:right;font-size:10px;color:#8a978f}
+.cr-data-row.low .cr-data-value,.cr-data-row.high .cr-data-value,.cr-data-row.border .cr-data-value{color:#b86a18}
+.cr-data-row.ok .cr-data-value{color:#1f8a6f}
+.cr-suggestion{font-size:12px;color:#2e6a52;line-height:1.7;padding:1px 0}
+.cr-link{margin-top:4px;padding:5px 7px;background:rgba(31,138,111,0.08);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;gap:3px;font-size:11px;color:#1f8a6f;font-weight:600;cursor:pointer}
+.normal-sub-item{background:#fff;border-radius:6px;padding:7px 8px;margin-top:5px;border:1px solid #d8ede1}
+.ng-title{font-size:15px;font-weight:800;color:#14443a}
+.ng-summary{font-size:12px;color:#5a6f6a;font-weight:500;line-height:1.4}
+
+/* ===== 今日打卡 ===== */
+.today-checkins{margin-top:9px;padding:9px;background:#fff;border:1px solid #e6f0ea;border-radius:8px}
+.today-checkins-head{display:flex;align-items:center;gap:4px;margin-bottom:7px;padding-bottom:6px;border-bottom:1px dashed #d8e8e0}
+.tc-head-emoji{font-size:14px}
+.tc-head-text{font-size:14px;font-weight:700;color:#14443a;flex:1}
+.tc-head-deadline{font-size:11px;color:#1f8a6f;background:#ecfaf3;padding:2px 6px;border-radius:999px;font-weight:600;border:1px solid #c8e8d6}
+.today-checkin-item{display:flex;align-items:center;gap:7px;padding:7px 4px;border-bottom:1px solid #f0f6f3;cursor:pointer;border-radius:5px;transition:background 0.2s}
+.today-checkin-item:hover{background:#f0faf5}
+.today-checkin-item:last-child{border-bottom:none}
+.today-checkin-item.checked .tc-item-title{color:#7a8c84;text-decoration:line-through}
+.tc-item-emoji{font-size:18px;line-height:1;flex-shrink:0;width:28px;text-align:center}
+.tc-item-text{flex:1;display:flex;flex-direction:column;gap:2px}
+.tc-item-title{font-size:14px;font-weight:700;color:#14443a;line-height:1.35}
+.tc-item-sub{font-size:11px;color:#6a7a81;line-height:1.45}
+.tc-check-box{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:1px solid #c5d4ce;display:flex;align-items:center;justify-content:center}
+.today-checkin-item.checked .tc-check-box{background:#1f8a6f;border-color:#1f8a6f}
+.tc-check-icon{color:#fff;font-size:14px;font-weight:700;line-height:1}
+
+/* ===== 主卡 header ===== */
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.card-title{display:flex;align-items:center;gap:5px}
+.card-title-emoji{font-size:14px;line-height:1}
+.card-title-text{font-size:14px;font-weight:700;color:#1f443c}
+.card-collapse-btn{font-size:13px;color:#1f8a6f;cursor:pointer;border:none;background:none}
+
+/* ===== 心脏健康指数渐变条 ===== */
+.hi-compact{margin-top:7px;margin-bottom:3px}
+.hi-compact-title-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.hi-compact-title{font-size:14px;font-weight:700;color:#1f443c}
+.hi-gauge-wrap{position:relative;height:24px;padding:0 2px;background:#fafcfb;border-radius:7px;border:1px solid #eef2f0}
+.hi-bar{position:absolute;left:6px;right:6px;top:50%;transform:translateY(-50%);height:13px;border-radius:7px;background:linear-gradient(90deg,#ef9a9a 0%,#f4c5bd 22%,#f6e1da 42%,#f0ece9 50%,#d4e2ea 58%,#b6d4e6 78%,#8ec2dc 100%);display:flex;align-items:center;justify-content:space-around;padding:0 4px;overflow:hidden}
+.hi-tick{width:1px;height:46%;background:rgba(255,255,255,0.85);display:block;border-radius:1px}
+.hi-pointer{position:absolute;top:1px;bottom:1px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;z-index:2}
+.hi-ptr-line{width:1px;height:100%;background:#2c3a3a;border-radius:1px}
+.hi-ptr-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:11px;height:11px;background:#fff;border:1px solid #2c3a3a;border-radius:50%}
+.hi-legend{display:flex;justify-content:space-between;margin-top:4px;padding:0 2px;font-size:11px;color:#8a99a3}
+
+/* ===== 2x2 指标网格 ===== */
+.metrics-grid-2x2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.metric-box{background:#f8fdf9;border:1px solid #e3f0ec;border-radius:6px;padding:8px 6px}
+.metric-name{font-size:12px;color:#6a8b82;line-height:1.4;margin-bottom:3px}
+.metric-number{font-size:16px;font-weight:700;color:#16443c;line-height:1.2;margin-bottom:2px}
+.metric-note{font-size:10px;color:#2e9f82;line-height:1.3}
+
+/* ===== 图表卡片 ===== */
+.card-title-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.card-title-bold{font-size:14px;font-weight:700;color:#1f443c}
+.chart-header{display:flex;justify-content:flex-end;align-items:center;margin-bottom:6px}
+.chart-range{display:flex;align-items:baseline;gap:3px}
+.range-number{font-size:14px;font-weight:700;color:#2e3035;line-height:1}
+.range-unit{font-size:11px;color:#6a7a81;line-height:1}
+canvas.trend-chart{width:100%;height:100px;background:#fff;border:1px solid #e6f0ed;border-radius:6px;margin:6px 0}
+canvas.ecg-waveform{width:100%;height:90px;background:#fff;border:1px solid #e6efec;border-radius:6px;margin:6px 0}
+.chart-axis-labels{display:flex;justify-content:space-between;font-size:11px;color:#8ca6a0;padding:4px 8px 0;margin-bottom:8px}
+.ecg-axis-labels{display:flex;justify-content:space-between;font-size:12px;color:#9cb2ac;padding:4px 8px 0;margin-bottom:8px}
+
+/* ===== 分析框 ===== */
+.analysis-box{border-radius:6px;padding:8px;line-height:1.6}
+.analysis-box.blue-variant{background:#F7FBFD;border-left:2px solid #3DB9F0}
+.analysis-box.orange-variant{background:#FBF8F3;border-left:2px solid #D89B5C}
+.analysis-headline{display:block;font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:6px;line-height:1.5}
+.bold{font-weight:700}
+.bullet-dot{color:#3DB9F0;font-size:13px;line-height:1.2;min-width:8px}
+.bullet-dot.orange{color:#D89B5C}
+.bullet-text{font-size:12px;color:#577970;line-height:1.5;flex:1}
+.analysis-list{display:flex;flex-direction:column;gap:5px}
+.analysis-bullet{display:flex;gap:4px;align-items:flex-start}
+.tooltip-term{border-bottom:1px dashed #3DB9F0;cursor:help}
+.analysis-box.orange-variant .tooltip-term{border-bottom-color:#D89B5C}
+
+/* ===== 呼吸健康 ===== */
+.breath-stats-row{display:flex;align-items:stretch;justify-content:space-between;background:#fafcfb;border:1px solid #eef2f0;border-radius:6px;padding:9px 4px;margin-bottom:7px}
+.breath-stat-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.breath-stat-item.highlight .breath-stat-num{color:#58c7f5}
+.breath-stat-num{font-size:19px;font-weight:700;color:#2e3035;line-height:1}
+.breath-stat-unit{font-size:12px;font-weight:600;color:inherit;margin-left:1px}
+.breath-stat-label{margin-top:5px;font-size:11px;color:#6a7a81}
+.breath-stat-divider{width:1px;background:#e6ece9;margin:3px 0}
+
+/* ===== 恢复双环 ===== */
+.recovery-rings-row{display:flex;justify-content:space-evenly;align-items:stretch;margin-top:12px;padding:12px 6px;background:rgba(255,255,255,0.85);border:1px solid #e6f0ea;border-radius:8px;gap:8px}
+.recovery-ring-box{display:flex;flex-direction:column;align-items:center;flex:1}
+.recovery-ring-outer{width:92px;height:92px;border-radius:50%;padding:4px;display:flex;align-items:center;justify-content:center}
+.recovery-ring-box.body .recovery-ring-outer{background:linear-gradient(145deg,#d9f4e3,#f7fcf9);box-shadow:0 5px 13px rgba(31,138,111,0.18)}
+.recovery-ring-box.mind .recovery-ring-outer{background:linear-gradient(145deg,#d9e8f9,#f7faff);box-shadow:0 5px 13px rgba(58,108,219,0.18)}
+.recovery-ring{width:85px;height:85px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+.ring-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:68px;height:68px;background:#fff;border-radius:50%}
+.ring-score{font-size:30px;font-weight:800;line-height:1}
+.recovery-ring-box.body .ring-score{color:#1f8a6f}
+.recovery-ring-box.mind .ring-score{color:#3a6cdb}
+.ring-unit{font-size:12px;color:#a3b5ad;font-weight:600;margin-top:1px}
+.ring-label{margin-top:8px;font-size:13px;color:#4a5e57;font-weight:600}
+.ring-status-pill{margin-top:4px;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:600}
+.recovery-ring-box.body .ring-status-pill{color:#1f8a6f;background:#e6f5ee;border:1px solid #c8e8d8}
+.recovery-ring-box.mind .ring-status-pill{color:#3a6cdb;background:#ebf1fd;border:1px solid #cfdcf8}
+
+/* ===== 核心睡眠数据 ===== */
+.core-metrics-grid{margin-top:9px;background:#fff;border:1px solid #e6f0ea;border-radius:8px;padding:2px 0;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+.core-metric{display:flex;flex-direction:column;align-items:center;padding:8px 2px;position:relative}
+.core-metric+.core-metric::before{content:'';position:absolute;left:0;top:11px;bottom:11px;width:1px;background:#ecf3ef}
+.core-metric-label{font-size:11px;color:#7a8c84;font-weight:500}
+.core-metric-value-wrap{margin-top:5px;display:flex;align-items:baseline;gap:1px}
+.core-metric-value{font-size:15px;font-weight:700;color:#14443a;line-height:1.1}
+.core-metric-unit{font-size:11px;color:#7a8c84;font-weight:500}
+
+/* ===== 入睡建议 ===== */
+.sleep-suggestion-grid{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sleep-suggestion{display:flex;align-items:center;gap:7px;padding:9px 10px;background:linear-gradient(135deg,#f0faf5 0%,#fff 100%);border:1px solid #d9efe3;border-radius:8px}
+.ss-icon{font-size:22px;line-height:1;flex-shrink:0}
+.ss-text{display:flex;flex-direction:column;gap:1px;flex:1}
+.ss-label{font-size:12px;color:#4a7a6c;font-weight:500}
+.ss-value{font-size:17px;font-weight:800;color:#14443a;line-height:1.1}
+.ss-sub{font-size:11px;color:#7a8c84;margin-top:1px}
+
+/* ===== 睡眠分期 ===== */
+.sleep-section-title{margin-top:11px;padding-top:9px;border-top:1px solid #eef4f1;font-size:14px;font-weight:700;color:#1f443c;line-height:1.4}
+.sleep-section-title--first{margin-top:4px;padding-top:0;border-top:none}
+.sleep-phase-card-inner{background:linear-gradient(180deg,#09141a 0%,#050b0f 100%);border:1px solid #13262f;border-radius:9px;padding:10px;margin-top:8px}
+.phase-time-row{display:flex;justify-content:space-between;color:#9ab0b8;font-size:13px;margin-bottom:5px}
+.phase-chart{width:100%;height:125px;background:transparent;border-radius:6px}
+.phase-time-axis{margin-top:4px;padding:0 5px;display:flex;justify-content:space-between}
+.phase-time-tick{font-size:11px;color:rgba(152,178,191,0.78)}
+.phase-legend-grid{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:6px 8px}
+.phase-legend-item{display:flex;align-items:center;gap:5px;color:#8ea3ab;cursor:pointer;transition:all 0.2s}
+.phase-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.phase-text{font-size:12px;line-height:1.4}
+.phase-pct{font-size:12px;font-weight:700;color:#2cd2c4;margin-left:2px}
+.phase-legend-item.active{color:#e8f6ff}
+.phase-legend-item.active .phase-dot{width:9px;height:9px;box-shadow:0 0 8px rgba(165,227,255,0.7)}
+.phase-legend-item.inactive{opacity:0.45}
+
+/* ===== 睡眠循环分析 ===== */
+.cycle-analysis-wrap{margin-top:8px;padding-top:7px;border-top:1px solid rgba(109,144,162,0.28)}
+.cycle-analysis-title{font-size:13px;color:#d4e7f3;font-weight:700;margin-bottom:6px}
+.cycle-item{background:rgba(13,28,38,0.66);border:1px solid rgba(76,118,141,0.36);border-radius:6px;padding:6px}
+.cycle-item+.cycle-item{margin-top:5px}
+.cycle-item-title{display:block;font-size:12px;color:#f0f8ff;font-weight:700;line-height:1.45}
+.cycle-segment-row{margin-top:5px}
+.cycle-segment-track{display:flex;width:100%;height:21px;overflow:hidden;border-radius:5px;background:rgba(146,179,197,0.14)}
+.cycle-segment{height:100%;min-width:13px;display:flex;align-items:center;justify-content:center}
+.cycle-segment-text{font-size:11px;color:#fff;font-weight:600;line-height:1;white-space:nowrap}
+.cycle-recovery-text{display:block;margin-top:5px;font-size:12px;color:#a8cae4;line-height:1.5}
+
+/* ===== 体动 ===== */
+.movement-head{margin-top:6px;display:flex;justify-content:space-between;align-items:flex-end}
+.movement-title{font-size:15px;line-height:1.2;color:#3a6960;font-weight:600}
+.movement-count-wrap{display:flex;align-items:baseline;gap:3px;color:#2b3940}
+.movement-count-label{font-size:17px;line-height:1;font-weight:500;color:#4a5a60}
+.movement-count-value{font-size:29px;line-height:.95;font-weight:500;color:#1e2d32}
+.movement-count-unit{font-size:13px;line-height:1;color:#55666d}
+.movement-axis{margin-top:5px;display:flex;justify-content:space-between;font-size:12px;color:#8ca6a0}
+.movement-legend{margin-top:5px;display:flex;justify-content:center;gap:14px;color:#587169;font-size:13px}
+.movement-legend-item{display:flex;align-items:center;gap:5px}
+.movement-dot{width:16px;height:3px;border-radius:999px;display:inline-block}
+.movement-dot-activity{background:#4fc3d8}
+.movement-dot-turnover{background:#c95b77}
+
+/* ===== 声音监测网格 ===== */
+.sound-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sound-box{background:#fafffd;border:1px solid #e6f0ea;border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:3px}
+.sound-box.tappable{background:linear-gradient(135deg,#f0faf5 0%,#fff 80%);border-color:#c8e8d6;cursor:pointer}
+.sb-label{font-size:12px;color:#4a6a60;font-weight:500}
+.sb-value{font-size:19px;font-weight:800;color:#14443a;line-height:1.1}
+.sb-level{font-size:11px;color:#1f8a6f;font-weight:600}
+.sb-hint{margin-top:3px;font-size:10px;color:#1f8a6f;font-weight:600}
+
+/* ===== 声音弹窗 ===== */
+.sound-modal{position:fixed;inset:0;z-index:2000;background:rgba(20,30,26,0.55);display:flex;align-items:center;justify-content:center;padding:0 20px}
+.sound-modal-card{width:100%;max-width:320px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+.sm-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;border-bottom:1px solid #eef4f1}
+.sm-title{font-size:15px;font-weight:700;color:#14443a;flex:1}
+.sm-close{width:28px;height:28px;border-radius:50%;background:#f0f4f1;color:#6a7a81;text-align:center;line-height:28px;font-size:14px;font-weight:600;cursor:pointer;border:none}
+.sm-body{padding:4px 14px 14px;max-height:60vh;overflow-y:auto}
+.sm-empty{text-align:center;padding:30px 0;font-size:14px;color:#9aa8a2}
+.sm-rec-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f3f7f5}
+.sm-rec-item:last-child{border-bottom:none}
+.sm-rec-left{display:flex;flex-direction:column;gap:2px}
+.sm-rec-time{font-size:15px;font-weight:700;color:#14443a}
+.sm-rec-label{font-size:13px;color:#6a7a81}
+.sm-rec-play{width:32px;height:32px;border-radius:50%;background:#1f8a6f;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(31,138,111,0.3);cursor:pointer;border:none}
+.sm-rec-play-icon{color:#fff;font-size:14px;margin-left:2px}
+
+/* ===== 长期 — 坚持见效 Hero ===== */
+.lt-hero{background:linear-gradient(160deg,#0D3A30 0%,#14443A 35%,#1a5548 70%,#0f3b30 100%);border-radius:12px;padding:20px 16px 18px;margin-bottom:8px;position:relative;overflow:hidden}
+.lt-hero::after{content:'';position:absolute;top:-30px;right:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(70,199,158,0.15) 0%,transparent 70%);border-radius:50%}
+.lt-hero-streak{font-size:48px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px}
+.lt-hero-streak-sub{font-size:14px;color:#8aad9f;margin-top:2px;font-weight:600}
+.lt-hero-title{font-size:17px;font-weight:800;color:#e8f5f0;margin-bottom:2px}
+.lt-hero-delta{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.lt-hero-delta-item{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px}
+.lt-hero-delta-icon{font-size:14px}
+.lt-hero-delta-text{font-size:11px;color:#c8e8d6;font-weight:600}
+.lt-hero-delta-num{font-size:13px;font-weight:800;color:#4cd964}
+
+/* ===== 长期 — 见效故事卡片 ===== */
+.lt-story-card{background:#fff;border-radius:9px;padding:12px 11px;margin-bottom:7px;box-shadow:0 2px 7px rgba(37,114,93,0.06);border-left:3px solid #1f8a6f}
+.lt-story-head{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.lt-story-icon{font-size:18px}
+.lt-story-title{font-size:14px;font-weight:700;color:#14443a}
+.lt-story-badge{font-size:10px;font-weight:700;color:#1f8a6f;background:#E7F7EE;padding:2px 8px;border-radius:999px}
+.lt-story-chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#6a8b82;margin-bottom:4px}
+.lt-story-from{text-decoration:line-through;color:#9aa8a2}
+.lt-story-arrow{color:#1f8a6f;font-weight:700}
+.lt-story-to{color:#14443a;font-weight:700}
+.lt-story-delta{font-size:11px;color:#c43a2c;font-weight:700;margin-left:4px}
+.lt-story-progress{margin-top:6px;height:4px;background:#e0efe8;border-radius:2px;overflow:hidden}
+.lt-story-progress-fill{height:100%;background:linear-gradient(90deg,#1f8a6f,#4cd964);border-radius:2px}
+.lt-story-action{font-size:11px;color:#5a7a6a;margin-top:4px}
+
+/* ===== 长期 — 坚持统计行 ===== */
+.lt-stats-row{display:flex;gap:6px;margin-bottom:8px}
+.lt-stat-card{flex:1;background:#fff;border-radius:9px;padding:10px 8px;text-align:center;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.lt-stat-num{font-size:22px;font-weight:800;color:#14443a;line-height:1}
+.lt-stat-label{font-size:10px;color:#6a8b82;margin-top:3px}
+.lt-stat-delta{font-size:10px;font-weight:700;margin-top:2px}
+.lt-stat-delta.up{color:#1f8a6f}
+.lt-stat-delta.down{color:#c43a2c}
+.lt-stat-delta.good{color:#1f8a6f}
+
+/* ===== 长期页模块卡 ===== */
+.module-card{background:#fff;border-radius:9px;margin-bottom:7px;box-shadow:0 2px 7px rgba(37,114,93,0.06);overflow:hidden}
+.module-header{display:flex;align-items:center;gap:10px;padding:12px 11px;cursor:pointer}
+.module-header:hover{background:#f9fdfb}
+.module-icon-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.module-icon-circle.heart{background:#fff0f0}
+.module-icon-circle.breath{background:#eef8ff}
+.module-icon-circle.sleep{background:#edf6ff}
+.module-icon-circle.sound{background:#f5f0ff}
+.module-info{flex:1;min-width:0}
+.module-title-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.module-title{font-size:16px;font-weight:800;color:#14443a}
+.module-score-pill{font-size:11px;font-weight:600;padding:2px 6px;border-radius:3px;line-height:1.2}
+.module-score-pill.excellent{background:#E7F7EE;color:#0F6E56}
+.module-score-pill.good{background:#E7F7EE;color:#0F6E56}
+.module-score-pill.warn{background:#FBF3DC;color:#8C6C12}
+.module-stats{font-size:11px;color:#6a8b82;margin-top:3px}
+.stat-divider{margin:0 4px;color:#c5d4ce}
+.stat-item.good{color:#1f8a6f}
+.stat-item.warn{color:#b86a18}
+.module-focus{font-size:11px;color:#7a8c84;margin-top:2px;font-weight:600}
+.module-right{display:flex;align-items:center}
+.module-arrow-new{font-size:22px;color:#9aa8a2;font-weight:bold}
+.module-body{padding:0 11px 14px}
+
+/* ===== 心脏年龄卡 ===== */
+.heart-age-card{background:linear-gradient(135deg,#fff5f5,#fff);border:1px solid #ffe1e1;border-radius:8px;padding:12px;margin-bottom:10px}
+.ha-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.ha-title-row{display:flex;align-items:center;gap:4px}
+.ha-label{font-size:13px;color:#6a7a81}
+.ha-age{font-size:28px;font-weight:800;color:#14443a;line-height:1}
+.ha-unit{font-size:13px;color:#6a7a81;margin-top:4px}
+.ha-actual{font-size:11px;color:#7a8c84;margin-left:4px}
+.ha-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#E7F7EE;color:#0F6E56}
+.ha-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ha-mname{font-size:11px;color:#6a8b82}
+.ha-mvalue-row{display:flex;align-items:baseline;gap:4px;margin-top:3px}
+.ha-mnum{font-size:22px;font-weight:700;color:#14443a}
+.ha-munit{font-size:12px;color:#6a7a81}
+.ha-mdelta{font-size:11px;font-weight:600}
+.ha-mdelta.up{color:#4cd964}
+.ha-mdelta.down{color:#3DB9F0}
+
+/* ===== 图表卡片 ===== */
+.hc-card{background:#fff;border:1px solid #e6f0ea;border-radius:8px;padding:10px;margin-bottom:8px}
+.hc-head{margin-bottom:8px}
+.hc-title-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.hc-title{font-size:14px;font-weight:700;color:#1f443c}
+.hc-healthy{font-size:11px;color:#1f8a6f;background:#E7F7EE;padding:2px 6px;border-radius:3px;font-weight:600}
+.hc-healthy-warn{color:#b86a18;background:#FBF3DC}
+/* ===== 我的账户编辑页（Level 3） + 弹层 ===== */
+.ae-avatar-section{display:flex;flex-direction:column;align-items:center;padding:18px 0 14px;background:linear-gradient(180deg,#ecf6f1 0%,#f4fbf9 100%);margin-bottom:10px;cursor:pointer}
+.ae-avatar-big{width:80px;height:80px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(31,138,111,.12)}
+.ae-avatar-emoji-big{font-size:45px}
+.ae-avatar-edit-tag{font-size:11px;color:#1F8A6F;margin-top:7px}
+.ae-group-title{font-size:12px;color:#6a8b82;padding:8px 18px 4px}
+.ae-card{margin:0 14px 8px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.04);overflow:hidden}
+.ae-row{display:flex;align-items:center;padding:13px 14px;min-height:44px;cursor:pointer}
+.ae-row:hover{background:#f4fbf9}
+.ae-row-label{font-size:14px;font-weight:500;color:#14443a;flex-shrink:0}
+.ae-row-value{flex:1;font-size:13px;color:#14443a;text-align:right;padding-right:7px;word-break:break-all}
+.ae-row-value-empty{color:#95a5a0}
+.ae-row-arrow{font-size:16px;color:#9aa8a2;font-weight:300}
+.ae-divider{height:1px;background:#f0f4f2;margin:0 14px}
+.ae-danger{color:#c43a2c}
+.ae-bold{font-weight:700}
+.ae-modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998}
+.ae-modal-head{display:flex;align-items:center;padding:14px 14px 7px;border-bottom:1px solid #f0f4f2}
+.ae-modal-cancel,.ae-modal-save,.ae-modal-placeholder{flex:0 0 50px;font-size:14px;cursor:pointer}
+.ae-modal-cancel{color:#6a8b82}
+.ae-modal-save{color:#1F8A6F;font-weight:700;text-align:right}
+.ae-modal-title{flex:1;text-align:center;font-size:15px;font-weight:700;color:#14443a}
+.ae-avatar-modal,.ae-input-modal,.ae-phone-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:12px 12px 0 0;z-index:999;max-width:420px;margin:0 auto}
+.ae-avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px}
+.ae-avatar-item{aspect-ratio:1;background:#f4fbf9;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid transparent;cursor:pointer}
+.ae-avatar-item.selected{border-color:#1F8A6F;background:#ecf6f1}
+.ae-avatar-grid-emoji{font-size:30px}
+.ae-modal-body{padding:14px 14px 20px}
+.ae-input{width:100%;height:44px;border:1px solid #d8e8e1;border-radius:8px;padding:0 10px;font-size:15px;background:#f4fbf9;color:#14443a;box-sizing:border-box;outline:none}
+.ae-input-hint{display:block;margin-top:6px;font-size:11px;color:#8a978f}
+.ae-step-bar{display:flex;align-items:center;padding:14px 28px}
+.ae-step{display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.4}
+.ae-step.active{opacity:1}
+.ae-step-dot{width:26px;height:26px;border-radius:50%;background:#c8e8d6;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ae-step.active .ae-step-dot{background:#1F8A6F}
+.ae-step-label{font-size:11px;color:#6a8b82}
+.ae-step-line{flex:1;height:2px;background:#c8e8d6;margin:0 8px 15px}
+.ae-step-line.active{background:#1F8A6F}
+.ae-phone-step{padding:0 14px 18px}
+.ae-phone-hint{font-size:13px;color:#4a6a60;line-height:1.6;padding:8px 0 12px}
+.ae-input-wrap{margin-bottom:9px}
+.ae-input-group{display:flex;gap:6px;margin-bottom:14px}
+.ae-input-code{flex:1}
+.ae-code-btn{flex-shrink:0;height:44px;padding:0 12px;background:#ecf6f1;color:#1F8A6F;font-size:13px;font-weight:600;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid #c8e8d6;cursor:pointer}
+.ae-code-btn.disabled{background:#f0f4f2;color:#95a5a0;border-color:#e6ebe8;cursor:not-allowed}
+.ae-primary-btn{height:44px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;border-radius:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ae-primary-btn.disabled{background:#a8d5c8;cursor:not-allowed}
+.ae-close-modal{position:fixed;left:14px;right:14px;top:50%;transform:translateY(-50%);background:#fff;border-radius:12px;padding:18px 16px;z-index:999;max-width:380px;margin-left:auto;margin-right:auto}
+.ae-close-title{display:block;font-size:17px;font-weight:800;color:#c43a2c;text-align:center;margin-bottom:8px}
+.ae-close-text{display:block;font-size:13px;color:#14443a;line-height:1.6;margin-bottom:7px}
+.ae-close-list{display:flex;flex-direction:column;gap:4px;background:#fff5f2;border-radius:6px;padding:8px 10px;margin-bottom:12px}
+.ae-close-list-item{font-size:12px;color:#8c4530;line-height:1.6}
+.ae-close-btn-row{display:flex;gap:7px}
+.ae-secondary-btn,.ae-danger-btn{flex:1;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer}
+.ae-secondary-btn{background:#ecf6f1;color:#14443a}
+.ae-danger-btn{background:#c43a2c;color:#fff}
+.hc-range{font-size:11px;color:#7a8c84}
+.hc-toolbar{display:flex;justify-content:space-between;align-items:center}
+.hc-tabs{display:flex;gap:4px}
+.hc-tab{font-size:11px;padding:3px 8px;border-radius:999px;background:#f0f6f3;color:#6a8b82;cursor:pointer;border:none;font-weight:600}
+.hc-tab.active{background:#1f8a6f;color:#fff}
+.hc-nav{display:flex;gap:2px}
+.hc-nav-btn{font-size:13px;padding:2px 5px;border-radius:3px;background:#f0f6f3;color:#6a8b82;cursor:pointer;border:none}
+.hc-nav-btn:hover{background:#e0ede6}
+.hc-canvas-wrap{position:relative;margin-bottom:6px}
+canvas.hc-canvas{width:100%;height:180px;background:#f8fcfb;border:1px solid #e6f0ed;border-radius:6px}
+.hc-legend{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;font-size:10px;color:#6a8b82;margin-bottom:6px}
+.hc-legend-item{display:flex;align-items:center;gap:3px}
+.hc-dot{width:8px;height:8px;border-radius:50%}
+.hc-dot.green{background:#C7E8DC}
+.hc-dot.yellow{background:#F5C8BD}
+.hc-line{width:14px;height:2px;border-radius:1px}
+.hc-line.dark{background:#1d2c4a}
+.hc-line.gray{background:#8ca6a0}
+.hc-summary{font-size:12px;color:#577970;line-height:1.6;padding:6px;background:#f9fdfb;border-radius:5px}
+.hc-tip{font-size:11px;color:#1f8a6f;margin-bottom:4px;text-align:center}
+
+/* ===== 睡眠走势KPI ===== */
+.kpi-strip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.kpi-item{display:flex;flex-direction:column;align-items:center;padding:8px;background:#f9fdfb;border-radius:5px}
+.kpi-label{font-size:10px;color:#6a8b82}
+.kpi-value{font-size:18px;font-weight:700;color:#14443a;margin-top:3px}
+.insight-block{margin-top:8px;padding:8px;background:#f9fafb;border-radius:6px}
+.insight-line{font-size:12px;color:#4a5a63;line-height:1.6;margin-bottom:3px}
+.insight-line.tip{color:#1f8a6f}
+.insight-source{font-size:10px;color:#8ca6a0;margin-top:4px}
+
+/* ===== 健康关注中心 Dashboard ===== */
+.hd-banner{background:linear-gradient(135deg,#0f2f2b 0%,#1a3a34 40%,#143430 100%);border-radius:10px;padding:14px 12px;margin-bottom:8px}
+.hd-banner-title{font-size:16px;font-weight:800;color:#e8f5f0;letter-spacing:0.5px;margin-bottom:6px}
+.hd-banner-summary{font-size:11px;color:#8aad9f;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.hd-banner-dot{width:5px;height:5px;border-radius:50%;display:inline-block;margin:0 2px}
+.hd-banner-dot.warn{background:#f0a050}
+.hd-banner-dot.good{background:#4cd964}
+.hd-banner-improved{color:#7fd4a0;font-weight:600}
+.hd-risk-row{display:flex;gap:6px;margin-bottom:8px}
+.hd-risk-card{flex:1;min-width:0;border-radius:8px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
+.hd-risk-card:active{transform:scale(0.97)}
+.hd-risk-card.warn{background:linear-gradient(135deg,#fff5f5 0%,#ffebeb 100%);border:1px solid #f5d1d1}
+.hd-risk-card.caution{background:linear-gradient(135deg,#fffcf5 0%,#fff8e8 100%);border:1px solid #f0e5cf}
+.hd-risk-card.ok{background:linear-gradient(135deg,#f5fdf8 0%,#ebf9f0 100%);border:1px solid #c8e8d6}
+.hd-risk-icon{font-size:18px;line-height:1}
+.hd-risk-name{font-size:10px;color:#6a8b82;font-weight:500;text-align:center;line-height:1.3}
+.hd-risk-value{font-size:15px;font-weight:800;line-height:1}
+.hd-risk-card.warn .hd-risk-value{color:#c0392b}
+.hd-risk-card.caution .hd-risk-value{color:#b86518}
+.hd-risk-card.ok .hd-risk-value{color:#1f8a6f}
+.hd-risk-trend{font-size:10px;font-weight:600;display:flex;align-items:center;gap:2px}
+.hd-risk-trend.improving{color:#1f8a6f}
+.hd-risk-trend.worsening{color:#c0392b}
+.hd-risk-trend.stable{color:#9aa8a2}
+.hd-risk-tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:999px;line-height:1.4}
+.hd-risk-card.warn .hd-risk-tag{background:#fde8e8;color:#c0392b}
+.hd-risk-card.caution .hd-risk-tag{background:#fbf3dc;color:#8c6c12}
+.hd-risk-card.ok .hd-risk-tag{background:#d4f0e4;color:#0f6e56}
+.hd-advice-section{background:#fff;border-radius:9px;padding:12px 11px;margin-bottom:7px;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.hd-advice-section-title{font-size:13px;font-weight:700;color:#14443a;margin-bottom:8px}
+.hd-advice-card{display:flex;gap:8px;align-items:flex-start;padding:10px;background:#f9fdfb;border-radius:7px;border-left:3px solid #1f8a6f;margin-bottom:7px}
+.hd-advice-card:last-child{margin-bottom:0}
+.hd-advice-num{width:22px;height:22px;border-radius:50%;background:#1f8a6f;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hd-advice-body{flex:1;min-width:0}
+.hd-advice-title{font-size:13px;font-weight:700;color:#14443a;display:block}
+.hd-advice-desc{font-size:11px;color:#577970;line-height:1.55;margin-top:2px}
+.hd-advice-target{font-size:11px;color:#1f8a6f;font-weight:600;margin-top:5px;display:flex;align-items:center;gap:6px}
+.hd-advice-target-label{flex-shrink:0}
+.hd-advice-progress{flex:1;height:4px;background:#e0efe8;border-radius:2px;overflow:hidden}
+.hd-advice-progress-fill{height:100%;background:#1f8a6f;border-radius:2px;transition:width 0.4s ease}
+
+/* ===== 全局提示卡 ===== */
+.global-tip-card{background:#f0faf5;border:1px solid #c8e8d6;border-radius:7px;padding:8px 10px;margin-bottom:7px;display:flex;align-items:center;gap:6px;font-size:11px;color:#1f8a6f}
+
+/* ===== 周总结 ===== */
+.weekly-summary-card{background:#fff;border-radius:9px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.ws-icon{font-size:28px}
+.ws-text{flex:1}
+.ws-title{font-size:15px;font-weight:800;color:#14443a;display:block}
+.ws-sub{font-size:12px;color:#577970;display:block;margin-top:2px}
+.ws-score{text-align:center;min-width:60px}
+.ws-score-num{font-size:36px;font-weight:800;color:#1f8a6f;line-height:1}
+.ws-score-unit{font-size:14px;color:#7a8c84}
+.ws-score-label{font-size:11px;color:#7a8c84;display:block;margin-top:2px}
+
+/* ===== 我的页面 ===== */
+.section-label-row{padding:4px 4px;margin-bottom:2px}
+.section-label{font-size:12px;color:#7a8c84;font-weight:600}
+.account-card{display:flex;align-items:center;gap:10px;padding:12px 11px;background:#fff;border-radius:9px;margin-bottom:7px;cursor:pointer;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.account-card:hover{background:#f9fdfb}
+.ah-avatar{width:48px;height:48px;border-radius:50%;background:#e8f4f0;display:flex;align-items:center;justify-content:center;font-size:26px}
+.ah-name-row{flex:1;display:flex;align-items:center;gap:4px}
+.ah-name{font-size:17px;font-weight:700;color:#14443a}
+.ah-edit{font-size:13px;color:#7a8c84}
+.ah-phone-sub{font-size:11px;color:#7a8c84;margin-left:4px}
+.ah-arrow{font-size:18px;color:#9aa8a2}
+.member-banner{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,#fff9e8,#fef3d3);border:1px solid #f0e5cf;border-radius:9px;margin-bottom:7px;cursor:pointer}
+.mb-left{display:flex;align-items:center;gap:8px}
+.mb-crown{font-size:24px}
+.mb-title{font-size:15px;font-weight:700;color:#5a3a0e;display:block}
+.mb-sub{font-size:11px;color:#8a6a3a;display:block;margin-top:2px}
+.mb-cta{font-size:13px;font-weight:700;color:#b3851e;background:#fff;padding:5px 12px;border-radius:999px}
+.my-devices-section{margin-bottom:7px}
+.my-devices-head{display:flex;justify-content:space-between;align-items:center;padding:8px 4px}
+.my-devices-title{font-size:14px;font-weight:700;color:#1f443c}
+.my-devices-count{font-size:11px;color:#6a8b82}
+.device-card-v2{display:flex;align-items:center;gap:10px;padding:12px 11px;background:#fff;border-radius:9px;margin-bottom:6px;cursor:pointer;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.device-card-v2:hover{background:#f9fdfb}
+.dc2-icon{width:44px;height:44px;border-radius:12px;background:#edf6ff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.dc2-body{flex:1}
+.dc2-name-row{display:flex;align-items:center;gap:6px}
+.dc2-name{font-size:15px;font-weight:700;color:#14443a}
+.dc2-online{font-size:8px}
+.dc2-online.online{color:#4cd964}
+.dc2-online.offline{color:#c5d4ce}
+.dc2-sn{font-size:11px;color:#7a8c84;display:block;margin-top:2px}
+.dc2-user{font-size:11px;color:#6a8b82;display:block;margin-top:1px}
+.dc2-arrow{font-size:18px;color:#9aa8a2}
+.my-devices-add{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#fff;border:1px dashed #c5d4ce;border-radius:9px;color:#1f8a6f;font-size:14px;cursor:pointer}
+
+/* ===== 通用菜单 ===== */
+.menu-list{background:#fff;border-radius:9px;overflow:hidden;box-shadow:0 2px 7px rgba(37,114,93,0.06)}
+.menu-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid #f3f7f5;cursor:pointer}
+.menu-item:hover{background:#f9fdfb}
+.menu-item:last-child{border-bottom:none}
+.menu-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.menu-text{flex:1}
+.menu-title{font-size:15px;font-weight:600;color:#14443a;display:block}
+.menu-subtitle{font-size:11px;color:#7a8c84;display:block;margin-top:2px}
+.menu-badge{font-size:10px;color:#1f8a6f;background:#E7F7EE;padding:2px 6px;border-radius:999px;font-weight:600}
+.menu-arrow{font-size:18px;color:#9aa8a2}
+
+/* ===== 子页 ===== */
+.subpage-header{display:flex;align-items:center;gap:10px;padding:12px 8px;margin-bottom:8px;position:sticky;top:0;z-index:50;background:#f4fbf9}
+.back-btn{width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.08);border:none;font-size:22px;color:#14443a}
+.subpage-title{font-size:18px;font-weight:700;color:#14443a;flex:1}
+.bottom-space{height:80px}
+.body-bottom-pad{padding-bottom:48px}
+
+/* ===== 付费弹窗 ===== */
+.pw-mask{position:fixed;inset:0;background:rgba(20,30,26,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:0 20px}
+.pw-card{width:100%;max-width:320px;background:#fff;border-radius:11px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.25)}
+.pw-header{background:linear-gradient(135deg,#f6e8c3 0%,#f3d990 100%);padding:18px 11px 14px;text-align:center}
+.pw-icon-circle{width:55px;height:55px;border-radius:50%;background:linear-gradient(135deg,#fff,#fef3d3);display:flex;align-items:center;justify-content:center;font-size:29px;margin:0 auto 7px;box-shadow:0 4px 10px rgba(180,130,30,0.22)}
+.pw-title{font-size:17px;font-weight:800;color:#5a3a0e;margin-bottom:3px}
+.pw-sub{font-size:13px;color:#8a6a3a}
+.pw-body{padding:10px 13px}
+.pw-feature{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:1px dashed #f0e5cf}
+.pw-feature:last-of-type{border-bottom:none}
+.pw-feature-title{font-size:13px;font-weight:700;color:#1a2c24;display:block;margin-bottom:2px}
+.pw-feature-sub{font-size:12px;color:#7a8a83;line-height:1.5;display:block}
+.pw-price-row{margin-top:11px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pw-price-card{background:#fafffd;border:1px solid #eef4f1;border-radius:8px;padding:12px 7px 9px;text-align:center;position:relative;cursor:pointer}
+.pw-price-card.recommended{border-color:#d4a548;background:linear-gradient(135deg,#fff9e8 0%,#fff 100%);box-shadow:0 4px 9px rgba(180,130,30,0.18)}
+.pw-price-badge{position:absolute;top:-6px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4a548,#b3851e);color:#fff;font-size:12px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.pw-price-name{font-size:13px;color:#7a8a83;display:block;margin-bottom:3px}
+.pw-price-num{font-size:20px;font-weight:800;color:#1a2c24;display:block;line-height:1.1}
+.pw-price-card.recommended .pw-price-num{color:#c0850f}
+.pw-price-orig{font-size:12px;color:#b0aea2;text-decoration:line-through;display:block;margin-top:2px;min-height:13px}
+.pw-price-equiv{font-size:12px;color:#1f8a6f;font-weight:600;display:block;margin-top:1px}
+.pw-actions{padding:4px 13px 13px;display:flex;flex-direction:column;gap:5px}
+.pw-btn-primary{background:linear-gradient(135deg,#d4a548,#b3851e);color:#fff;text-align:center;padding:11px;border-radius:999px;font-size:14px;font-weight:700;box-shadow:0 4px 9px rgba(180,130,30,0.36);cursor:pointer;border:none}
+.pw-btn-ghost{text-align:center;padding:6px;font-size:13px;color:#7a8a83;cursor:pointer;border:none;background:none}
+
+/* ===== 按钮行 ===== */
+.btn-row{margin-top:6px;display:flex;gap:5px}
+.btn{flex:1;border-radius:999px;font-size:13px;padding:0;line-height:36px;height:36px;cursor:pointer}
+.btn.primary{background:#1f8a6f;color:#fff;border:none}
+.btn.ghost{background:#edf8f4;color:#1f8a6f;border:1px solid #cfe8df}
+.tip{margin-top:4px;color:#7c9790;font-size:12px;line-height:1.5}
+.list-item{margin-top:4px;font-size:13px;color:#4f7269;line-height:1.58}
+
+/* ===== 声音横幅 ===== */
+.sound-demo-banner{margin:0 0 7px;padding:10px 12px;background:linear-gradient(135deg,#fff9e8 0%,#fef3d3 100%);border:1px solid #f0e5cf;border-radius:9px;display:flex;align-items:center;justify-content:space-between}
+.sdb-left{display:flex;align-items:center;gap:7px;flex:1}
+.sdb-icon{font-size:19px;line-height:1}
+.sdb-title{font-size:13px;font-weight:700;color:#5a3a0e}
+.sdb-sub{font-size:11px;color:#8a6a3a;display:block;margin-top:2px}
+.sdb-cta{background:linear-gradient(135deg,#d4a548,#b3851e);color:#fff;font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;cursor:pointer;border:none}
+.sound-collapse-row{display:flex;justify-content:flex-end;margin:2px 3px 6px}
+.sound-collapse-btn{width:24px;height:17px;border-radius:4px;border:1px solid #cfe4dd;background:#e9f5f1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:#3f6d61}
+.sound-collapse-icon.expanded{transform:rotate(180deg)}
+
+/* 子页卡片 */
+.share-hero{text-align:center;padding:24px 16px;background:#fff;border-radius:9px;margin-bottom:8px}
+.share-hero-emoji{font-size:36px}
+.share-hero-title{font-size:17px;font-weight:800;color:#14443a;display:block;margin-top:8px}
+.share-hero-sub{font-size:12px;color:#6a7a81;display:block;margin-top:4px}
+.share-invite-btn{margin-top:12px;display:inline-block;padding:10px 24px;background:#1f8a6f;color:#fff;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer}
+.share-card{background:#fff;border-radius:9px;padding:14px;margin-bottom:8px}
+.share-card-title{font-size:14px;font-weight:700;color:#1f443c;margin-bottom:8px}
+.share-user-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f7f5}
+.share-user-row:last-child{border-bottom:none}
+.share-user-avatar{font-size:24px}
+.share-user-info{flex:1}
+.share-user-name{font-size:14px;font-weight:700;color:#14443a;display:block}
+.share-user-meta{font-size:11px;color:#7a8c84;display:block;margin-top:1px}
+.share-remove-btn{font-size:12px;color:#c43a2c;background:none;border:1px solid #f0d2cb;border-radius:4px;padding:3px 8px;cursor:pointer}
+
+/* 会员页 */
+.mp-hero{text-align:center;padding:20px 16px;background:linear-gradient(135deg,#fff9e8,#fef3d3);border-radius:9px;margin-bottom:8px}
+.mp-crown-big{font-size:40px}
+.mp-brand{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
+.mp-brand-name{font-size:22px;font-weight:800;color:#5a3a0e}
+.mp-brand-pro{font-size:13px;background:#b3851e;color:#fff;padding:2px 8px;border-radius:999px;font-weight:700}
+.mp-tagline{font-size:12px;color:#8a6a3a;margin-top:6px}
+.mp-status-pill{margin-top:8px;display:inline-block;padding:4px 12px;background:#fff;border-radius:999px;font-size:12px;color:#5a3a0e;font-weight:600}
+.mp-status-expire{font-size:10px;color:#8a6a3a;margin-left:4px}
+.mp-features{background:#fff;border-radius:9px;padding:14px;margin-bottom:8px}
+.mp-features-title{font-size:15px;font-weight:800;color:#14443a;margin-bottom:10px}
+.mp-feature-item{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #f3f7f5}
+.mp-feature-item:last-child{border-bottom:none}
+.mp-feature-icon{font-size:20px;flex-shrink:0}
+.mp-feature-title{font-size:14px;font-weight:700;color:#14443a;display:block}
+.mp-feature-cmp{font-size:11px;display:block;margin-top:2px}
+.mp-feature-cmp .free{color:#8ca6a0}
+.mp-feature-cmp .pro{color:#1f8a6f;font-weight:600}
+.mp-pricing{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.mp-price-card{background:#fafffd;border:1px solid #eef4f1;border-radius:9px;padding:14px;text-align:center;cursor:pointer;position:relative}
+.mp-price-card.recommended{border-color:#d4a548;background:linear-gradient(135deg,#fff9e8,#fff);box-shadow:0 4px 9px rgba(180,130,30,0.18)}
+.mp-cta-trial{background:linear-gradient(135deg,#d4a548,#b3851e);color:#fff;text-align:center;padding:14px;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:6px}
+.mp-cta-sub{text-align:center;font-size:11px;color:#7a8c84}
+.mp-trust{display:flex;justify-content:center;gap:16px;padding:8px;font-size:11px;color:#7a8c84}
+.mp-faq{background:#fff;border-radius:9px;padding:14px;margin-top:8px}
+.mp-faq-title{font-size:14px;font-weight:700;color:#1f443c;margin-bottom:8px}
+.mp-faq-item{font-size:12px;color:#4a5a63;line-height:1.6;margin-bottom:4px}
+.mp-faq-bold{font-weight:700}
+
+/* 预警设置 */
+.alert-section{padding:12px 0}
+.alert-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.alert-section-title{font-size:16px;font-weight:800;color:#14443a}
+.alert-label{font-size:12px;color:#6a8b82;margin:8px 0 4px}
+.alert-row{display:flex;align-items:center;gap:6px}
+.alert-chip{padding:8px 12px;background:#f4f8f6;border:1px solid #e0ede6;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.alert-sep{color:#c5d4ce}
+.caret{font-size:10px;color:#8ca6a0}
+.alert-check-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.alert-check-row{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#4a5a63}
+.alert-check-box{width:20px;height:20px;border-radius:4px;border:1px solid #c5d4ce;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.alert-check-box.checked{background:#1f8a6f;border-color:#1f8a6f}
+.alert-save-btn{margin-top:14px;text-align:center;padding:12px;background:#1f8a6f;color:#fff;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer}
+.alert-emergency{padding:10px 0}
+.alert-emergency-title{font-size:14px;font-weight:700;color:#14443a}
+.alert-emergency-input{width:100%;padding:10px;margin-top:8px;border:1px solid #e0ede6;border-radius:8px;font-size:15px;background:#f9fdfb}
+.alert-thin-divider{height:1px;background:#eef4f1;margin:8px 0}
+
+/* 被监测人信息 */
+.user-cover{background:linear-gradient(135deg,#f0faf5,#fff);border-radius:9px;padding:20px 16px;text-align:center;margin-bottom:8px}
+.user-cover-name{font-size:24px;font-weight:800;color:#14443a}
+.user-cover-age{font-size:16px;color:#6a8b82;margin-top:4px}
+.user-cover-sub{font-size:12px;color:#7a8c84;margin-top:2px}
+.user-card{background:#fff;border-radius:9px;padding:14px;margin-bottom:8px}
+.user-card-title{font-size:15px;font-weight:700;color:#1f443c;margin-bottom:8px}
+.user-card-edit{float:right;font-size:13px;color:#1f8a6f;cursor:pointer}
+.user-field{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f7f5;font-size:14px}
+.user-field:last-child{border-bottom:none}
+.user-field-label{color:#6a8b82}
+.user-field-text{color:#14443a;font-weight:600}
+.user-field-value.chip{padding:4px 10px;background:#f4f8f6;border:1px solid #e0ede6;border-radius:6px;cursor:pointer}
+
+/* 物联卡 */
+.sim-main-card{background:#fff;border-radius:9px;padding:16px;text-align:center}
+.sim-main-title{font-size:18px;font-weight:800;color:#14443a;margin-bottom:10px}
+.sim-iccid{font-size:13px;color:#6a8b82;background:#f4f8f6;padding:8px 12px;border-radius:6px;margin-bottom:10px}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;font-size:13px;color:#14443a}
+.sim-footnote{font-size:11px;color:#8ca6a0;text-align:center;margin-top:10px}
+
+/* 更多设置 */
+.more-list{background:#fff;border-radius:9px;overflow:hidden}
+.more-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f7f5;cursor:pointer;font-size:15px;color:#14443a}
+.more-item:hover{background:#f9fdfb}
+.more-item:last-child{border-bottom:none}
+.more-item-extra{font-size:12px;color:#8ca6a0;margin-right:8px}
+.more-item-arrow{font-size:16px;color:#9aa8a2}
+
+/* 客服 */
+.cu-banner{background:linear-gradient(135deg,#eef8ff,#fff);border-radius:9px;padding:20px;text-align:center;margin-bottom:8px}
+.cu-banner-emoji{font-size:36px}
+.cu-banner-title{font-size:18px;font-weight:800;color:#14443a;display:block;margin-top:8px}
+.cu-banner-sub{font-size:12px;color:#7a8c84;display:block;margin-top:4px}
+.cu-section{background:#fff;border-radius:9px;padding:14px;margin-bottom:8px}
+.cu-section-title{font-size:15px;font-weight:700;color:#1f443c;margin-bottom:10px}
+.cu-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f7f5;cursor:pointer}
+.cu-row:last-child{border-bottom:none}
+.cu-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.cu-text{flex:1}
+.cu-title{font-size:14px;font-weight:700;color:#14443a;display:block}
+.cu-sub{font-size:11px;color:#6a8b82;display:block;margin-top:2px}
+.cu-arrow{font-size:16px;color:#9aa8a2}
+.cu-faq{margin-bottom:8px}
+.cu-faq-q{font-size:13px;font-weight:700;color:#14443a;display:block}
+.cu-faq-a{font-size:12px;color:#577970;display:block;margin-top:2px;line-height:1.6}
+
+/* 设备详情页 */
+.device-illust-circle{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#e8f4f0,#c8e8d6);margin:20px auto;display:flex;align-items:center;justify-content:center}
+.device-illust-box{width:50px;height:50px;background:#1f8a6f;border-radius:10px;position:relative}
+.device-illust-dot{width:8px;height:8px;background:#fff;border-radius:50%;position:absolute;top:10px;left:50%;transform:translateX(-50%)}
+.device-name-row{text-align:center;font-size:20px;font-weight:800;color:#14443a;cursor:pointer}
+.device-name-edit{font-size:14px;color:#7a8c84;margin-left:4px}
+.device-fw{text-align:center;font-size:12px;color:#8ca6a0;margin-top:6px}
+.device-unbind-btn,.dd-unbind-btn{margin-top:20px;text-align:center;padding:12px;color:#c43a2c;border:1px solid #f0d2cb;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer}
+
+/* 实时监测 */
+.rt-card{background:#fff;border-radius:9px;padding:12px;margin-bottom:8px}
+.rt-online-card{display:flex;justify-content:space-between;align-items:center}
+.rt-online-label{font-size:14px;font-weight:700;color:#14443a}
+.rt-signal-bars{font-size:24px}
+.rt-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rt-title-row{display:flex;align-items:center;gap:6px}
+.rt-card-title{font-size:15px;font-weight:700;color:#14443a}
+.rt-status-pill{font-size:11px;padding:2px 6px;background:#E7F7EE;color:#0F6E56;border-radius:3px}
+.rt-value-wrap{display:flex;align-items:baseline;gap:4px}
+.rt-value{font-size:36px;font-weight:800;color:#14443a;line-height:1}
+.rt-unit{font-size:13px;color:#6a8b82}
+.rt-canvas{width:100%;height:100px;background:#f8fcfb;border-radius:6px}
+.rt-signal-axis{display:flex;justify-content:space-between;font-size:10px;color:#8ca6a0;margin-bottom:4px}
+.rt-signal-bar{height:6px;background:linear-gradient(90deg,#ef9a9a,#f4c5bd,#d4e2ea,#b6d4e6,#8ec2dc);border-radius:3px;position:relative;margin-bottom:4px}
+.rt-signal-pointer{position:absolute;top:-4px;width:12px;height:14px;background:#14443a;border-radius:3px;transform:translateX(-50%)}
+.rt-signal-legend{display:flex;justify-content:space-between;font-size:10px;color:#8ca6a0}
+.rt-bottom-tip{text-align:center;color:#c5d4ce;font-size:12px;padding:10px}
+</style>
+</head>
+<body>
+
+<div class="page" id="app">
+  <!-- ═══ 内容区：根据 activeTab 切换 ═══ -->
+  <div id="tab-daily" class="tab-content"></div>
+  <div id="tab-longterm" class="tab-content hidden"></div>
+  <div id="tab-my" class="tab-content hidden"></div>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar" id="tabBar">
+  <div class="tab-item active" data-tab="daily"><span class="tab-icon">❤️</span><span class="tab-label">每日</span></div>
+  <div class="tab-item" data-tab="longterm"><span class="tab-icon">📈</span><span class="tab-label">长期</span></div>
+  <div class="tab-item" data-tab="my"><span class="tab-icon">👤</span><span class="tab-label">我的</span></div>
+</div>
+
+<!-- 日历弹窗 -->
+<div class="calendar-modal hidden" id="calendarModal">
+  <div class="modal-mask" onclick="hideCalendar()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="modal-month-nav" onclick="prevCalendarMonth()">‹</button>
+      <div class="modal-subtitle" id="calendarYearMonth"></div>
+      <button class="modal-month-nav" onclick="nextCalendarMonth()">›</button>
+      <button class="modal-close" onclick="hideCalendar()">✕</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</div>
+
+<!-- 声音弹窗 -->
+<div class="sound-modal hidden" id="soundModal">
+  <div class="sound-modal-card">
+    <div class="sm-head"><span class="sm-title" id="smTitle"></span><button class="sm-close" onclick="closeSoundModal()">✕</button></div>
+    <div class="sm-body" id="smBody"></div>
+  </div>
+</div>
+
+<!-- 付费弹窗 -->
+<div class="pw-mask hidden" id="paywall">
+  <div class="pw-card">
+    <div class="pw-header"><div class="pw-icon-circle">🔊</div><div class="pw-title">解锁睡眠声音监测</div><div class="pw-sub">听见昨晚发生的一切</div></div>
+    <div class="pw-body">
+      <div class="pw-feature"><div class="pw-feature-icon">🎙️</div><div class="pw-feature-text"><span class="pw-feature-title">鼾声 / 梦话 / 咳嗽 录音回放</span><span class="pw-feature-sub">每条事件可点击试听，标注准确发生时间</span></div></div>
+      <div class="pw-feature"><div class="pw-feature-icon">🌙</div><div class="pw-feature-text"><span class="pw-feature-title">整夜声音事件详细记录</span><span class="pw-feature-sub">8 项核心指标 + 联动趋势图</span></div></div>
+      <div class="pw-feature"><div class="pw-feature-icon">📈</div><div class="pw-feature-text"><span class="pw-feature-title">长期声音趋势</span><span class="pw-feature-sub">鼾声 / 梦话 30 天 / 全周期频次变化，看到改善</span></div></div>
+      <div class="pw-price-row">
+        <div class="pw-price-card recommended" onclick="subscribeYearly()"><div class="pw-price-badge">⭐ 限时新人价</div><span class="pw-price-name">年付</span><span class="pw-price-num">¥98</span><span class="pw-price-orig">原价 ¥168</span><span class="pw-price-equiv">约 ¥8.2 / 月</span></div>
+        <div class="pw-price-card" onclick="subscribeMonthly()"><span class="pw-price-name">月付</span><span class="pw-price-num">¥19.9</span><span class="pw-price-orig">&nbsp;</span><span class="pw-price-equiv">/ 月</span></div>
+      </div>
+    </div>
+    <div class="pw-actions">
+      <button class="pw-btn-primary" onclick="startTrial()">🎁 立即开启 7 天免费试用</button>
+      <button class="pw-btn-ghost" onclick="closePaywall()">暂不开通</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// 登录检查
+// ═══════════════════════════════════════
+(function(){
+  const token = localStorage.getItem('hc_token');
+  const user = localStorage.getItem('hc_user');
+  if(!token || !user){
+    window.location.href = '/web/login.html';
+    return;
+  }
+  try{ window._currentUser = JSON.parse(user); }catch(e){}
+  // Check profile completion
+  if(window._currentUser && window._currentUser.profileComplete === false){
+    window.location.href = '/web/profile.html';
+  }
+})();
+
+// ═══════════════════════════════════════
+// 全局状态
+// ═══════════════════════════════════════
+let isMember = false;
+let calendarYear = 2026, calendarMonth = 4; // 0-indexed = May
+let showCalendarModal = false;
+
+const soundRecordings = {
+  snore: [{time:'00:42',durationSec:12,label:'鼾声'},{time:'01:18',durationSec:8,label:'鼾声'},{time:'02:35',durationSec:18,label:'鼾声（最长）'},{time:'04:11',durationSec:6,label:'鼾声'},{time:'05:47',durationSec:9,label:'鼾声'}],
+  sleeptalk: [{time:'03:14',durationSec:4,label:'梦话片段'},{time:'06:22',durationSec:3,label:'梦话片段'}],
+  cough: []
+};
+
+// ═══════════════════════════════════════
+// Tab 切换
+// ═══════════════════════════════════════
+document.querySelectorAll('.tab-item').forEach(el => {
+  el.addEventListener('click', function(){
+    document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+    const tab = this.dataset.tab;
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
+    document.getElementById('tab-'+tab).classList.remove('hidden');
+    if(tab==='daily') renderDaily();
+    else if(tab==='longterm') renderLongterm();
+    else if(tab==='my') renderMy();
+    window.scrollTo(0,0);
+  });
+});
+
+// ═══════════════════════════════════════
+// 日历逻辑
+// ═══════════════════════════════════════
+function showCalendar(){ showCalendarModal=true; renderCalendar(); document.getElementById('calendarModal').classList.remove('hidden'); }
+function hideCalendar(){ showCalendarModal=false; document.getElementById('calendarModal').classList.add('hidden'); }
+function prevCalendarMonth(){ calendarMonth--; if(calendarMonth<0){calendarMonth=11;calendarYear--;} renderCalendar(); }
+function nextCalendarMonth(){ calendarMonth++; if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); }
+
+function renderCalendar(){
+  const m=calendarMonth+1;
+  document.getElementById('calendarYearMonth').textContent = `${calendarYear}年${String(m).padStart(2,'0')}月`;
+  const daysInMonth = new Date(calendarYear, m, 0).getDate();
+  const today = new Date();
+  let html='';
+  for(let i=1;i<=daysInMonth;i++){
+    const date = new Date(calendarYear, calendarMonth, i);
+    const isToday = date.toDateString()===today.toDateString();
+    const hasData = date <= today;
+    html+=`<div class="calendar-day${isToday?' today':''}${hasData?' has-data':''}" onclick="selectCalendarDay(${i})">${i}</div>`;
+  }
+  document.getElementById('calendarGrid').innerHTML=html;
+}
+
+function selectCalendarDay(day){
+  const d=new Date(calendarYear,calendarMonth,day);
+  // applyDate logic would go here
+  hideCalendar();
+}
+
+// ═══════════════════════════════════════
+// 声音弹窗
+// ═══════════════════════════════════════
+function openSoundDetail(key){
+  if(!isMember){ openPaywall(); return; }
+  const labels={snore:'鼾声总次数（5次）',sleeptalk:'梦话总次数（2次）',cough:'咳嗽声总次数（0次）'};
+  document.getElementById('smTitle').textContent=labels[key]||'';
+  const recs=soundRecordings[key]||[];
+  let html='';
+  if(recs.length===0){ html='<div class="sm-empty">本时段未记录到对应声音</div>'; }
+  else { recs.forEach(r=>{ html+=`<div class="sm-rec-item"><div class="sm-rec-left"><span class="sm-rec-time">${r.time}</span><span class="sm-rec-label">${r.label} · ${r.durationSec}秒</span></div><button class="sm-rec-play" onclick="playSoundClip('${r.time}')"><span class="sm-rec-play-icon">▶</span></button></div>`; }); }
+  document.getElementById('smBody').innerHTML=html;
+  document.getElementById('soundModal').classList.remove('hidden');
+}
+function closeSoundModal(){ document.getElementById('soundModal').classList.add('hidden'); }
+function playSoundClip(time){ alert('播放 '+time+' 录音（接入 API 后启用）'); }
+
+// ═══════════════════════════════════════
+// 付费弹窗
+// ═══════════════════════════════════════
+function openPaywall(){ document.getElementById('paywall').classList.remove('hidden'); }
+function closePaywall(){ document.getElementById('paywall').classList.add('hidden'); }
+function startTrial(){ isMember=true; closePaywall(); alert('7 天免费试用已开启！'); renderDaily(); }
+function subscribeYearly(){ isMember=true; closePaywall(); alert('年付订阅成功！'); renderDaily(); }
+function subscribeMonthly(){ isMember=true; closePaywall(); alert('月付订阅成功！'); renderDaily(); }
+
+// ═══════════════════════════════════════
+// Canvas 工具函数
+// ═══════════════════════════════════════
+function setupCanvas(canvasId, width, height){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return null;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width+'px';
+  canvas.style.height = height+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return {ctx, w:width, h:height};
+}
+
+// ═══════════════════════════════════════
+// 渲染：每日 Tab
+// ═══════════════════════════════════════
+let dailyState = {
+  showHeart: false, showBreathing: false, showSleepHealth: false, showAdvanced: false,
+  risksExpanded: {}, showNormalGroup: false,
+  checkIns: [
+    {id:'after-meal-walk',emoji:'🚶',title:'饭后散步 15 分钟',sub:'降低静息心率',checked:false},
+    {id:'diaphragm-breath',emoji:'🌬️',title:'睡前 5 分钟腹式呼吸',sub:'吸气 4 秒·屏息 4 秒·呼气 6 秒',checked:false},
+    {id:'no-afternoon-caffeine',emoji:'☕',title:'下午 3 点后不喝咖啡',sub:'稳定夜间心率',checked:false}
+  ],
+  selectedDay: 3,
+};
+
+// ── 真实数据加载 ──
+let dailyData = null;  // API返回的日报数据
+
+function loadDailyReport(dateStr){
+  var devId = myState.currentDeviceId;
+  if(!devId || !window.HeartCareAPI) return;
+  var d = dateStr || new Date().toISOString().slice(0,10);
+  HeartCareAPI.dailyReport(devId, d).then(function(r){
+    if(r && !r.error && r.heart){
+      dailyData = r;
+      renderDaily();
+    }
+  }).catch(function(){});
+}
+
+function getCardiacRisks(){ return window._cardiacRisks || null; }
+
+function loadCardiacRisks(){
+  var devId = myState.currentDeviceId;
+  if(!devId || !window.HeartCareAPI) return;
+  HeartCareAPI.cardiacAssess(devId).then(function(r){
+    if(r && r.cardiac_risk){
+      window._cardiacRisks = r.cardiac_risk;
+      renderDaily();
+    }
+  }).catch(function(){});
+}
+
+function renderDaily(){
+  const risks = getCardiacRisks();
+  var R = dailyData; // 真实API数据 (可能为null)
+  var metrics = {
+    // 睡眠
+    sleepDuration: R&&R.sleep ? R.sleep.sleepDuration||'8h30m' : '8h36m',
+    sleepHours: R&&R.sleep ? (R.sleep.sleepDurationHours||8.5) : 8.5,
+    deepPct: R&&R.sleep ? (R.sleep.deepPct||18) : 18,
+    remPct: R&&R.sleep ? (R.sleep.remPct||21) : 21,
+    movingNum: R&&R.sleep ? (R.sleep.movingNum||93) : 93,
+    bodyRecovery: R&&R.sleep ? (R.sleep.bodyRecovery||92) : 92,
+    mindRecovery: R&&R.sleep ? (R.sleep.mindRecovery||87) : 87,
+    latency: R&&R.sleep ? (R.sleep.sleepLatency||28) : 28,
+    efficiency: R&&R.sleep ? (R.sleep.sleepEfficiency||85) : 85,
+    gotobed: R&&R.sleep ? (R.sleep.gotobedTime||'23:15') : '23:15',
+    wakeTime: R&&R.sleep ? (R.sleep.wakeTime||'07:51') : '07:51',
+    deepMin: R&&R.sleep ? (R.sleep.deepDuration||'1h24m') : '1h24m',
+    // 心脏
+    aveHr: R&&R.heart ? (R.heart.aveHr||69) : 69,
+    minHr: R&&R.heart ? (R.heart.minHr||55) : 55,
+    maxHr: R&&R.heart ? (R.heart.maxHr||75) : 75,
+    hrv: R&&R.heart ? (R.heart.hrv||33) : 33,
+    rmssd: R&&R.heart ? (R.heart.rmssd||892) : 892,
+    heartIndex: R&&R.heart ? (R.heart.healthIndex||82) : 82,
+    // 呼吸
+    apneaNum: R&&R.breath ? (R.breath.apneaNum||5) : 5,
+    apneaMax: R&&R.breath ? (R.breath.apneaMaxDuration||17) : 17,
+    apneaAvg: R&&R.breath ? (R.breath.apneaAvgDuration||12) : 12,
+    aveBr: R&&R.breath ? (R.breath.aveBr||16) : 16,
+    breathIndex: R&&R.breath ? (R.breath.healthIndex||90) : 90,
+  };
+  let h='';
+
+  // 星期选择器
+  const weekDays = ['日','一','二','三','四','五','六'];
+  const today = new Date();
+  const selectedDay = today.getDay();
+  const m = today.getMonth()+1, d = today.getDate();
+  h+=`<div class="week-selector"><div class="week-header"><span class="week-title">星期${weekDays[selectedDay]}</span><span class="week-subtitle">${m}月${d}日</span><button class="week-calendar-btn" onclick="showCalendar()">🗓</button></div><div class="week-days">`;
+  const sun=new Date(today); sun.setDate(today.getDate()-today.getDay());
+  for(let i=0;i<7;i++){
+    const dt=new Date(sun); dt.setDate(sun.getDate()+i);
+    const active=dt.getDate()===today.getDate();
+    h+=`<div class="day-item"><div class="day-circle${active?' active':''}"><span class="day-text">${weekDays[i]}</span><span class="day-num">${dt.getDate()}</span></div></div>`;
+  }
+  h+=`</div></div>`;
+
+  // 顶部状态
+  h+=`<div class="top-status"><span>📶 健康监测仪 X2 · 已正常在线 | 昨夜监测数据完整</span><span class="status-link">⚙️ 设备详情</span></div>`;
+
+  // ★ 心脏健康总览
+  h+=`<div class="card overview-card heart-overview-card">`;
+  h+=`<div class="overview-header"><span class="overview-emoji">❤️</span><span class="overview-title">心脏健康总览</span><span class="overview-date">${m}月${d}日</span></div>`;
+
+  // 免责声明
+  h+=`<div class="cr-disclaimer"><span class="cr-disc-icon">ℹ️</span><span class="cr-disc-text">以下为基于夜间数据信号的健康风险评估，仅供日常参考，不构成医学诊断。</span></div>`;
+
+  // 红/黄风险卡（独立展示）
+  const criticalRisks = risks.filter(r=>r.status==='red'||r.status==='yellow');
+  const normalRisks = risks.filter(r=>r.status==='green');
+  criticalRisks.forEach(r=>{
+    const exp=dailyState.risksExpanded[r.id]||false;
+    h+=`<div class="cardiac-risk-card ${r.level}" onclick="toggleRisk('${r.id}')"><div class="cr-head"><span class="cr-icon">${r.icon}</span><div class="cr-text"><span class="cr-title">${r.title}</span><span class="cr-summary">${r.summary}</span></div><span class="cr-arrow">${exp?'▲':'▼'}</span></div>`;
+    if(exp){
+      h+=`<div class="cr-body" onclick="event.stopPropagation()">`;
+      if(r.diseaseTags&&r.diseaseTags.length){ h+=`<div class="cr-disease-tags">${r.diseaseTags.map(t=>`<span class="cr-disease-tag">${t}</span>`).join('')}</div>`; }
+      if(r.assessment){ h+=`<div class="cr-detail-block"><span class="cr-detail-label">📊 数据解读</span><span class="cr-detail-text">${r.assessment}</span></div>`; }
+      if(r.dataPoints&&r.dataPoints.length){
+        h+=`<div class="cr-detail-block"><span class="cr-detail-label">📋 量化依据</span><div class="cr-data-list">${r.dataPoints.map(dp=>`<div class="cr-data-row ${dp.status}"><span class="cr-data-label">${dp.label}</span><span class="cr-data-value">${dp.value}</span><span class="cr-data-ref">${dp.ref}</span></div>`).join('')}</div></div>`;
+      }
+      if(r.suggestions&&r.suggestions.length){ h+=`<div class="cr-detail-block"><span class="cr-detail-label">💡 改善建议</span>${r.suggestions.map(s=>`<div class="cr-suggestion">· ${s}</div>`).join('')}</div>`; }
+      h+=`<div class="cr-link">${r.linkText} →</div></div>`;
+    }
+    h+=`</div>`;
+  });
+
+  // 绿色正常卡折叠区：分割线+小字提示，展开后绿色卡片与风险卡同格式
+  if(normalRisks.length>0){
+    const ne = dailyState.showNormalGroup||false;
+    h+=`<div class="cr-normal-divider" onclick="toggleNormalGroup()"><span>${ne?'▲ 收起':'▼'} 以下 ${normalRisks.length} 项正常</span></div>`;
+    if(ne){
+      normalRisks.forEach(ng=>{
+        const exp=dailyState.risksExpanded[ng.id]||false;
+        h+=`<div class="cardiac-risk-card normal" onclick="toggleRisk('${ng.id}')"><div class="cr-head"><span class="cr-icon">${ng.icon}</span><div class="cr-text"><span class="cr-title">${ng.title}</span><span class="cr-summary">${ng.summary}</span></div><span class="cr-arrow">${exp?'▲':'▼'}</span></div>`;
+        if(exp){
+          h+=`<div class="cr-body" onclick="event.stopPropagation()">`;
+          if(ng.diseaseTags&&ng.diseaseTags.length){ h+=`<div class="cr-disease-tags">${ng.diseaseTags.map(t=>`<span class="cr-disease-tag">${t}</span>`).join('')}</div>`; }
+          if(ng.assessment){ h+=`<div class="cr-detail-block"><span class="cr-detail-label">📊 数据解读</span><span class="cr-detail-text">${ng.assessment}</span></div>`; }
+          if(ng.dataPoints&&ng.dataPoints.length){ h+=`<div class="cr-detail-block"><span class="cr-detail-label">📋 量化依据</span><div class="cr-data-list">${ng.dataPoints.map(dp=>`<div class="cr-data-row ${dp.status}"><span class="cr-data-label">${dp.label}</span><span class="cr-data-value">${dp.value}</span><span class="cr-data-ref">${dp.ref}</span></div>`).join('')}</div></div>`; }
+          if(ng.suggestions&&ng.suggestions.length){ h+=`<div class="cr-detail-block"><span class="cr-detail-label">💡 改善建议</span>${ng.suggestions.map(s=>`<div class="cr-suggestion">· ${s}</div>`).join('')}</div>`; }
+          h+=`<div class="cr-link">${ng.linkText} →</div></div>`;
+        }
+        h+=`</div>`;
+      });
+    }
+  }
+
+  // 今日打卡
+  h+=`<div class="today-checkins"><div class="today-checkins-head"><span class="tc-head-emoji">💡</span><span class="tc-head-text">今日建议打卡</span><span class="tc-head-deadline">截至今晚 12:00</span></div>`;
+  dailyState.checkIns.forEach(it=>{
+    h+=`<div class="today-checkin-item${it.checked?' checked':''}" onclick="toggleCheckIn('${it.id}')"><span class="tc-item-emoji">${it.emoji}</span><div class="tc-item-text"><span class="tc-item-title">${it.title}</span><span class="tc-item-sub">${it.sub}</span></div><div class="tc-check-box">${it.checked?'<span class="tc-check-icon">✓</span>':''}</div></div>`;
+  });
+  h+=`</div>`;
+  h+=`</div>`; // end overview-card
+
+  // ★ 心脏具体数据（折叠卡）
+  h+=`<div class="card heart-main-card"><div class="card-header" onclick="toggleDailySection('heart')"><div class="card-title"><span class="card-title-emoji">❤️</span><span class="card-title-text">心脏具体数据</span></div><span class="card-collapse-btn">${dailyState.showHeart?'收起':'展开'}</span></div>`;
+  h+=`<div class="status-line"><span class="sl-label">夜间心率</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">未见异常</span></span><span class="sl-divider">·</span><span class="sl-label">心动图</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">未见异常</span></span></div>`;
+
+  if(dailyState.showHeart){
+    // 心脏健康指数渐变条
+    var hIdx = Math.min(98, Math.max(5, metrics.heartIndex));
+h+=`<div class="hi-compact heart-detail-gauge"><div class="hi-compact-title-row"><span class="hi-compact-title">心脏健康指数</span><span class="status-pill ${hIdx>=70?'normal':'warning'} mini"><span class="pill-icon">${hIdx>=80?'✅':hIdx>=60?'🟡':'⚠️'}</span><span class="pill-text">${hIdx>=80?'优秀':hIdx>=60?'一般':'需关注'}</span></span></div><div class="hi-gauge-wrap"><div class="hi-bar">${'<span class="hi-tick"></span>'.repeat(10)}</div><div class="hi-pointer" style="left:${hIdx}%;"><div class="hi-ptr-line"></div><div class="hi-ptr-circle"></div></div></div><div class="hi-legend"><span>需要关注</span><span>正常</span><span>优秀</span></div></div>`;
+    // 4 项指标
+    h+=`<div class="metrics-grid-2x2 heart-detail-metrics">`;
+    [{label:'心率范围',value:metrics.minHr+'-'+metrics.maxHr+'次/分',level:'夜间平稳'},{label:'HRV值',value:metrics.hrv,level:metrics.hrv>=50?'恢复优秀':metrics.hrv>=30?'中等偏好':'需关注'},{label:'平均心率',value:metrics.aveHr+'bpm',level:'参考45-70bpm'},{label:'rMSSD',value:(metrics.rmssd||'--')+'ms',level:'参考600-1200ms'}].forEach(m=>{
+      h+=`<div class="metric-box"><div class="metric-name">${m.label}</div><div class="metric-number">${m.value}</div><div class="metric-note">${m.level}</div></div>`;
+    });
+    h+=`</div></div>`; // end heart detail gauge + metrics
+
+    // 心率数据卡
+    h+=`<div class="card heart-rate-card"><div class="card-title-row"><span class="card-title-bold">心率数据</span><span class="status-pill normal"><span class="pill-icon">✅</span><span class="pill-text">未见异常</span></span></div><div class="chart-header"><div class="chart-range"><span class="range-number">55-69</span><span class="range-unit">次/分钟</span></div></div><canvas class="trend-chart" id="heartTrendChart"></canvas><div class="chart-axis-labels"><span>01:00</span><span>03:00</span><span>05:00</span></div><div class="analysis-box blue-variant"><span class="analysis-headline">整夜心率维持在 <span class="bold">55-69</span> 次/分，与你设定的「夜间心率参考范围」<span class="bold" style="background:rgba(29,158,117,0.12);color:#0F6E56;padding:1px 3px;border-radius:2px;">55-65</span>基本吻合，整体表现良好。</span><div class="analysis-list"><div class="analysis-bullet"><span class="bullet-dot">●</span><span class="bullet-text">曲线整体平滑，未见骤升骤降，提示夜间<span class="tooltip-term">交感神经</span>活跃度低，心脏处于充分休息状态。</span></div><div class="analysis-bullet"><span class="bullet-dot">●</span><span class="bullet-text">凌晨 5 点后出现 ~<span class="bold">8bpm</span> 轻度回升、短暂超出你的范围上限 4bpm，属正常觉醒前生理反应，无需关注。</span></div></div></div></div>`;
+
+    // 心动图卡
+    h+=`<div class="card ecg-card"><div class="card-title-row"><span class="card-title-bold">心动图</span><span class="status-pill normal"><span class="pill-icon">✅</span><span class="pill-text">未见异常</span></span></div><canvas class="ecg-waveform" id="ecgChart"></canvas><div class="ecg-axis-labels"><span>0s</span><span>1s</span><span>2s</span><span>3s</span></div><div class="analysis-box orange-variant"><span class="analysis-headline">心电波形形态规整，「<span class="tooltip-term">R 波</span>」清晰锐利，节律间隔均匀。</span><div class="analysis-list"><div class="analysis-bullet"><span class="bullet-dot orange">●</span><span class="bullet-text">「<span class="tooltip-term">P-QRS-T</span>」各波段比例协调，反映「<span class="tooltip-term">窦性心律</span>」稳定，心肌电活动有序。</span></div><div class="analysis-bullet"><span class="bullet-dot orange">●</span><span class="bullet-text">未见早搏、漏搏、ST 段抬高等异常信号，「<span class="tooltip-term">R-R 间期</span>」变异在正常范围。</span></div></div></div></div>`;
+  }
+  h+=`</div>`; // end heart main card
+
+  // ★ 呼吸健康
+  h+=`<div class="card heart-main-card"><div class="card-header" onclick="toggleDailySection('breathing')"><div class="card-title"><span class="card-title-emoji">🌬️</span><span class="card-title-text">呼吸健康</span></div><span class="card-collapse-btn">${dailyState.showBreathing?'收起':'展开'}</span></div><div class="status-line"><span class="sl-label">健康指数</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">优秀</span></span><span class="sl-divider">·</span><span class="sl-label">呼吸暂停</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">未见异常</span></span></div></div>`;
+
+  if(dailyState.showBreathing){
+    var bIdx = Math.min(98, Math.max(5, metrics.breathIndex));
+h+=`<div class="card ecg-card"><div class="hi-compact breath-overview-gauge"><div class="hi-compact-title-row"><span class="hi-compact-title">呼吸健康指数</span><span class="status-pill ${bIdx>=70?'normal':'warning'} mini"><span class="pill-icon">${bIdx>=80?'✅':bIdx>=60?'🟡':'⚠️'}</span><span class="pill-text">${bIdx>=80?'优秀':bIdx>=60?'一般':'需关注'}</span></span></div><div class="hi-gauge-wrap"><div class="hi-bar">${'<span class="hi-tick"></span>'.repeat(10)}</div><div class="hi-pointer" style="left:${bIdx}%;"><div class="hi-ptr-line"></div><div class="hi-ptr-circle"></div></div></div><div class="hi-legend"><span>需要关注</span><span>正常</span><span>优秀</span></div></div><div class="breath-stats-row"><div class="breath-stat-item highlight"><div class="breath-stat-num">${metrics.apneaNum}<span class="breath-stat-unit">次</span></div><div class="breath-stat-label">呼吸暂停</div></div><div class="breath-stat-divider"></div><div class="breath-stat-item"><div class="breath-stat-num">${metrics.apneaMax}<span class="breath-stat-unit">秒</span></div><div class="breath-stat-label">最长呼吸暂停</div></div><div class="breath-stat-divider"></div><div class="breath-stat-item"><div class="breath-stat-num">${metrics.apneaAvg}<span class="breath-stat-unit">秒</span></div><div class="breath-stat-label">平均呼吸暂停</div></div></div><div class="analysis-box orange-variant"><span class="analysis-headline">夜间共记录到 <span class="bold">${metrics.apneaNum}次</span> 呼吸暂停事件，最长持续 <span class="bold">${metrics.apneaMax}秒</span>。</span><div class="analysis-list"><div class="analysis-bullet"><span class="bullet-dot orange">●</span><span class="bullet-text">同龄健康人群夜间平均呼吸暂停次数为 <span class="bold">3-8 次</span>，${metrics.apneaNum<=8?'你处于正常区间':'建议关注是否持续偏高'}。</span></div><div class="analysis-bullet"><span class="bullet-dot orange">●</span><span class="bullet-text">最长 ${metrics.apneaMax} 秒${metrics.apneaMax>10?'已超过10秒观察阈值，单次不构成风险，但若连续≥3天出现≥15秒事件建议关注':'在正常范围'}。</span></div></div></div>`;
+
+    // 呼吸频率卡
+    h+=`<div class="card heart-rate-card"><div class="card-title-row"><span class="card-title-bold">呼吸频率</span><div class="chart-range"><span class="range-unit">平均 </span><span class="range-number">16</span><span class="range-unit">次/分钟</span></div></div><canvas class="trend-chart" id="breathingTrend"></canvas><div class="chart-axis-labels"><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>09:00</span></div><div class="analysis-box blue-variant"><span class="analysis-headline">整夜呼吸频率维持在 <span class="bold">12-19</span> 次/分钟，平均 <span class="bold">16</span> 次，处于健康成人参考区间（12-20次/分钟）。</span><div class="analysis-list"><div class="analysis-bullet"><span class="bullet-dot">●</span><span class="bullet-text">曲线整体平稳，提示夜间呼吸节律稳定，气道通畅度良好。</span></div><div class="analysis-bullet"><span class="bullet-dot">●</span><span class="bullet-text">凌晨 3-4 点与 7 点出现两次轻度波动，与睡眠周期切换吻合，属于正常生理反应。</span></div></div></div></div></div>`;
+  }
+
+  // ★ 睡眠健康
+  h+=`<div class="card"><div class="fold-head" onclick="toggleDailySection('sleepHealth')"><span class="section-title">🛌 睡眠健康</span><span class="fold-action">${dailyState.showSleepHealth?'收起':'展开'}</span></div><div class="status-line status-line--one-row"><span class="sl-label">时长</span><span class="sl-value">${metrics.sleepDuration}</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">${metrics.sleepHours>=7?'足够':metrics.sleepHours>=5?'偏少':'不足'}</span></span><span class="sl-divider">·</span><span class="sl-label">深睡</span><span class="sl-value">${metrics.deepPct}%</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">${metrics.deepPct>=15?'充足':metrics.deepPct>=10?'偏少':'不足'}</span></span><span class="sl-divider">·</span><span class="sl-label">翻身</span><span class="sl-value">${metrics.movingNum}次</span><span class="status-pill ${metrics.movingNum>60?'warning':'normal'} mini"><span class="pill-icon">${metrics.movingNum>60?'⚠️':'✅'}</span><span class="pill-text">${metrics.movingNum>80?'较多':metrics.movingNum>50?'一般':'安稳'}</span></span></div>`;
+
+  if(dailyState.showSleepHealth){
+    // 恢复双环
+    var br = metrics.bodyRecovery, mr = metrics.mindRecovery;
+    var brLabel = br>=90?'充分恢复':br>=70?'部分恢复':'需关注';
+    var mrLabel = mr>=90?'充分恢复':mr>=70?'部分恢复':'需关注';
+    h+=`<div class="recovery-rings-row"><div class="recovery-ring-box body"><div class="recovery-ring-outer"><div class="recovery-ring" style="background:conic-gradient(from -90deg,#1f8a6f 0deg,#4cd964 ${br*3.6}deg,#ebf4ef ${br*3.6}deg,#ebf4ef 360deg);"><div class="ring-inner"><span class="ring-score">${br}</span><span class="ring-unit">/ 100</span></div></div></div><span class="ring-label">身体恢复度</span><span class="ring-status-pill">${brLabel}</span></div><div class="recovery-ring-box mind"><div class="recovery-ring-outer"><div class="recovery-ring" style="background:conic-gradient(from -90deg,#3aa0e2 0deg,#6c8cff ${mr*3.6}deg,#eaeef7 ${mr*3.6}deg,#eaeef7 360deg);"><div class="ring-inner"><span class="ring-score">${mr}</span><span class="ring-unit">/ 100</span></div></div></div><span class="ring-label">精神恢复度</span><span class="ring-status-pill">${mrLabel}</span></div></div>`;
+    // 核心数据
+    var sleepTime = metrics.gotobed.split(':')[0]+':'+(parseInt(metrics.gotobed.split(':')[1]||0)+metrics.latency)+'';
+    h+=`<div class="core-metrics-grid">${[
+      {label:'上床时间',value:metrics.gotobed,unit:''},
+      {label:'入睡时长',value:metrics.latency,unit:'min'},
+      {label:'起床时间',value:metrics.wakeTime,unit:''},
+      {label:'睡眠时长',value:metrics.sleepDuration,unit:''}
+    ].map(m=>`<div class="core-metric"><span class="core-metric-label">${m.label}</span><div class="core-metric-value-wrap"><span class="core-metric-value">${m.value}</span><span class="core-metric-unit">${m.unit}</span></div></div>`).join('')}</div>`;
+    // 入睡建议
+    h+=`<div class="sleep-suggestion-grid"><div class="sleep-suggestion"><span class="ss-icon">🌙</span><div class="ss-text"><span class="ss-label">建议今晚入睡</span><span class="ss-value">22:50</span><span class="ss-sub">比昨晚提前 25 分钟</span></div></div><div class="sleep-suggestion"><span class="ss-icon">☀️</span><div class="ss-text"><span class="ss-label">建议明早起床</span><span class="ss-value">06:30</span><span class="ss-sub">保证 7h40m 优质睡眠</span></div></div></div>`;
+
+    // 睡眠分期
+    h+=`<div class="sleep-section-title sleep-section-title--first">🛏️ 睡眠分期</div><div class="sub-title">整夜分期节律清晰，深睡与梦境切换有序，恢复效率稳定。</div><div class="sleep-phase-card-inner"><div class="phase-time-row"><span>入睡23:15</span><span>起床08:35</span></div><canvas class="phase-chart" id="phaseChart"></canvas><div class="phase-time-axis">${['23:00','00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00'].map(t=>`<span class="phase-time-tick">${t}</span>`).join('')}</div><div class="phase-legend-grid">${[{key:'awake',label:'清醒时间',duration:'0小时35分钟',pct:'8.0%',color:'#cfd9e8'},{key:'dream',label:'梦',duration:'1小时31分钟',pct:'20.8%',color:'#b15dff'},{key:'light',label:'浅睡眠',duration:'3小时50分钟',pct:'52.6%',color:'#71bfd1'},{key:'deep',label:'深度睡眠',duration:'1小时21分钟',pct:'18.5%',color:'#00a6a0'}].map(p=>`<div class="phase-legend-item" onclick="event.stopPropagation()"><span class="phase-dot" style="background:${p.color}"></span><span class="phase-text">${p.label} ${p.duration} <span class="phase-pct">${p.pct}</span></span></div>`).join('')}<div class="cycle-analysis-wrap"><div class="cycle-analysis-title">睡眠循环与累计恢复分析</div>${[{index:1,start:'23:30',end:'01:00',deep:20,light:30,dream:50,bodyRecovery:14,mindRecovery:65},{index:2,start:'01:00',end:'02:30',deep:40,light:40,dream:20,bodyRecovery:42,mindRecovery:82},{index:3,start:'02:30',end:'04:00',deep:35,light:50,dream:15,bodyRecovery:78,mindRecovery:90},{index:4,start:'04:00',end:'08:35',deep:10,light:40,dream:50,bodyRecovery:92,mindRecovery:100}].map(c=>`<div class="cycle-item"><span class="cycle-item-title">第${c.index}个循环（${c.start} - ${c.end}）</span><div class="cycle-segment-row"><div class="cycle-segment-track"><div class="cycle-segment" style="width:${c.deep}%;background:#00a6a0;"><span class="cycle-segment-text">${c.deep>=18?'深睡'+c.deep+'%':c.deep+'%'}</span></div><div class="cycle-segment" style="width:${c.light}%;background:#71bfd1;"><span class="cycle-segment-text">${c.light>=18?'浅睡'+c.light+'%':c.light+'%'}</span></div><div class="cycle-segment" style="width:${c.dream}%;background:#b15dff;"><span class="cycle-segment-text">${c.dream>=18?'REM'+c.dream+'%':c.dream+'%'}</span></div></div></div><span class="cycle-recovery-text">身体恢复至${c.bodyRecovery}%，精神恢复至${c.mindRecovery}%</span></div>`).join('')}</div></div>`;
+
+    // 体动健康
+    h+=`<div class="sleep-section-title">🏃 体动健康</div><div class="sub-title">体动与翻身节律整体稳定，后半夜翻身略有增加</div><div class="movement-head"><span class="movement-title">体动数据</span><div class="movement-count-wrap"><span class="movement-count-label">翻身</span><span class="movement-count-value">93</span><span class="movement-count-unit">次</span></div></div><canvas class="trend-chart movement-chart" id="movementChart" style="height:75px;margin-top:5px;"></canvas><div class="movement-axis"><span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>09:00</span></div><div class="movement-legend"><div class="movement-legend-item"><span class="movement-dot movement-dot-activity"></span><span>体动</span></div><div class="movement-legend-item"><span class="movement-dot movement-dot-turnover"></span><span>翻身</span></div></div>`;
+  }
+  h+=`</div>`; // end 睡眠健康
+
+  // ★ 声音监测
+  h+=`<div class="card"><div class="fold-head" onclick="toggleDailySection('advanced')"><span class="section-title">🔊 声音监测</span><span class="fold-action">${dailyState.showAdvanced?'收起':'展开'}</span></div><div class="status-line"><span class="sl-label">鼾声</span><span class="sl-value">5次</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">较少</span></span><span class="sl-divider">·</span><span class="sl-label">梦话</span><span class="sl-value">2次</span><span class="status-pill normal mini"><span class="pill-icon">✅</span><span class="pill-text">正常</span></span><span class="sl-divider">·</span><span class="sl-label">噪音峰值</span><span class="sl-value">62dB</span><span class="status-pill orange mini"><span class="pill-icon">🔸</span><span class="pill-text">偏高</span></span></div></div>`;
+
+  if(dailyState.showAdvanced){
+    if(!isMember){
+      h+=`<div class="sound-demo-banner" onclick="openPaywall()"><div class="sdb-left"><span class="sdb-icon">✨</span><div class="sdb-text"><span class="sdb-title">以下为示例数据</span><span class="sdb-sub">开通会员后查看你的真实声音监测数据</span></div></div><span class="sdb-cta">开通会员 ›</span></div>`;
+    }
+    h+=`<div class="card"><div class="sound-grid">${[{key:'snore',label:'鼾声总次数',value:'5次',level:'轻度频发',tappable:true},{key:'sleeptalk',label:'梦话总次数',value:'2次',level:'-',tappable:true},{key:'cough',label:'咳嗽声总次数',value:'0次',level:'无异常',tappable:true},{key:'snoreMax',label:'最长鼾声时长',value:'18秒',level:'需关注',tappable:false},{key:'noiseDur',label:'噪音干扰时长',value:'8分钟',level:'正常范围',tappable:false},{key:'noiseAvg',label:'环境平均噪音',value:'32分贝',level:'超安静',tappable:false},{key:'noisePeak',label:'峰值噪音',value:'62分贝',level:'轻度干扰',tappable:false}].map(s=>`<div class="sound-box${s.tappable?' tappable':''}"${s.tappable?` onclick="openSoundDetail('${s.key}')"`:''}><span class="sb-label">${s.label}</span><span class="sb-value">${s.value}</span><span class="sb-level">${s.level}</span>${s.tappable?'<span class="sb-hint">▶ 点击查看声音数据</span>':''}</div>`).join('')}</div></div>`;
+    h+=`<div class="card"><div class="section-title">⚕️ 健康风险关联提示</div><div class="list-item">1. 鼾声属于轻度频发，若每周出现≥5天，建议关注呼吸道健康</div><div class="list-item">2. 整夜无异常咳嗽、呼吸声记录，呼吸道状态平稳</div><div class="list-item">3. 环境噪音仅单次突发，不会对长期睡眠健康造成持续负面影响</div></div><div class="card improve-card"><div class="section-title">💡 个性化改善方案</div><div class="list-item">1. 针对交通噪音：建议关闭卧室窗户，或使用隔音耳塞</div><div class="list-item">2. 针对轻度鼾声：优先采用侧卧位，减少气道阻塞</div><div class="list-item">3. 长期优化：固定睡前10分钟关闭门窗</div><div class="sound-collapse-row"><button class="sound-collapse-btn" onclick="toggleDailySection('advanced')"><span class="sound-collapse-icon expanded">▼</span></button></div></div>`;
+  }
+
+  document.getElementById('tab-daily').innerHTML = h;
+
+  // 渲染图表
+  setTimeout(()=>{
+    if(dailyState.showHeart){ drawHeartTrendChart(); drawEcgChart(); }
+    if(dailyState.showBreathing) drawBreathingTrend();
+    if(dailyState.showSleepHealth){ drawPhaseChart(); drawMovementChart(); }
+  },100);
+}
+
+// 每日页切换展开
+function toggleDailySection(section){
+  const key = 'show'+section.charAt(0).toUpperCase()+section.slice(1);
+  dailyState[key] = !dailyState[key];
+  renderDaily();
+}
+function toggleRisk(id){ dailyState.risksExpanded[id] = !dailyState.risksExpanded[id]; renderDaily(); }
+function toggleNormalGroup(){ dailyState.showNormalGroup = !dailyState.showNormalGroup; renderDaily(); }
+function toggleCheckIn(id){ const item=dailyState.checkIns.find(i=>i.id===id); if(item)item.checked=!item.checked; renderDaily(); }
+
+// ═══════════════════════════════════════
+// 每日图表绘制
+// ═══════════════════════════════════════
+function drawLineChart(canvasId,series,yMin,yMax,color){
+  const c=setupCanvas(canvasId,380,100);
+  if(!c) return;
+  const {ctx,w,h}=c;
+  ctx.clearRect(0,0,w,h);
+  const padL=35,padR=10,padT=10,padB=15,chartW=w-padL-padR,chartH=h-padT-padB;
+  // grid
+  ctx.strokeStyle='rgba(222,236,235,0.6)';ctx.lineWidth=0.8;
+  for(let i=0;i<=3;i++){const y=padT+(chartH/3)*i;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();}
+  // Y labels
+  ctx.fillStyle='#8ca6a0';ctx.font='10px sans-serif';ctx.textAlign='right';
+  for(let i=0;i<=3;i++){ctx.fillText(String(Math.round(yMax-((yMax-yMin)/3)*i)),padL-6,padT+(chartH/3)*i+3);}
+  // fill
+  const grad=ctx.createLinearGradient(0,padT,0,h-padB);
+  grad.addColorStop(0,color.replace(')','').replace('rgb','rgba').replace('(','(')+',0.20)');grad.addColorStop(1,color+',0.02)');
+  ctx.fillStyle='rgba(61,185,240,0.08)';ctx.beginPath();ctx.moveTo(padL,h-padB);
+  const step=chartW/(series.length-1);
+  series.forEach((v,i)=>{const x=padL+i*step;const y=padT+chartH*(1-(v-yMin)/(yMax-yMin));if(i===0)ctx.lineTo(x,y);else ctx.lineTo(x,y);});
+  ctx.lineTo(w-padR,h-padB);ctx.closePath();ctx.fill();
+  // line
+  ctx.strokeStyle='#5b9ac9';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.beginPath();
+  series.forEach((v,i)=>{const x=padL+i*step;const y=padT+chartH*(1-(v-yMin)/(yMax-yMin));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+}
+
+function drawHeartTrendChart(){ drawLineChart('heartTrendChart',[60,61,59,60,61,60,61,62,61,63,62,64,63,64,63,65,64,66,67,66,68,67,68,66,60,61,63,62,59,57,60,61,58,60,62,61,60,61,62,60,61,62,61,60,62,59,58,60,61,60,58,57,59,60,62,61,60,59,58,57,59,60,58,57,56,57,59,60,58,56,57,60,63,62,60,58,59,60,58,59,60,62,64,67,68,66,67,64,66,63,65,62,61],50,80,'rgb(61,185,240)'); }
+function drawBreathingTrend(){ drawLineChart('breathingTrend',[17,17.2,16.8,17.4,18,17.2,16.4,16.8,17.6,18.2,17.4,16.6,15.8,14.6,15.4,16.2,17,16.4,15.8,15.4,16,16.6,16.2,15.6,15,14.4,13.8,14.4,15.6,17,16.4,15.8,16.2,16.8,17.4,16.2,14.6,13,11.8,12.6,14.4,16.2,17.8,19,18.4,17,16,15.4,14.8,14,14.6,15.4,16,16.6,16.2,15.6,15,15.6,16.4,17,16.6,16,15.4,14.8,14.4,15,15.8,17,18.4,19,18.2,17,16.4,17.2,18.6,17.8,16.4,15.2,15.8,16.6,17,16.4,15.6,14.8,14,13.2,12.4,11.8,12.2,13.4,14.8,15.6,16,15.2,13.8,12.4,11.8,12,11.6,12],5,25,'rgb(49,162,142)'); }
+
+function drawEcgChart(){
+  const c=setupCanvas('ecgChart',380,90);
+  if(!c) return;
+  const {ctx,w,h}=c;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='rgba(220,210,200,0.45)';ctx.lineWidth=0.4;
+  for(let x=0;x<=w;x+=10){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<=h;y+=10){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  const hbw=(w-20)/3; const padL=10;
+  ctx.strokeStyle='#D89B5C';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.lineJoin='round';
+  for(let beat=0;beat<3;beat++){
+    ctx.beginPath();
+    for(let i=0;i<80;i++){
+      const t=i/80, x=padL+beat*hbw+i*hbw/80;
+      let y=0.5;
+      if(t<0.1) y=0.5+0.08*Math.sin(t*Math.PI/0.1);
+      else if(t<0.2) y=0.5-0.05*Math.sin((t-0.1)*Math.PI/0.1);
+      else if(t<0.35) y=0.5+0.4*Math.sin((t-0.2)*Math.PI/0.15);
+      else if(t<0.5) y=0.5-0.08*Math.sin((t-0.35)*Math.PI/0.15);
+      else if(t<0.75) y=0.5+0.12*Math.sin((t-0.5)*Math.PI/0.25);
+      if(i===0)ctx.moveTo(x,y*h);else ctx.lineTo(x,y*h);
+    }
+    ctx.stroke();
+  }
+}
+
+// Phase Chart
+function drawPhaseChart(){
+  const c=setupCanvas('phaseChart',380,125);
+  if(!c) return;
+  const {ctx,w,h}=c;
+  ctx.clearRect(0,0,w,h);
+  const points=[{level:0.78,stage:'light'},{level:0.68,stage:'light'},{level:0.58,stage:'deep'},{level:0.48,stage:'deep'},{level:0.42,stage:'deep'},{level:0.46,stage:'deep'},{level:0.52,stage:'light'},{level:0.57,stage:'light'},{level:0.62,stage:'light'},{level:0.54,stage:'light'},{level:0.70,stage:'dream'},{level:0.88,stage:'dream'},{level:0.84,stage:'dream'},{level:0.64,stage:'light'},{level:0.56,stage:'light'},{level:0.52,stage:'deep'},{level:0.62,stage:'light'},{level:0.44,stage:'deep'},{level:0.40,stage:'deep'},{level:0.50,stage:'deep'},{level:0.66,stage:'dream'},{level:0.84,stage:'dream'},{level:0.80,stage:'dream'},{level:0.72,stage:'light'},{level:0.60,stage:'light'},{level:0.58,stage:'light'},{level:0.60,stage:'light'},{level:0.62,stage:'light'},{level:0.66,stage:'light'},{level:0.61,stage:'light'},{level:0.58,stage:'light'},{level:0.62,stage:'light'},{level:0.70,stage:'dream'},{level:0.82,stage:'dream'},{level:0.90,stage:'dream'},{level:0.92,stage:'dream'},{level:0.84,stage:'dream'},{level:0.76,stage:'dream'},{level:0.78,stage:'dream'},{level:0.64,stage:'light'},{level:0.60,stage:'light'},{level:0.58,stage:'light'},{level:0.54,stage:'light'},{level:0.56,stage:'light'},{level:0.62,stage:'light'},{level:0.60,stage:'light'},{level:0.66,stage:'awake'},{level:0.94,stage:'awake'}];
+  if(points.length<2) return;
+  const padX=10,padT=18,padB=18,chartW=w-padX*2,chartH=h-padT-padB;
+  ctx.strokeStyle='rgba(129,168,185,0.24)';ctx.lineWidth=1;
+  ctx.setLineDash([7,8]);
+  [0.2,0.5,0.8].forEach(r=>{const y=padT+chartH*r;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+  ctx.setLineDash([]);
+  const step=chartW/(points.length-1);
+  const colors={awake:'rgba(207,217,232,1)',dream:'rgba(177,93,255,1)',light:'rgba(113,191,209,1)',deep:'rgba(0,166,160,1)'};
+  for(let i=0;i<points.length-1;i++){
+    const curr=points[i],next=points[i+1];
+    ctx.strokeStyle=colors[curr.stage]||'rgba(113,191,209,1)';
+    ctx.lineWidth=2.2;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(padX+i*step,padT+(1-curr.level)*chartH);ctx.lineTo(padX+(i+1)*step,padT+(1-next.level)*chartH);ctx.stroke();
+  }
+}
+
+// Movement Chart
+function drawMovementChart(){
+  const c=setupCanvas('movementChart',380,75);
+  if(!c) return;
+  const {ctx,w,h}=c;
+  ctx.clearRect(0,0,w,h);
+  const movement=[4,2,3,1,2,3,0,0,1,3,2,0,1,2,5,4,1,0,0,1,4,2,0,0,1,4,2,0,0,1,5,3,3,1,0,4,3,2,0,1,1,1,0,0,0,2,3,4];
+  const turnover=[1,3,3,0,0,0,2,3,0,3,0,0,0,2,0,3,0,0,0,0,4,0,0,2,0,4,4,0,0,3,1,4,4,2,3,5,0,4,6,4,6,4,4,2,0,0,0,2];
+  const len=Math.min(movement.length,turnover.length);
+  const merged=movement.slice(0,len).concat(turnover.slice(0,len));
+  const min=0,max=Math.max(1,...merged),range=max-min;
+  const padX=8,padT=8,padB=6,chartW=w-padX*2,chartH=h-padT-padB;
+  const drawSeries=(series,clr)=>{
+    const step=chartW/(len-1);
+    ctx.strokeStyle=clr;ctx.lineWidth=1.8;ctx.lineCap='round';ctx.beginPath();
+    series.slice(0,len).forEach((v,i)=>{const x=padX+i*step;const y=padT+(1-(v-min)/range)*chartH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+    ctx.stroke();
+  };
+  drawSeries(movement,'#4fc3d8');drawSeries(turnover,'#c95b77');
+}
+
+// ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// 长期 Tab
+// ═══════════════════════════════════════
+const longtermState={
+  expanded:{heart:false,breath:false,sleep:false,sound:false},
+  activePeriod:'7',
+  // 趋势数据缓存: {field: [{date,value},...]}
+  data:{},
+  streak:{days:0,label:'',totalDays:7},
+  scoreDelta:{current:0,previous:0,change:0,trend:'up'},
+  daysOnTarget:0,
+  stories:[],
+  riskIndicators:[]
+};
+
+async function renderLongterm(){
+  const lt=longtermState;
+  const devId=myState.currentDeviceId;
+  if(!devId||!window.HeartCareAPI){
+    document.getElementById('tab-longterm').innerHTML='<div style="padding:60px 20px;text-align:center;color:#8a9baa">请先在"我的"Tab 绑定设备</div>';
+    return;
+  }
+  document.getElementById('tab-longterm').innerHTML='<div style="padding:40px;text-align:center;color:#8a9baa"><div style="font-size:32px;margin-bottom:8px">📊</div><div>加载趋势数据…</div></div>';
+
+  var fields=['hrv','ave_hr','sleep_score','ahi','apnea_num','moving_num','sleep_duration','deep_duration','sleep_efficiency','ave_br','apnea_duration_max','heart_hp','respiration_score','snore_num','sleeptalk_num'];
+  var results=await Promise.all(fields.map(function(f){ return HeartCareAPI.trend(devId,f,14).catch(function(){ return []; }); }));
+  fields.forEach(function(f,i){ lt.data[f]=results[i]||[]; });
+
+  function last(f){ var d=lt.data[f]; return d&&d.length?d[d.length-1].value:null; }
+  function avg(f){ var d=lt.data[f]; if(!d||!d.length) return null; var s=0;for(var i=0;i<d.length;i++)s+=d[i].value;return Math.round(s/d.length); }
+  function tDir(f){ var d=lt.data[f]; if(!d||d.length<2) return '→'; return d[d.length-1].value>d[0].value?'↑':d[d.length-1].value<d[0].value?'↓':'→'; }
+  function delta(f){ var d=lt.data[f]; if(!d||d.length<2) return 0; return d[d.length-1].value-d[0].value; }
+
+  var totalDays=lt.data.hrv?lt.data.hrv.length:0;
+  var scoreLast=last('sleep_score')||0;
+  var scoreAvg=avg('sleep_score')||0;
+  var hrvLast=last('hrv')||0, hrvAvg=avg('hrv')||0, hrvDir=tDir('hrv'), hrvDelta=delta('hrv');
+  var hrLast=last('ave_hr')||0, hrAvg=avg('ave_hr')||0, hrDir=tDir('ave_hr'), hrDelta=delta('ave_hr');
+  var ahiLast=last('ahi'), ahiAvg=avg('ahi');
+  var apneaLast=last('apnea_num'), apneaMax=last('apnea_duration_max');
+  var brLast=last('ave_br'), brAvg=avg('ave_br');
+  var sleepDurLast=last('sleep_duration'), deepLast=last('deep_duration');
+  var effLast=last('sleep_efficiency');
+  var hpLast=last('heart_hp'), respLast=last('respiration_score');
+  var snoreLast=last('snore_num'), sleeptalkLast=last('sleeptalk_num');
+
+  var onTarget=0;
+  (lt.data.sleep_score||[]).forEach(function(d){ if(d.value>=70) onTarget++; });
+
+  lt.stories=[];
+  if(hrvDir==='↑'&&Math.abs(hrvDelta)>=1){
+    lt.stories.push({icon:'💓',title:'HRV 稳步提升',action:'坚持规律作息与深呼吸训练',days:totalDays,from:(hrvLast-hrvDelta)+'ms',to:hrvLast+'ms',delta:(hrvDelta>0?'+':'')+hrvDelta+'ms',deltaDir:'up',progressPct:Math.min(100,totalDays*10),badge:totalDays>=7?'坚持中':totalDays>=3?'见效中':'开始见效'});
+  }
+  if(apneaLast!=null&&apneaLast<=5){
+    lt.stories.push({icon:'🌬️',title:'呼吸暂停控制良好',action:'侧卧睡姿有效减少呼吸暂停',days:totalDays,from:(apneaLast>0?apneaLast:1)+'次',to:apneaLast+'次',delta:'正常范围',deltaDir:'down',progressPct:totalDays>=7?85:50,badge:totalDays>=5?'保持良好':'需持续监测'});
+  }
+  if(hrDir==='↓'&&Math.abs(hrDelta)>=1){
+    lt.stories.push({icon:'❤️',title:'夜间心率下降趋势',action:'坚持有氧运动，心脏夜间负荷降低',days:totalDays,from:(hrLast-hrDelta)+'bpm',to:hrLast+'bpm',delta:(hrDelta>0?'+':'')+hrDelta+'bpm',deltaDir:'down',progressPct:Math.min(100,totalDays*8),badge:totalDays>=7?'见效中':'开始见效'});
+  }
+  if(lt.stories.length===0){
+    lt.stories.push({icon:'📊',title:'数据积累中',action:'连续佩戴数天后即可看到改善趋势',days:totalDays,from:'--',to:'--',delta:'',deltaDir:'up',progressPct:Math.min(100,totalDays*14),badge:'开始监测'});
+  }
+
+  lt.riskIndicators=[
+    {id:'hrv',icon:'💓',name:'HRV 变异性',value:String(hrvLast||'--'),unit:'ms',trendIcon:hrvDir,trendValue:hrvDelta!==0?(hrvDelta>0?'+':'')+hrvDelta:'',trendDir:hrvDir==='↑'?'improving':hrvDir==='↓'?'declining':'stable',severity:hrvLast>=30?'ok':hrvLast>=20?'warn':'caution',severityLabel:hrvLast>=30?'正常':hrvLast>=20?'偏低':'需关注'},
+    {id:'apnea',icon:'🌬️',name:'最长呼吸暂停',value:String(apneaMax!=null?apneaMax:'--'),unit:'秒',trendIcon:'→',trendValue:'',trendDir:'stable',severity:apneaMax!=null&&apneaMax<60?'ok':'caution',severityLabel:apneaMax!=null&&apneaMax<60?'正常':'需关注'},
+    {id:'resting-hr',icon:'❤️',name:'夜间心率',value:String(hrLast||'--'),unit:'bpm',trendIcon:hrDir==='↓'?'↓':hrDir==='↑'?'↑':'→',trendValue:hrDelta!==0?(hrDelta>0?'+':'')+hrDelta:'',trendDir:hrDir==='↓'?'improving':hrDir==='↑'?'declining':'stable',severity:hrLast>=50&&hrLast<=70?'ok':'warn',severityLabel:hrLast>=50&&hrLast<=70?'正常':'偏高'}
+  ];
+  lt.scoreDelta={current:scoreLast,previous:scoreAvg,change:scoreLast-scoreAvg,trend:scoreLast>=scoreAvg?'up':'down'};
+  lt.daysOnTarget=onTarget;
+  lt.streak={days:totalDays,label:totalDays>0?'连续 '+totalDays+' 天生成睡眠报告':totalDays+'天数据',totalDays:7};
+
+  let h='';
+
+  // ── 坚持见效 Hero ──
+  h+=`<div class="lt-hero"><div class="lt-hero-title">坚持有回报</div><div class="lt-hero-streak">${lt.streak.days}<span style="font-size:22px;font-weight:600;color:#8aad9f"> 天</span></div><div class="lt-hero-streak-sub">${lt.streak.label} · 达标 ${lt.daysOnTarget}/${totalDays||7} 天</div><div class="lt-hero-delta"><div class="lt-hero-delta-item"><span class="lt-hero-delta-icon">📈</span><span class="lt-hero-delta-text">健康评分</span><span class="lt-hero-delta-num" style="color:#4cd964">${scoreAvg||'--'} 分</span></div><div class="lt-hero-delta-item"><span class="lt-hero-delta-icon">🎯</span><span class="lt-hero-delta-text">本周达标</span><span class="lt-hero-delta-num">${lt.daysOnTarget}/${totalDays||7}</span></div></div></div>`;
+
+  // ── 坚持统计行 ──
+  h+=`<div class="lt-stats-row">`;
+  h+=`<div class="lt-stat-card"><div class="lt-stat-num">${totalDays}<span style="font-size:12px;font-weight:500">天</span></div><div class="lt-stat-label">数据积累</div><div class="lt-stat-delta up">${totalDays>0?'持续监测中':'新设备首日'}</div></div>`;
+  h+=`<div class="lt-stat-card"><div class="lt-stat-num">${scoreLast||'--'}<span style="font-size:12px;font-weight:500">分</span></div><div class="lt-stat-label">最新评分</div><div class="lt-stat-delta ${scoreLast>=scoreAvg?'up':'down'}">${scoreLast>=scoreAvg?'↑':'↓'} 均${scoreAvg||'--'}分</div></div>`;
+  h+=`<div class="lt-stat-card"><div class="lt-stat-num">${lt.daysOnTarget}<span style="font-size:12px;font-weight:500">/${totalDays||7}</span></div><div class="lt-stat-label">达标天数</div><div class="lt-stat-delta good">达标率 ${totalDays>0?Math.round(onTarget/totalDays*100):0}%</div></div>`;
+  h+=`</div>`;
+
+  // ── 见效故事卡片 ──
+  lt.stories.forEach(s=>{
+    var dDir=s.deltaDir==='down'?'↓':'↑';
+    h+=`<div class="lt-story-card"><div class="lt-story-head"><span class="lt-story-icon">${s.icon}</span><span class="lt-story-title">${s.title}</span><span class="lt-story-badge">${s.badge}</span></div><div class="lt-story-chain"><span class="lt-story-from">${s.from}</span><span class="lt-story-arrow">→</span><span class="lt-story-to">${s.to}</span><span class="lt-story-delta">${dDir} ${s.delta}</span></div><div class="lt-story-action">${s.action}</div><div class="lt-story-progress"><div class="lt-story-progress-fill" style="width:${s.progressPct}%"></div></div></div>`;
+  });
+
+  // ── 风险指标行 ──
+  h+=`<div class="hd-risk-row">`;
+  lt.riskIndicators.forEach(r=>{
+    h+=`<div class="hd-risk-card ${r.severity}"><span class="hd-risk-icon">${r.icon}</span><span class="hd-risk-name">${r.name}</span><span class="hd-risk-value">${r.value}<span style="font-size:10px;font-weight:500;margin-left:1px">${r.unit}</span></span><span class="hd-risk-trend ${r.trendDir}">${r.trendIcon} ${r.trendValue||''}</span><span class="hd-risk-tag">${r.severityLabel}</span></div>`;
+  });
+  h+=`</div>`;
+
+  // ── 心脏健康模块 ──
+  h+=`<div class="module-card ${lt.expanded.heart?'expanded':''}"><div class="module-header" onclick="longtermToggleModule('heart')"><div class="module-icon-circle heart">❤️</div><div class="module-info"><div class="module-title-row"><span class="module-title">心脏健康</span><span class="module-score-pill good">${hpLast||'--'} 分 · ${hrvLast>=30?'良好':hrvLast>=20?'需关注':'偏低'}</span></div><div class="module-stats"><span>3 项指标</span><span class="stat-divider">|</span><span class="stat-item good">${hrvLast>=30?2:1} 项健康</span><span class="stat-divider">|</span><span class="stat-item warn">${hrvLast>=30?1:2} 项可改善</span></div><span class="module-focus">★ 重点关注：HRV ${hrvLast>=30?'正常':'偏低'}${hrvLast<30?'，建议坚持深呼吸训练':''}</span></div><div class="module-right"><span class="module-arrow-new">›</span></div></div>`;
+  if(lt.expanded.heart){
+    h+=`<div class="module-body">`;
+    // 心脏年龄
+    var userAge=19; try{ userAge=(appData.user&&appData.user.birth_year)?new Date().getFullYear()-appData.user.birth_year:19; }catch(e){}
+    var heartAge=userAge; if(hrvLast>0&&hrvLast<40) heartAge=Math.round(userAge+(40-hrvLast)*0.5);
+    h+=`<div class="heart-age-card"><div class="ha-head"><div class="ha-title-row"><span class="ha-leaf">🌿</span><span class="ha-label">心脏年龄</span><span class="ha-age">${heartAge}</span><span class="ha-unit">岁</span><span class="ha-actual">实际 ${userAge} 岁</span></div><div class="ha-badge">${heartAge>userAge?'↑ 偏老 '+(heartAge-userAge)+' 岁':'✅ 与实际年龄相符'}</div></div><div class="ha-metrics"><div class="ha-metric"><span class="ha-mname">本周 HRV 均值</span><div class="ha-mvalue-row"><span class="ha-mnum">${hrvAvg||'--'}</span><span class="ha-munit">ms</span><span class="ha-mdelta ${hrvDir==='↑'?'up':'down'}">${hrvDir} ${Math.abs(hrvDelta)}</span></div></div><div class="ha-metric"><span class="ha-mname">本周静息心率</span><div class="ha-mvalue-row"><span class="ha-mnum">${hrAvg||'--'}</span><span class="ha-munit">bpm</span><span class="ha-mdelta ${hrDir==='↓'?'up':hrDir==='↑'?'down':''}">${hrDir==='↓'?'↓':'↑'} ${Math.abs(hrDelta)}</span></div></div></div></div>`;
+    // Charts
+    [{id:'heartRate',title:'夜间平均心率',legend:{h:'健康区 (55-75bpm)',sh:'亚健康区 (>75bpm)',avg:'14天 72bpm',peer:'同龄人 78bpm'},dataKey:'ave_hr',unit:'bpm',yMin:40,yMax:90,greenLo:50,greenHi:70,healthyDesc:hrLast>=50&&hrLast<=70?'本周正常':'本周需关注'},{id:'hrv',title:'HRV 心率变异性',legend:{h:'健康区 (>50ms)',sh:'亚健康 (<50ms)',avg:'14天 65ms',peer:'同龄人 42ms'},dataKey:'hrv',unit:'ms',yMin:10,yMax:60,greenLo:30,greenHi:60,healthyDesc:hrvLast>=30?'本周正常':'本周偏低'},{id:'heartIndex',title:'心脏健康指数',legend:{h:'健康区 (>80)',sh:'亚健康 (60-80)',avg:'14天 92分',peer:'同龄人 75分'},dataKey:'heart_hp',unit:'分',yMin:30,yMax:100,greenLo:60,greenHi:100,healthyDesc:hpLast>=60?'本周达标':'本周需关注'}].forEach(ch=>{
+      var d=lt.data[ch.dataKey];
+      var lastV=d&&d.length?d[d.length-1].value:null;
+      h+=`<div class="hc-card"><div class="hc-head"><div class="hc-title-row"><span class="hc-title">${ch.title}</span><span class="hc-healthy">${ch.healthyDesc}</span></div><div class="hc-toolbar"><div class="hc-tabs">${['周','月','全周期'].map(p=>`<button class="hc-tab${lt.activePeriod==='7'?' active':''}">${p}</button>`).join('')}</div><div class="hc-nav">${['«','‹','›','»'].map(b=>`<button class="hc-nav-btn">${b}</button>`).join('')}</div></div></div><div class="hc-canvas-wrap"><canvas class="hc-canvas" id="${ch.id}Chart"></canvas></div><div class="hc-legend"><span class="hc-legend-item"><span class="hc-dot green"></span>${ch.legend.h}</span><span class="hc-legend-item"><span class="hc-dot yellow"></span>${ch.legend.sh}</span><span class="hc-legend-item"><span class="hc-line dark"></span>${ch.legend.avg}</span><span class="hc-legend-item"><span class="hc-line gray"></span>${ch.legend.peer}</span></div><div class="hc-summary">${d&&d.length?d.length+'天数据 · 均值 '+avg(ch.dataKey)+ch.unit:'暂无数据'} · ${lastV!=null?ch.healthyDesc:'数据收集中'}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  // 呼吸健康模块
+  h+=`<div class="module-card ${lt.expanded.breath?'expanded':''}"><div class="module-header" onclick="longtermToggleModule('breath')"><div class="module-icon-circle breath">🫁</div><div class="module-info"><div class="module-title-row"><span class="module-title">呼吸健康</span><span class="module-score-pill good">${respLast||'--'} 分 · ${ahiLast!=null&&ahiLast<5?'良好':ahiLast!=null&&ahiLast<15?'需关注':'数据收集中'}</span></div><div class="module-stats"><span>3 项指标</span><span class="stat-divider">|</span><span class="stat-item good">2 项健康</span><span class="stat-divider">|</span><span class="stat-item warn">1 项可改善</span></div><span class="module-focus">★ 重点关注：${apneaLast!=null&&apneaLast<=5?'呼吸暂停控制良好':apneaLast!=null&&apneaLast<=30?'呼吸暂停偶有超标':'数据收集中'}</span></div><div class="module-right"><span class="module-arrow-new">›</span></div></div>`;
+  if(lt.expanded.breath){
+    h+=`<div class="module-body">`;
+    [{id:'breathRate',title:'平均夜间呼吸频率',legend:{h:'健康区 (12-20次/分)',sh:'亚健康 (<12 或 >20)',avg:'14天 14.5次/分',peer:'同龄人 16次/分'},dataKey:'ave_br',unit:'brpm',yMin:10,yMax:25,greenLo:12,greenHi:20,healthyDesc:brLast>=12&&brLast<=20?'本周正常':'本周需关注'},{id:'ahi',title:'AHI 呼吸暂停指数',legend:{h:'健康区 (<5)',sh:'亚健康 (5-10)',avg:'14天 1.1次/h',peer:'同龄人 2次/h'},dataKey:'ahi',unit:'/h',yMin:0,yMax:15,greenLo:0,greenHi:5,healthyDesc:ahiLast!=null&&ahiLast<5?'本周达标':'本周偏高'},{id:'apnea',title:'最长呼吸暂停时长',legend:{h:'健康区 (<10秒)',sh:'亚健康 (10-30秒)',avg:'14天 8秒',peer:'同龄人 5秒'},dataKey:'apnea_duration_max',unit:'秒',yMin:0,yMax:30,greenLo:0,greenHi:60,healthyDesc:apneaMax!=null&&apneaMax<60?'本周正常':'本周超标'}].forEach(ch=>{
+      var d=lt.data[ch.dataKey];
+      h+=`<div class="hc-card"><div class="hc-head"><div class="hc-title-row"><span class="hc-title">${ch.title}</span><span class="hc-healthy">${ch.healthyDesc}</span></div><div class="hc-toolbar"><div class="hc-tabs">${['周','月','全周期'].map(p=>`<button class="hc-tab${lt.activePeriod==='7'?' active':''}">${p}</button>`).join('')}</div><div class="hc-nav">${['«','‹','›','»'].map(b=>`<button class="hc-nav-btn">${b}</button>`).join('')}</div></div></div><div class="hc-canvas-wrap"><canvas class="hc-canvas" id="${ch.id}Chart"></canvas></div><div class="hc-legend"><span class="hc-legend-item"><span class="hc-dot green"></span>${ch.legend.h}</span><span class="hc-legend-item"><span class="hc-dot yellow"></span>${ch.legend.sh}</span><span class="hc-legend-item"><span class="hc-line dark"></span>${ch.legend.avg}</span><span class="hc-legend-item"><span class="hc-line gray"></span>${ch.legend.peer}</span></div><div class="hc-summary">${d&&d.length?d.length+'天数据 · 均值 '+avg(ch.dataKey)+ch.unit:'暂无数据'} · ${d&&d.length?ch.healthyDesc:'数据收集中'}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  // 睡眠板块
+  h+=`<div class="module-card ${lt.expanded.sleep?'expanded':''}"><div class="module-header" onclick="longtermToggleModule('sleep')"><div class="module-icon-circle sleep">🛏️</div><div class="module-info"><div class="module-title-row"><span class="module-title">睡眠板块</span><span class="module-score-pill good">${scoreLast||'--'} 分 · ${scoreLast>=70?'良好':scoreLast>=50?'一般':'需改善'}</span></div><div class="module-stats"><span>4 项指标</span><span class="stat-divider">|</span><span class="stat-item good">3 项健康</span><span class="stat-divider">|</span><span class="stat-item warn">1 项可改善</span></div><span class="module-focus">★ 重点关注：${effLast!=null&&effLast<80?'睡眠效率偏低':sleepDurLast!=null&&sleepDurLast<420?'睡眠时长偏短':'各项指标正常'}</span></div><div class="module-right"><span class="module-arrow-new">›</span></div></div>`;
+  if(lt.expanded.sleep){
+    h+=`<div class="module-body">`;
+    // 作息走势
+    h+=`<div class="hc-card schedule-card"><div class="hc-head"><div class="hc-title-row"><span class="hc-title">长期睡眠趋势</span></div><div class="hc-toolbar"><div class="hc-tabs">${['周','月','全周期'].map(p=>`<button class="hc-tab${lt.activePeriod==='7'?' active':''}">${p}</button>`).join('')}</div><div class="hc-nav">${['«','‹','›','»'].map(b=>`<button class="hc-nav-btn">${b}</button>`).join('')}</div></div></div><canvas class="hc-canvas" id="scheduleChart" style="height:200px"></canvas><div class="kpi-strip"><div class="kpi-item"><span class="kpi-label">数据天数</span><span class="kpi-value">${totalDays}天</span></div><div class="kpi-item"><span class="kpi-label">平均睡眠评分</span><span class="kpi-value">${scoreAvg||'--'}分</span></div><div class="kpi-item"><span class="kpi-label">平均睡眠时长</span><span class="kpi-value">${sleepDurLast!=null?Math.round(sleepDurLast/60)+'h':'--'}</span></div><div class="kpi-item"><span class="kpi-label">平均深睡占比</span><span class="kpi-value">${sleepDurLast&&deepLast?Math.round(deepLast/sleepDurLast*100)+'%':'--'}</span></div></div><div class="insight-block"><div class="insight-line">✨ ${totalDays>0?'共 '+totalDays+' 天数据，睡眠评分均值 '+scoreAvg+' 分':'新设备，数据积累中'}</div><div class="insight-line tip">💡 ${effLast!=null&&effLast<80?'建议固定上床时间，减少卧床看手机':'坚持规律作息，深睡会更充足'}</div></div></div>`;
+    [{id:'duration',title:'睡眠时长',legend:{h:'健康区 (7-9h)',sh:'亚健康 (<7 或 >9h)',avg:'14天 7.8h',peer:'同龄人 7.5h'},dataKey:'sleep_duration',unit:'分钟',yMin:200,yMax:600,greenLo:360,greenHi:540,healthyDesc:sleepDurLast>=360&&sleepDurLast<=540?'本周达标':'本周需关注'},{id:'efficiency',title:'睡眠效率',legend:{h:'健康区 (>85%)',sh:'亚健康 (<85%)',avg:'14天 84%',peer:'同龄人 80%'},dataKey:'sleep_efficiency',unit:'%',yMin:50,yMax:100,greenLo:80,greenHi:100,healthyDesc:effLast>=80?'本周达标':'本周偏低'},{id:'prep',title:'入睡准备时长',legend:{h:'健康区 (<20min)',sh:'亚健康 (>20min)',avg:'14天 28min',peer:'同龄人 18min'},dataKey:'sleep_latency',unit:'分钟',yMin:0,yMax:60,greenLo:0,greenHi:30,healthyDesc:'趋势监测中'},{id:'deep',title:'深睡占比',legend:{h:'健康区 (15-25%)',sh:'亚健康 (<15 或 >25%)',avg:'14天 20%',peer:'同龄人 18%'},dataKey:'deep_duration',unit:'%',yMin:5,yMax:30,greenLo:15,greenHi:25,healthyDesc:deepLast&&sleepDurLast&&deepLast/sleepDurLast>=0.15?'本周正常':'本周偏低'}].forEach(ch=>{
+      var d=lt.data[ch.dataKey];
+      var lastV=d&&d.length?d[d.length-1].value:null;
+      // deep_duration needs conversion to percentage
+      var series=d; if(ch.dataKey==='deep_duration'&&d&&d.length&&lt.data.sleep_duration&&lt.data.sleep_duration.length){
+        series=d.map(function(v,i){ var sd=lt.data.sleep_duration[i]; return sd&&sd.value?{date:v.date,value:Math.round(v.value/sd.value*100)}:null; }).filter(Boolean);
+      }
+      // sleep_duration seconds to minutes
+      if(ch.dataKey==='sleep_duration'&&d&&d.length){ series=d.map(function(v){ return {date:v.date,value:Math.round(v.value/60)}; }); }
+      h+=`<div class="hc-card"><div class="hc-head"><div class="hc-title-row"><span class="hc-title">${ch.title}</span><span class="hc-healthy">${ch.healthyDesc}</span></div><div class="hc-toolbar"><div class="hc-tabs">${['周','月','全周期'].map(p=>`<button class="hc-tab${lt.activePeriod==='7'?' active':''}">${p}</button>`).join('')}</div><div class="hc-nav">${['«','‹','›','»'].map(b=>`<button class="hc-nav-btn">${b}</button>`).join('')}</div></div></div><div class="hc-canvas-wrap"><canvas class="hc-canvas" id="${ch.id}Chart"></canvas></div><div class="hc-legend"><span class="hc-legend-item"><span class="hc-dot green"></span>${ch.legend.h}</span><span class="hc-legend-item"><span class="hc-dot yellow"></span>${ch.legend.sh}</span><span class="hc-legend-item"><span class="hc-line dark"></span>${ch.legend.avg}</span><span class="hc-legend-item"><span class="hc-line gray"></span>${ch.legend.peer}</span></div><div class="hc-summary">${d&&d.length?d.length+'天数据':'暂无数据'} · ${d&&d.length?ch.healthyDesc:'数据收集中'}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  // 睡眠声音 (音频功能开发中, 保留原始设计)
+  h+=`<div class="module-card ${lt.expanded.sound?'expanded':''}"><div class="module-header" onclick="longtermToggleModule('sound')"><div class="module-icon-circle sound">🎧</div><div class="module-info"><div class="module-title-row"><span class="module-title">睡眠声音</span><span class="module-score-pill good">90 分 · 优秀</span></div><div class="module-stats"><span>2 项指标</span><span class="stat-divider">|</span><span class="stat-item good">2 项健康</span></div><span class="module-focus">★ 重点关注：鼾声频次稳定下降</span></div><div class="module-right"><span class="module-arrow-new">›</span></div></div>`;
+  if(lt.expanded.sound){
+    h+=`<div class="module-body">`;
+    [{id:'snore',title:'鼾声总频次',healthy:'本周 5/7 天健康',legend:{h:'健康区 (<5次)',sh:'亚健康 (5-20次)',avg:'14天 4次',peer:'同龄人 5次'}},{id:'sleeptalk',title:'梦话总频次',healthy:'本周 7/7 天健康',legend:{h:'健康区 (<3次)',sh:'亚健康 (3-10次)',avg:'14天 2次',peer:'同龄人 3次'}}].forEach(ch=>{
+      h+=`<div class="hc-card"><div class="hc-head"><div class="hc-title-row"><span class="hc-title">${ch.title}</span><span class="hc-healthy">${ch.healthy}</span></div><div class="hc-toolbar"><div class="hc-tabs">${['周','月','全周期'].map(p=>`<button class="hc-tab${lt.activePeriod==='7'?' active':''}">${p}</button>`).join('')}</div><div class="hc-nav">${['«','‹','›','»'].map(b=>`<button class="hc-nav-btn">${b}</button>`).join('')}</div></div></div><div class="hc-canvas-wrap"><canvas class="hc-canvas" id="${ch.id}Chart"></canvas></div><div class="hc-legend"><span class="hc-legend-item"><span class="hc-dot green"></span>${ch.legend.h}</span><span class="hc-legend-item"><span class="hc-dot yellow"></span>${ch.legend.sh}</span><span class="hc-legend-item"><span class="hc-line dark"></span>${ch.legend.avg}</span><span class="hc-legend-item"><span class="hc-line gray"></span>${ch.legend.peer}</span></div><div class="hc-tip">💡 点击数据点查看当日详情 · 绿色点代表建议见效日 · 红色点为警示日</div><div class="hc-summary">本周鼾声频次稳定在 3-6 次/晚，14 天均值 4 次，处于健康区下沿。</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  // 本周总结
+  h+=`<div class="weekly-summary-card"><span class="ws-icon">🛡️</span><div class="ws-text"><span class="ws-title">${totalDays>0?(scoreAvg>=70?'本周总体表现良好':'本周表现一般，继续加油'):'数据积累中'}</span><span class="ws-sub">${totalDays>1?(scoreAvg>=70?'继续保持，健康评分稳中有升！':'坚持规律作息，评分会逐步提升'):'连续佩戴数天后即可看到趋势分析'}</span></div><div class="ws-score"><div class="ws-score-line"><span class="ws-score-num">${scoreAvg||'--'}</span><span class="ws-score-unit">分</span></div><span class="ws-score-label">周平均分</span></div></div>`;
+  h+=`<div class="bottom-space"></div>`;
+
+  document.getElementById('tab-longterm').innerHTML=h;
+
+  // 绘制图表 — 全部用真实数据
+  setTimeout(()=>{
+    lt.data['sleep_duration_min']=(lt.data.sleep_duration||[]).map(v=>({date:v.date,value:Math.round(v.value/60)}));
+    lt.data['deep_pct']=[];
+    if(lt.data.sleep_duration&&lt.data.deep_duration){
+      lt.data.sleep_duration.forEach((sd,i)=>{
+        var dd=lt.data.deep_duration[i];
+        if(sd&&dd&&sd.value>0) lt.data.deep_pct.push({date:sd.date,value:Math.round(dd.value/sd.value*100)});
+      });
+    }
+    if(lt.expanded.heart){ drawLongtermLine('heartRate',lt.data.ave_hr,40,100,55,75,78,'bpm','#ff8fb5'); drawLongtermLine('hrv',lt.data.hrv,0,150,30,100,42,'ms','#ca92ff'); drawLongtermLine('heartIndex',lt.data.heart_hp,30,100,60,100,75,'分','#9f9bff'); }
+    if(lt.expanded.breath){ drawLongtermLine('breathRate',lt.data.ave_br,6,24,12,20,16,'次/分','#58cfd0'); drawLongtermLine('ahi',lt.data.ahi,0,10,0,5,5,'/h','#ff8b8b'); drawLongtermLine('apnea',lt.data.apnea_duration_max,0,30,0,10,5,'秒','#ff9a85'); }
+    if(lt.expanded.sleep){ drawLongtermLine('schedule',lt.data.sleep_score,40,100,70,100,80,'分','#59d7cd'); drawLongtermLine('duration',lt.data.sleep_duration_min,200,600,420,540,450,'min','#59d7cd'); drawLongtermLine('efficiency',lt.data.sleep_efficiency,50,100,80,100,80,'%','#78bdf7'); drawLongtermLine('prep',lt.data.sleep_latency,0,60,0,20,18,'min','#f2b26b'); drawLongtermLine('deep',lt.data.deep_pct,5,30,15,25,18,'%','#84a7f8'); }
+    if(lt.expanded.sound){ drawLongtermLine('snore',lt.data.snore_num,0,20,0,5,5,'次','#ffb086'); drawLongtermLine('sleeptalk',lt.data.sleeptalk_num,0,10,0,3,3,'次','#b15dff'); }
+  },200);
+}
+
+function longtermToggleModule(m){longtermState.expanded[m]=!longtermState.expanded[m];renderLongterm();}
+
+function drawLongtermLine(id, data, yMin, yMax, greenLo, greenHi, refLine, unit, color){
+  var canvasId=id+'Chart';
+  var series=(data&&data.length)?data.map(function(d){ return d.value; }):null;
+  if(!series||series.length<1) return; // 无数据不绘制
+  var minV=yMin||50, maxV=yMax||80, rangeV=maxV-minV;
+  const c=setupCanvas(canvasId,380,180);
+  if(!c) return;
+  const {ctx,w,h}=c;
+  ctx.clearRect(0,0,w,h);
+  const padL=38,padR=14,padT=22,padB=28,chartW=w-padL-padR,chartH=h-padT-padB;
+
+  // Helper: value→Y
+  function toY(v){ return padT+chartH*(1-(v-minV)/rangeV); }
+
+  // L1: 健康分区背景色块（数据驱动，非固定百分比）
+  var gLo=greenLo!=null?greenLo:minV+rangeV*0.15;
+  var gHi=greenHi!=null?greenHi:minV+rangeV*0.55;
+  var greenTop=toY(gHi), greenBot=toY(gLo);
+  // 绿色健康区
+  ctx.fillStyle='rgba(199,232,220,0.48)';
+  ctx.fillRect(padL, greenTop, chartW, greenBot-greenTop);
+  // 上下亚健康区（珊瑚红淡色）
+  ctx.fillStyle='rgba(245,181,164,0.35)';
+  ctx.fillRect(padL, padT, chartW, greenTop-padT);
+  ctx.fillRect(padL, greenBot, chartW, (padT+chartH)-greenBot);
+
+  // L2: 横向网格线
+  ctx.strokeStyle='rgba(170,180,178,0.22)';ctx.lineWidth=0.5;ctx.setLineDash([3,4]);
+  for(var i=0;i<=4;i++){var gy=padT+(chartH/4)*i;ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(w-padR,gy);ctx.stroke();}
+  ctx.setLineDash([]);
+
+  // L3: Y轴刻度
+  ctx.fillStyle='#8A978F';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+  for(var i=0;i<=4;i++){var tv=Math.round(maxV-((maxV-minV)/4)*i);ctx.fillText(String(tv)+(unit||''),padL-5,padT+(chartH/4)*i);}
+
+  // L4: Catmull-Rom → Bezier 平滑曲线
+  var n=series.length, step=chartW/Math.max(1,n-1);
+  var points=[];
+  for(var i=0;i<n;i++){points.push({x:padL+i*step, y:toY(series[i]), v:series[i], idx:i});}
+
+  var lineColor=color||'#5b9ac9';
+  ctx.strokeStyle=lineColor;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();
+  if(points.length>0) ctx.moveTo(points[0].x, points[0].y);
+  for(var i=0;i<points.length-1;i++){
+    var p0=points[i-1]||points[i], p1=points[i], p2=points[i+1], p3=points[i+2]||p2;
+    var cp1x=p1.x+(p2.x-p0.x)/6, cp1y=p1.y+(p2.y-p0.y)/6;
+    var cp2x=p2.x-(p3.x-p1.x)/6, cp2y=p2.y-(p3.y-p1.y)/6;
+    ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,p2.x,p2.y);
+  }
+  ctx.stroke();
+
+  // L5: 14天均值虚线
+  var avgV=series.reduce(function(a,b){return a+b;},0)/series.length;
+  var avgY=toY(avgV);
+  ctx.strokeStyle='#14443A';ctx.lineWidth=1.2;ctx.globalAlpha=0.72;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(padL,avgY);ctx.lineTo(w-padR,avgY);ctx.stroke();
+  ctx.globalAlpha=1.0;ctx.setLineDash([]);
+
+  // L6: 同龄人参考线
+  if(refLine!=null){
+    var refY=toY(refLine);
+    ctx.strokeStyle='#8A9BAA';ctx.lineWidth=1;ctx.globalAlpha=0.78;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(padL,refY);ctx.lineTo(w-padR,refY);ctx.stroke();
+    ctx.globalAlpha=1.0;ctx.setLineDash([]);
+  }
+
+  // L7: 数据点
+  points.forEach(function(p){
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=lineColor;ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);ctx.fill();
+  });
+
+  // L8: 当前值标注（最后一个点）
+  if(points.length>0){
+    var lp=points[points.length-1];
+    ctx.fillStyle='#1d2c4a';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
+    ctx.fillText((unit?lp.v+unit:lp.v),lp.x,lp.y-10);
+  }
+}
+// ═══════════════════════════════════════
+// 我的 Tab
+// ═══════════════════════════════════════
+let myState={
+  currentView:'main',
+  member:{isMember:false},
+  // 账号信息（手机号登录；未设置昵称时显示脱敏手机号）
+  accountInfo:{
+    phone:'13800138000', maskPhone:'138****8000',
+    nickname:'138****8000', avatar:'👤',
+    gender:'未设置', birthday:'', wechatBound:false
+  },
+  // 头像 emoji 候选池
+  avatarOptions:['👤','😀','😎','🧑','👨','👩','👴','👵','🧓','🐱','🐶','🦊','🌸','🌟','💪'],
+  // 4 个弹层状态
+  avatarPicker:{visible:false},
+  editingNickname:false,
+  nicknameDraft:'',
+  phoneChange:{visible:false, step:1, currentCode:'', newPhone:'', newCode:'', countdown:0},
+  accountClose:{visible:false, step:1}
+};
+let _aeCountdownTimer = null;
+let appData = { user: null, devices: [] };
+
+function loadAppData(){
+  // 读取本地缓存的用户信息
+  try {
+    var raw = localStorage.getItem('hc_user');
+    if(raw) appData.user = JSON.parse(raw);
+  } catch(e){}
+  // 从 API 获取最新用户 + 设备
+  if(window.HeartCareAPI){
+    HeartCareAPI.me().then(function(u){
+      if(u && u.phone){ appData.user = u; localStorage.setItem('hc_user', JSON.stringify(u)); }
+    }).catch(function(){});
+    HeartCareAPI.getDevices().then(function(list){
+      appData.devices = list || [];
+      if(list && list.length>0){
+        var saved=null; try{ saved=localStorage.getItem('hc_device'); }catch(e){}
+        var found = saved && list.find(function(d){return d.device_id===saved;});
+        myState.currentDeviceId = found ? saved : list[0].device_id;
+      }
+    }).catch(function(){});
+  }
+}
+
+function renderMy(){
+  const s=myState; let h='';
+  if(s.currentView==='main'){
+    var phone = (appData.user && appData.user.phone) || '';
+    var maskPhone = phone ? phone.slice(0,3)+'****'+phone.slice(-4) : '未登录';
+    var nickname = (appData.user && appData.user.nickname) || '';
+    h+=`<div class="section-label-row"><span class="section-label">👤 我的账户</span></div>`;
+    h+=`<div class="account-card" onclick="myNavigate('accountEdit')"><div class="ah-avatar"><span class="ah-avatar-emoji">👤</span></div><div class="ah-name-row"><span class="ah-name">${nickname||maskPhone}</span>${phone?`<span class="ah-phone-sub">${maskPhone}</span>`:''}<span class="ah-edit">✎</span></div><span class="ah-arrow">›</span></div>`;
+    h+=`<div class="member-banner ${s.member.isMember?'is-member':''}" onclick="myNavigate('membership')"><div class="mb-left"><span class="mb-crown">${s.member.isMember?'👑':'✨'}</span><div class="mb-text"><span class="mb-title">护心宝 Pro 会员</span><span class="mb-sub">${s.member.isMember?'专业版已激活':'解锁完整健康监测能力'}</span></div></div><span class="mb-cta">${s.member.isMember?'管理':'立即开通'} ›</span></div>`;
+    var devs = appData.devices || [];
+    var curDevId = myState.currentDeviceId;
+    h+=`<div class="my-devices-section"><div class="my-devices-head"><span class="my-devices-title">📦 我的设备</span><span class="my-devices-count">已绑定 ${devs.length||0} 台</span></div>`;
+    if(devs.length===0){
+      h+=`<div class="device-card-v2" style="justify-content:center;color:#a0b5ae;cursor:default"><span>暂无绑定设备</span></div>`;
+    } else {
+      devs.forEach(function(d,i){
+        var name = d.device_name || d.device_id || '';
+        var online = d.last_seen ? (Date.now() - new Date(d.last_seen).getTime() < 300000) : false;
+        var isCurrent = d.device_id === curDevId;
+        h+=`<div class="device-card-v2" onclick="switchToDevice('${d.device_id}',${i})" style="${isCurrent?'border:2px solid #1F8A6F;background:#f0faf6':''}">`;
+        h+=`<div class="dc2-icon"><span class="dc2-icon-emoji">🛏</span></div>`;
+        h+=`<div class="dc2-body"><div class="dc2-name-row"><span class="dc2-name">${name||'设备 '+d.device_id}</span><span class="dc2-online ${online?'online':'offline'}">${online?'●':'○'}</span></div>`;
+        h+=`<span class="dc2-sn">${d.device_id||''}</span>`;
+        h+=`<span class="dc2-user">${isCurrent?'🟢 当前显示':(d.is_primary?'⭐ 主设备':'')}</span></div>`;
+        h+=`<span class="dc2-arrow" onclick="event.stopPropagation();myState.selectedDeviceIdx=${i};myNavigate('deviceDetail')">›</span>`;
+        h+=`</div>`;
+      });
+    }
+    h+=`<div class="my-devices-add" onclick="myNavigate('bindDevice');stopQRScan()"><span class="md-add-icon">＋</span><span class="md-add-text">添加设备</span></div></div>`;
+    h+=`<div class="menu-list general-menu">${[{key:'account',icon:'🔐',iconBg:'#fff1de',title:'账号与服务',subtitle:'账号管理、会员服务等'},{key:'contact',icon:'☎️',iconBg:'#e8f4ec',title:'联系我们',subtitle:'电话、邮箱、在线客服等'},{key:'feedback',icon:'💬',iconBg:'#e3f0ff',title:'问题反馈',subtitle:'意见反馈与建议'},{key:'logout',icon:'↩️',iconBg:'#fde7e7',title:'退出登录',subtitle:'安全退出当前账号'}].map(m=>`<div class="menu-item menu-item-with-sub" onclick="myNavigate('${m.key}')"><div class="menu-icon-wrap" style="background:${m.iconBg};"><span class="menu-icon">${m.icon}</span></div><div class="menu-text"><span class="menu-title">${m.title}</span><span class="menu-subtitle">${m.subtitle}</span></div><span class="menu-arrow">›</span></div>`).join('')}</div>`;
+  }
+  else if(s.currentView==='deviceDetail'){
+    var sel = appData.devices[s.selectedDeviceIdx] || {};
+    var did = sel.device_id || '';
+    var dname = sel.device_name || ('设备 '+did) || '未知设备';
+    var online = sel.last_seen ? (Date.now() - new Date(sel.last_seen).getTime() < 300000) : false;
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">${dname}</span></div>`;
+    h+=`<div class="dd-header"><div class="dd-illust"><div class="dd-illust-box" style="width:50px;height:50px;background:#1f8a6f;border-radius:10px;position:relative;margin:0 auto"><div class="dd-illust-dot" style="width:8px;height:8px;background:#fff;border-radius:50%;position:absolute;top:10px;left:50%;transform:translateX(-50%)"></div></div></div><div class="device-name-row" style="text-align:center;margin:12px 0"><span class="dc2-name">${dname}</span></div><div class="dd-meta" style="text-align:center"><span class="dc2-online ${online?'online':'offline'}">${online?'● 在线':'○ 离线'}</span><span style="font-size:12px;color:#7a8c84;margin-left:8px">${did}</span></div></div>`;
+    h+=`<div class="menu-list" style="margin-top:8px">${[{key:'realtime',icon:'📡',iconBg:'#dff4ff',title:'实时'},{key:'user',icon:'👤',iconBg:'#ece7ff',title:'被监测人信息'},{key:'sim',icon:'📅',iconBg:'#ffe1e1',title:'4G卡信息'}].map(m=>`<div class="menu-item" onclick="myNavigate('${m.key}')"><div class="menu-icon-wrap" style="background:${m.iconBg};"><span class="menu-icon">${m.icon}</span></div><span class="menu-title">${m.title}</span><span class="menu-arrow">›</span></div>`).join('')}</div>`;
+    h+=`<div class="dd-unbind-btn" onclick="doUnbindDevice('${did}')">解绑设备</div>`;
+  }
+  else if(s.currentView==='membership'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">护心宝 Pro</span></div>`;
+    h+=`<div class="mp-hero"><div class="mp-crown-big">👑</div><div class="mp-brand"><span class="mp-brand-name">护心宝</span><span class="mp-brand-pro">Pro 会员</span></div><div class="mp-tagline">解锁完整健康监测能力，看到你心脏长期改善的每一步</div></div>`;
+    h+=`<div class="mp-features"><div class="mp-features-title">✨ 开通后立享 4 大特权</div>${['📊 长期趋势 30 天 / 全周期|免费版：仅 7 天 · Pro：完整 30 天 + 全周期','🎯 同龄人对比 + 14 天均值|看到自己在同龄人中的位置，以及自身改善趋势','🔊 睡眠声音完整监测|鼾声 / 梦话 / 咳嗽 录音回放 + 长期频次趋势','💡 行为见效分析|长期图自动标注：哪些打卡真的让你的健康指标改善'].map((f,i)=>{const p=f.split('|');return`<div class="mp-feature-item"><span class="mp-feature-icon">${p[0].split(' ')[0]}</span><div class="mp-feature-text"><span class="mp-feature-title">${p[0].slice(p[0].indexOf(' ')+1)}</span><span class="mp-feature-cmp"><span class="pro">${p[1]}</span></span></div></div>`;}).join('')}</div>`;
+    h+=`<div class="mp-pricing"><div class="mp-price-card" onclick="subscribeMonthly()"><span class="mp-price-name">月付</span><span class="mp-price-num">¥19.9</span><span class="mp-price-period">/ 月</span></div><div class="mp-price-card recommended" onclick="subscribeYearly()"><div class="mp-price-badge">⭐ 限时新人价</div><span class="mp-price-name">年付</span><span class="mp-price-num">¥98</span><span class="mp-price-period">首年（原价 ¥168）</span><span class="mp-price-equiv">约 ¥8.2 / 月</span></div></div>`;
+    h+=`<div class="mp-trust"><span>🛡️ 隐私加密</span><span>↩️ 7 天无理由退款</span><span>💬 7×24 客服</span></div>`;
+    h+=`<div class="mp-cta-wrap"><div class="mp-cta-trial" onclick="startTrial()">🎁 立即开启 7 天免费试用</div><div class="mp-cta-sub">试用期内随时取消 · 试用结束后按月付 ¥19.9 自动续费</div></div>`;
+    h+=`<div class="mp-faq"><div class="mp-faq-title">📋 服务说明</div><div class="mp-faq-item"><span class="mp-faq-bold">· 自动续费：</span>到期前 24 小时自动续费下一周期</div><div class="mp-faq-item"><span class="mp-faq-bold">· 取消订阅：</span>取消后已生效的订阅会持续到当前周期结束</div><div class="mp-faq-item"><span class="mp-faq-bold">· 数据隐私：</span>所有声音录音仅本地识别，不上传任何原始音频</div></div>`;
+  }
+  else if(s.currentView==='contact'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">联系我们</span></div>`;
+    h+=`<div class="cu-banner"><span class="cu-banner-emoji">☎️</span><span class="cu-banner-title">护心宝 客服</span><span class="cu-banner-sub">工作时间：每日 9:00 - 21:00</span></div>`;
+    h+=`<div class="cu-section"><div class="cu-section-title">联系方式</div>`;
+    [{icon:'📞',bg:'#e3f4ff',title:'客服热线',sub:'400-100-8888（每日 9:00-21:00）'},{icon:'💬',bg:'#e3f5ea',title:'客服微信',sub:'huahaomian-cs（点击复制）'},{icon:'✉️',bg:'#fdf0e3',title:'客服邮箱',sub:'support@huahaomian.com'}].forEach(c=>{h+=`<div class="cu-row"><div class="cu-icon" style="background:${c.bg};">${c.icon}</div><div class="cu-text"><span class="cu-title">${c.title}</span><span class="cu-sub">${c.sub}</span></div><span class="cu-arrow">›</span></div>`;});
+    h+=`</div><div class="cu-section"><div class="cu-section-title">常见问题</div>`;
+    [{q:'Q：设备无法连接怎么办？',a:'A：请检查蓝牙是否开启，并保持设备距离手机 1 米内，重启设备后重试。'},{q:'Q：监测数据不准确怎么办？',a:'A：进入「设备自适应」重新校准，并确保床上无重物、设备贴合床垫。'},{q:'Q：4G 卡流量不足如何续费？',a:'A：在「4G卡信息」页面查看流量与有效期，到期前会自动提醒续费。'},{q:'Q：会员订阅怎么取消？',a:'A：进入「账号与服务 → 订阅管理」，关闭自动续费或取消订阅。'}].forEach(f=>{h+=`<div class="cu-faq"><span class="cu-faq-q">${f.q}</span><span class="cu-faq-a">${f.a}</span></div>`;});
+    h+=`</div>`;
+  }
+  else if(s.currentView==='alert'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">预警设置</span></div>`;
+    h+=`<div class="card"><div style="padding:40px 20px;text-align:center"><div style="font-size:40px;margin-bottom:10px">🔔</div><div style="font-size:15px;font-weight:700;color:#14443a;margin-bottom:6px">预警设置</div><div style="font-size:13px;color:#8a9baa">功能开发中，敬请期待</div></div></div>`;
+  }
+  else if(s.currentView==='sim'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">4G卡信息</span></div>`;
+    const dv = s.simDevice;
+    const base = appData.devices[s.selectedDeviceIdx] || {};
+    const did = (dv&&dv.device_id) || base.device_id || '--';
+    const serial = dv && dv.serial_number ? dv.serial_number : '--';
+    const fw = dv && dv.firmware_version ? dv.firmware_version : '--';
+    const lastSeen = (dv&&dv.last_seen)||base.last_seen;
+    const online = lastSeen ? (Date.now()-new Date(lastSeen).getTime()<300000) : false;
+    const net = (dv&&dv.product_key&&/LTE|4G/i.test(dv.product_key))||/LTE|4G/i.test(serial)?'4G (LTE)':'4G / WiFi';
+    h+=`<div class="card"><div class="sim-main-card"><div class="sim-main-title">设备网络</div><div class="sim-grid">`;
+    h+=`<div>设备编号：${did}</div><div>网络制式：${net}</div>`;
+    h+=`<div>连接状态：${online?'在线':'离线'}</div><div>序列号：${serial}</div>`;
+    h+=`<div>固件版本：${fw}</div><div>最近上报：${lastSeen?new Date(lastSeen).toLocaleString('zh-CN'):'--'}</div>`;
+    h+=`</div></div>`;
+    h+=`<div class="sim-footnote" style="margin-top:10px">* ICCID、运营商、套餐流量与有效期由物联卡平台管理，本应用暂未接入。如需查询或充值，请用微信扫描设备背部二维码操作。</div></div>`;
+  }
+  else if(s.currentView==='user'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">被监测人信息</span></div>`;
+    const p = s.profile;
+    if(!p){
+      h+=`<div class="card"><div style="padding:24px;text-align:center;color:#8a9baa">加载中…</div></div>`;
+    } else {
+      const cy=new Date().getFullYear();
+      const age = p.birthYear? (cy-p.birthYear):null;
+      const genderText = p.gender==='male'?'男':p.gender==='female'?'女':'--';
+      const bmi = (p.heightCm&&p.weightKg)? (p.weightKg/Math.pow(p.heightCm/100,2)) : null;
+      const bmiText = bmi? (bmi.toFixed(1)+'（'+(bmi<18.5?'偏瘦':bmi<24?'正常':bmi<28?'偏胖':'肥胖')+'）') : '--';
+      const name = p.nickname || (p.phone?('用户'+p.phone.slice(-4)):'被监测人');
+      if(!s.profileEdit){
+        h+=`<div class="user-cover"><div class="user-cover-name">${name}</div><div class="user-cover-age">${age!=null?age+'岁':'--'}</div><div class="user-cover-sub">${genderText}${p.birthYear?'  出生年份 '+p.birthYear:''}</div></div>`;
+        const fields=[{l:'被监测人',v:name},{l:'性别',v:genderText},{l:'出生年份',v:p.birthYear||'--'},{l:'身高',v:p.heightCm?p.heightCm+' cm':'--'},{l:'体重',v:p.weightKg?p.weightKg+' kg':'--'},{l:'BMI 指数',v:bmiText}];
+        h+=`<div class="user-card"><div class="user-card-title">基础信息</div>${fields.map(f=>`<div class="user-field"><span class="user-field-label">${f.l}</span><span class="user-field-text">${f.v}</span></div>`).join('')}</div>`;
+        h+=`<button class="btn" onclick="myState.profileEdit=true;renderMy()" style="width:100%;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">编辑信息</button>`;
+      } else {
+        const inp='width:100%;height:42px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa;box-sizing:border-box';
+        h+=`<div class="user-card"><div class="user-card-title">编辑基础信息</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">姓名 / 称呼</label><input id="pfNickname" style="${inp}" value="${(p.nickname||'').replace(/"/g,'&quot;')}" placeholder="请输入"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">性别</label><select id="pfGender" style="${inp}"><option value="male"${p.gender==='male'?' selected':''}>男</option><option value="female"${p.gender==='female'?' selected':''}>女</option></select></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">出生年份</label><input id="pfBirthYear" type="number" style="${inp}" value="${p.birthYear||''}" placeholder="如 1960"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">身高 (cm)</label><input id="pfHeight" type="number" style="${inp}" value="${p.heightCm||''}" placeholder="如 170"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">体重 (kg)</label><input id="pfWeight" type="number" style="${inp}" value="${p.weightKg||''}" placeholder="如 65"/></div>`;
+        h+=`</div>`;
+        h+=`<div style="display:flex;gap:8px"><button onclick="myState.profileEdit=false;renderMy()" style="flex:1;height:44px;border:1.5px solid #dde5e1;border-radius:10px;background:#fff;color:#6a8b82;font-size:15px;font-weight:700;cursor:pointer">取消</button><button onclick="doSaveProfile()" style="flex:2;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">保存</button></div>`;
+      }
+    }
+  }
+  else if(s.currentView==='share'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">分享设备</span></div>`;
+    h+=`<div class="card"><div style="padding:40px 20px;text-align:center"><div style="font-size:40px;margin-bottom:10px">📤</div><div style="font-size:15px;font-weight:700;color:#14443a;margin-bottom:6px">分享设备</div><div style="font-size:13px;color:#8a9baa">功能开发中，敬请期待</div></div></div>`;
+  }
+  else if(s.currentView==='more'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">更多设置</span></div>`;
+    h+=`<div class="card"><div style="padding:40px 20px;text-align:center"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:15px;font-weight:700;color:#14443a;margin-bottom:6px">更多设置</div><div style="font-size:13px;color:#8a9baa">功能开发中，敬请期待</div></div></div>`;
+  }
+  else if(s.currentView==='bindDevice'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">绑定设备</span></div>`;
+    h+=`<div class="card" style="margin-bottom:8px"><div style="padding:4px 0"><span style="font-size:14px;font-weight:700;color:#14443a;display:block;margin-bottom:8px">输入设备ID</span>`;
+    h+=`<input class="input" id="bindDeviceInput" type="text" placeholder="输入设备编号, 如 58755565" style="width:100%;height:44px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa" />`;
+    h+=`<button class="btn" onclick="doBindDevice()" style="width:100%;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px">确认绑定</button>`;
+    h+=`</div></div>`;
+    h+=`<div class="card"><div style="padding:4px 0;text-align:center">`;
+    h+=`<div style="font-size:14px;font-weight:700;color:#14443a;margin-bottom:10px">或扫描设备二维码</div>`;
+    h+=`<div id="qrScannerContainer" style="width:100%;max-width:280px;height:200px;margin:0 auto;background:#f0f5f3;border-radius:12px;overflow:hidden;position:relative;border:2px dashed #c5d4ce">`;
+    h+=`<video id="qrVideo" style="width:100%;height:100%;object-fit:cover;display:none"></video>`;
+    h+=`<div id="qrPlaceholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#8a9baa;font-size:13px;cursor:pointer" onclick="startQRScan()"><span style="font-size:36px;margin-bottom:6px">📷</span><span>点击扫码识别</span></div>`;
+    h+=`</div>`;
+    h+=`<div id="qrResult" style="font-size:12px;color:#1F8A6F;margin-top:6px;min-height:18px"></div>`;
+    h+=`</div></div>`;
+  }
+  else if(s.currentView==='account'){
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">账号与服务</span></div>`;
+    h+=`<div class="card"><div style="padding:10px 0"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span>🔒</span><div><span style="font-size:15px;font-weight:700;color:#14443a">未开通会员</span></div></div></div></div>`;
+    h+=`<div class="card" style="margin-top:8px"><div style="padding:10px 0"><span style="font-size:15px;font-weight:700;color:#1f443c">账号信息</span>${[{l:'微信账号',v:'微信用户'},{l:'注册时间',v:'2024-12-03'},{l:'用户协议',v:'›'},{l:'隐私政策',v:'›'},{l:'注销账号',v:'›'}].map(r=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f7f5;font-size:14px"><span style="color:#6a8b82">${r.l}</span><span style="color:#14443a">${r.v}</span></div>`).join('')}</div></div>`;
+  }
+  else if(s.currentView==='logout'){
+    if(window.HeartCareAPI) HeartCareAPI.logout().catch(function(){});
+    localStorage.removeItem('hc_token');
+    localStorage.removeItem('hc_user');
+    window.location.href = '/web/login.html';
+  }
+  else if(s.currentView==='realtime'){
+    const rd = s.realtimeData || {};
+    const loaded = s.realtimeLoaded;
+    const online = !!rd.online;
+    const inBed = !!rd.inBed;
+    const sig = rd.signalQuality||0, sigLabel = rd.signalLabel||'--';
+    const sigColor = sig>=70?'#1F8A6F':sig>=40?'#e09a1e':'#c43a2c';
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="stopRealtimePolling();myGoBack()">‹</button><span class="subpage-title">实时监测</span><span style="font-size:12px;color:${online?'#1F8A6F':'#c43a2c'};font-weight:600">${online?'● 在线':'○ 离线'}</span></div>`;
+    // 设备 & 在床状态
+    h+=`<div class="card" style="margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">`;
+    h+=`<div style="background:${online?'#eef9f4':'#fbeeee'};border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">设备状态</span><span style="font-size:16px;font-weight:800;color:${online?'#1F8A6F':'#c43a2c'};display:block;margin-top:2px">${online?'在线':'离线'}</span></div>`;
+    h+=`<div style="background:${inBed?'#eef9f4':'#f5faf8'};border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">在床状态</span><span style="font-size:16px;font-weight:800;color:${inBed?'#1F8A6F':'#8a9baa'};display:block;margin-top:2px">${!online?'--':inBed?'🛏 在床':'离床'}</span></div>`;
+    h+=`<div style="background:#f5faf8;border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">信号质量</span><span style="font-size:16px;font-weight:800;color:${sigColor};display:block;margin-top:2px">${sigLabel}</span></div>`;
+    h+=`</div></div>`;
+    // 生命体征
+    h+=`<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:15px;font-weight:700;color:#14443a">❤️ 生命体征</span><span style="font-size:11px;color:#8a9baa" id="realtimeUpdateTime">${loaded?'':'连接中…'}</span></div>`;
+    h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">`;
+    h+=`<div style="background:#f5faf8;border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">心率</span><span style="font-size:24px;font-weight:800;color:#c43a2c;display:block">${inBed&&rd.heartRate?rd.heartRate:'--'}</span><span style="font-size:11px;color:#5a7a6a">bpm</span></div>`;
+    h+=`<div style="background:#f5faf8;border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">呼吸率</span><span style="font-size:24px;font-weight:800;color:#1F8A6F;display:block">${inBed&&rd.respiratoryRate?rd.respiratoryRate:'--'}</span><span style="font-size:11px;color:#5a7a6a">brpm</span></div>`;
+    h+=`<div style="background:#f5faf8;border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">HRV</span><span style="font-size:24px;font-weight:800;color:#3a6cdb;display:block">${inBed&&rd.hrv?rd.hrv:'--'}</span><span style="font-size:11px;color:#5a7a6a">ms</span></div>`;
+    h+=`</div>`;
+    if(online&&!inBed) h+=`<div style="font-size:11px;color:#8a9baa;text-align:center;margin-top:8px">当前未检测到人员在床，生命体征暂停采集</div>`;
+    h+=`</div>`;
+    // 睡眠 & 体动
+    h+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:700;color:#14443a">🛌 睡眠 & 体动</span></div>`;
+    h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`;
+    h+=`<div style="background:#f5faf8;border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">睡眠分期</span><span style="font-size:18px;font-weight:700;color:#14443a;display:block">${inBed?(['--','清醒','REM','浅睡','深睡'][rd.sleepStage]||'--'):'--'}</span></div>`;
+    h+=`<div style="background:#f5faf8;border-radius:10px;padding:10px;text-align:center"><span style="font-size:11px;color:#5a7a6a">体动</span><span style="font-size:18px;font-weight:700;color:#14443a;display:block">${!inBed?'--':rd.moving?'🔄 活动中':'😴 静止'}</span></div>`;
+    h+=`</div></div>`;
+    h+=`<div class="card"><span style="font-size:13px;font-weight:600;color:#14443a;display:block;margin-bottom:6px">📊 实时心率趋势</span>`;
+    h+=`<canvas id="rtMiniChart" style="width:100%;height:80px;background:#f9fbfa;border-radius:8px"></canvas>`;
+    h+=`<div style="display:flex;justify-content:space-between;font-size:10px;color:#8a9baa;margin-top:2px"><span>${s.realtimeChartLabel||''}</span></div></div>`;
+  }
+  else if(s.currentView==='accountEdit'){
+    const ai = s.accountInfo;
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">我的账户</span></div>`;
+    // 大头像区
+    h+=`<div class="ae-avatar-section" onclick="aeOpenAvatarPicker()"><div class="ae-avatar-big"><span class="ae-avatar-emoji-big">${ai.avatar}</span></div><span class="ae-avatar-edit-tag">点击修改头像</span></div>`;
+    // 基本资料
+    h+=`<div class="ae-group-title">基本资料</div>`;
+    h+=`<div class="ae-card">`;
+    h+=`  <div class="ae-row" onclick="aeOpenNicknameEdit()"><span class="ae-row-label">昵称</span><span class="ae-row-value">${ai.nickname}</span><span class="ae-row-arrow">›</span></div>`;
+    h+=`  <div class="ae-divider"></div>`;
+    h+=`  <div class="ae-row" onclick="aeOpenGenderPicker()"><span class="ae-row-label">性别</span><span class="ae-row-value ${ai.gender==='未设置'?'ae-row-value-empty':''}">${ai.gender}</span><span class="ae-row-arrow">›</span></div>`;
+    h+=`  <div class="ae-divider"></div>`;
+    h+=`  <div class="ae-row" onclick="aeOpenBirthdayPicker()"><span class="ae-row-label">生日</span><span class="ae-row-value ${!ai.birthday?'ae-row-value-empty':''}">${ai.birthday||'未设置'}</span><span class="ae-row-arrow">›</span></div>`;
+    h+=`</div>`;
+    // 账号绑定
+    h+=`<div class="ae-group-title">账号绑定</div>`;
+    h+=`<div class="ae-card">`;
+    h+=`  <div class="ae-row" onclick="aeOpenPhoneChange()"><span class="ae-row-label">手机号</span><span class="ae-row-value">${ai.maskPhone}</span><span class="ae-row-arrow">›</span></div>`;
+    h+=`  <div class="ae-divider"></div>`;
+    h+=`  <div class="ae-row" onclick="aeOpenWechatBind()"><span class="ae-row-label">微信账号</span><span class="ae-row-value ${ai.wechatBound?'':'ae-row-value-empty'}">${ai.wechatBound?'已绑定':'未绑定'}</span><span class="ae-row-arrow">›</span></div>`;
+    h+=`</div>`;
+    // 账号管理
+    h+=`<div class="ae-group-title">账号管理</div>`;
+    h+=`<div class="ae-card">`;
+    h+=`  <div class="ae-row" onclick="aeOpenAccountClose()"><span class="ae-row-label ae-danger">注销账号</span><span class="ae-row-arrow">›</span></div>`;
+    h+=`</div>`;
+  }
+  else {
+    h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">${s.currentView}</span></div>`;
+    h+=`<div class="card"><div style="padding:20px;text-align:center;color:#6a8b82">此功能页面（开发中）</div></div>`;
+  }
+  if(s.currentView!=='main') h+=`<div class="body-bottom-pad"></div>`;
+  // ===== 4 个弹层（仅 accountEdit 视图下可能显示） =====
+  if(s.currentView==='accountEdit'){
+    // 头像选择
+    if(s.avatarPicker.visible){
+      h+=`<div class="ae-modal-mask" onclick="aeCloseAvatarPicker()"></div>`;
+      h+=`<div class="ae-avatar-modal" onclick="event.stopPropagation()">`;
+      h+=`  <div class="ae-modal-head"><span class="ae-modal-cancel" onclick="aeCloseAvatarPicker()">取消</span><span class="ae-modal-title">选择头像</span><span class="ae-modal-placeholder"></span></div>`;
+      h+=`  <div class="ae-avatar-grid">${s.avatarOptions.map(a=>`<div class="ae-avatar-item ${s.accountInfo.avatar===a?'selected':''}" onclick="aeSelectAvatar('${a}')"><span class="ae-avatar-grid-emoji">${a}</span></div>`).join('')}</div>`;
+      h+=`</div>`;
+    }
+    // 昵称编辑
+    if(s.editingNickname){
+      h+=`<div class="ae-modal-mask" onclick="aeCancelNicknameEdit()"></div>`;
+      h+=`<div class="ae-input-modal" onclick="event.stopPropagation()">`;
+      h+=`  <div class="ae-modal-head"><span class="ae-modal-cancel" onclick="aeCancelNicknameEdit()">取消</span><span class="ae-modal-title">修改昵称</span><span class="ae-modal-save" onclick="aeSaveNickname()">保存</span></div>`;
+      h+=`  <div class="ae-modal-body">`;
+      h+=`    <input class="ae-input" id="aeNicknameInput" maxlength="20" placeholder="2-20 个字符" value="${(s.nicknameDraft||'').replace(/"/g,'&quot;')}" oninput="aeNicknameDraftInput(this.value)"/>`;
+      h+=`    <span class="ae-input-hint">支持中英文、数字（<span id="aeNicknameCounter">${(s.nicknameDraft||'').length}</span>/20）</span>`;
+      h+=`  </div>`;
+      h+=`</div>`;
+    }
+    // 修改手机号
+    if(s.phoneChange.visible){
+      const pc = s.phoneChange;
+      h+=`<div class="ae-modal-mask" onclick="aeCancelPhoneChange()"></div>`;
+      h+=`<div class="ae-phone-modal" onclick="event.stopPropagation()">`;
+      h+=`  <div class="ae-modal-head"><span class="ae-modal-cancel" onclick="aeCancelPhoneChange()">取消</span><span class="ae-modal-title">${pc.step===1?'验证原手机号':'绑定新手机号'}</span><span class="ae-modal-placeholder"></span></div>`;
+      h+=`  <div class="ae-step-bar">`;
+      h+=`    <div class="ae-step ${pc.step>=1?'active':''}"><div class="ae-step-dot">1</div><span class="ae-step-label">验证原号码</span></div>`;
+      h+=`    <div class="ae-step-line ${pc.step>=2?'active':''}"></div>`;
+      h+=`    <div class="ae-step ${pc.step>=2?'active':''}"><div class="ae-step-dot">2</div><span class="ae-step-label">绑定新号码</span></div>`;
+      h+=`  </div>`;
+      if(pc.step===1){
+        h+=`  <div class="ae-phone-step">`;
+        h+=`    <div class="ae-phone-hint">为确保安全，我们将向您的原手机号 <span class="ae-bold">${s.accountInfo.maskPhone}</span> 发送验证码</div>`;
+        h+=`    <div class="ae-input-group">`;
+        h+=`      <input class="ae-input ae-input-code" type="tel" maxlength="6" placeholder="6 位验证码" value="${pc.currentCode}" oninput="aePhoneInput('currentCode',this.value)"/>`;
+        h+=`      <div class="ae-code-btn ${pc.countdown>0?'disabled':''}" onclick="aeSendVerifyCode('current')">${pc.countdown>0?(pc.countdown+'s 后重发'):'发送验证码'}</div>`;
+        h+=`    </div>`;
+        h+=`    <div class="ae-primary-btn ${pc.currentCode.length===6?'':'disabled'}" onclick="aeNextPhoneChangeStep()">下一步</div>`;
+        h+=`  </div>`;
+      } else {
+        h+=`  <div class="ae-phone-step">`;
+        h+=`    <div class="ae-phone-hint">请输入您要绑定的新手机号</div>`;
+        h+=`    <div class="ae-input-wrap"><input class="ae-input" type="tel" maxlength="11" placeholder="新手机号" value="${pc.newPhone}" oninput="aePhoneInput('newPhone',this.value)"/></div>`;
+        h+=`    <div class="ae-input-group">`;
+        h+=`      <input class="ae-input ae-input-code" type="tel" maxlength="6" placeholder="6 位验证码" value="${pc.newCode}" oninput="aePhoneInput('newCode',this.value)"/>`;
+        h+=`      <div class="ae-code-btn ${pc.countdown>0?'disabled':''}" onclick="aeSendVerifyCode('new')">${pc.countdown>0?(pc.countdown+'s 后重发'):'发送验证码'}</div>`;
+        h+=`    </div>`;
+        h+=`    <div class="ae-primary-btn ${(pc.newPhone.length===11&&pc.newCode.length===6)?'':'disabled'}" onclick="aeNextPhoneChangeStep()">完成绑定</div>`;
+        h+=`  </div>`;
+      }
+      h+=`</div>`;
+    }
+    // 注销账号
+    if(s.accountClose.visible){
+      const ac = s.accountClose;
+      h+=`<div class="ae-modal-mask" onclick="aeCancelAccountClose()"></div>`;
+      h+=`<div class="ae-close-modal" onclick="event.stopPropagation()">`;
+      if(ac.step===1){
+        h+=`  <span class="ae-close-title">⚠ 注销账号</span>`;
+        h+=`  <span class="ae-close-text">注销账号后将<span class="ae-danger ae-bold">永久删除</span>以下内容，且不可恢复：</span>`;
+        h+=`  <div class="ae-close-list"><span class="ae-close-list-item">· 全部健康监测数据</span><span class="ae-close-list-item">· 设备绑定关系</span><span class="ae-close-list-item">· 个人资料与昵称</span><span class="ae-close-list-item">· 会员订阅（剩余时长不退还）</span></div>`;
+        h+=`  <div class="ae-close-btn-row"><div class="ae-secondary-btn" onclick="aeCancelAccountClose()">取消</div><div class="ae-danger-btn" onclick="aeConfirmAccountCloseStep1()">我已了解，继续</div></div>`;
+      } else {
+        h+=`  <span class="ae-close-title">🛑 最后确认</span>`;
+        h+=`  <span class="ae-close-text">再次确认要注销账号？此操作无法撤销。</span>`;
+        h+=`  <div class="ae-close-btn-row"><div class="ae-secondary-btn" onclick="aeCancelAccountClose()">我再想想</div><div class="ae-danger-btn" onclick="aeConfirmAccountCloseFinal()">确认注销</div></div>`;
+      }
+      h+=`</div>`;
+    }
+  }
+  document.getElementById('tab-my').innerHTML=h;
+}
+
+let navStack = []; // 返回栈: ['main', 'deviceDetail', 'realtime', ...]
+
+function myNavigate(view){
+  navStack.push(myState.currentView || 'main');
+  myState.currentView = view;
+  renderMy();
+  window.scrollTo(0,0);
+}
+
+function myGoBack(){
+  if(myState.currentView === 'deviceDetail'){
+    stopRealtimePolling();
+  }
+  if(navStack.length > 0){
+    myState.currentView = navStack.pop();
+  } else {
+    myState.currentView = 'main';
+  }
+  renderMy();
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════
+// 我的账户编辑（Level 3）— 4 个弹层 handler
+// ═══════════════════════════════════════
+function aeOpenAvatarPicker(){ myState.avatarPicker.visible=true; renderMy(); }
+function aeCloseAvatarPicker(){ myState.avatarPicker.visible=false; renderMy(); }
+function aeSelectAvatar(emoji){
+  myState.accountInfo.avatar = emoji;
+  myState.avatarPicker.visible = false;
+  renderMy();
+  aeToast('头像已更换');
+}
+function aeOpenNicknameEdit(){
+  myState.editingNickname = true;
+  myState.nicknameDraft = myState.accountInfo.nickname;
+  renderMy();
+  setTimeout(()=>{ const i=document.getElementById('aeNicknameInput'); if(i) i.focus(); }, 50);
+}
+function aeNicknameDraftInput(v){
+  myState.nicknameDraft = v;
+  const c=document.getElementById('aeNicknameCounter');
+  if(c) c.textContent = v.length;
+}
+function aeCancelNicknameEdit(){ myState.editingNickname=false; renderMy(); }
+function aeSaveNickname(){
+  const v = (myState.nicknameDraft||'').trim();
+  if(v.length<2){ aeToast('昵称至少 2 个字符'); return; }
+  if(v.length>20){ aeToast('昵称最多 20 个字符'); return; }
+  myState.accountInfo.nickname = v;
+  myState.editingNickname = false;
+  renderMy();
+  aeToast('昵称已更新');
+}
+function aeOpenGenderPicker(){
+  // 简易 ActionSheet：用 prompt 替代
+  const choice = window.prompt('选择性别：输入数字\n1=男  2=女  3=不便透露', '');
+  if(!choice) return;
+  const map = {'1':'男','2':'女','3':'不便透露'};
+  if(map[choice]){
+    myState.accountInfo.gender = map[choice];
+    renderMy();
+    aeToast('已保存');
+  }
+}
+function aeOpenBirthdayPicker(){
+  const cur = myState.accountInfo.birthday || '1980-01-01';
+  const v = window.prompt('请输入生日（YYYY-MM-DD）', cur);
+  if(!v) return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ aeToast('格式错误，应为 YYYY-MM-DD'); return; }
+  myState.accountInfo.birthday = v;
+  renderMy();
+  aeToast('生日已保存');
+}
+function aeOpenWechatBind(){
+  if(myState.accountInfo.wechatBound){
+    if(confirm('解绑微信？解绑后将无法用微信快捷登录')){
+      myState.accountInfo.wechatBound = false;
+      renderMy();
+      aeToast('已解绑');
+    }
+  } else {
+    aeToast('微信绑定功能开发中');
+  }
+}
+// ── 手机号 2 步换绑 ──
+function aeOpenPhoneChange(){
+  myState.phoneChange = {visible:true, step:1, currentCode:'', newPhone:'', newCode:'', countdown:0};
+  renderMy();
+}
+function aeCancelPhoneChange(){
+  aeStopCountdown();
+  myState.phoneChange.visible = false;
+  renderMy();
+}
+function aeStopCountdown(){
+  if(_aeCountdownTimer){ clearInterval(_aeCountdownTimer); _aeCountdownTimer = null; }
+}
+function aeStartCountdown(){
+  aeStopCountdown();
+  myState.phoneChange.countdown = 60;
+  renderMy();
+  _aeCountdownTimer = setInterval(()=>{
+    const c = myState.phoneChange.countdown - 1;
+    if(c<=0){ aeStopCountdown(); myState.phoneChange.countdown = 0; }
+    else myState.phoneChange.countdown = c;
+    renderMy();
+  }, 1000);
+}
+function aeSendVerifyCode(target){
+  if(myState.phoneChange.countdown > 0) return;
+  if(target==='new'){
+    const p = myState.phoneChange.newPhone;
+    if(!/^1[3-9]\d{9}$/.test(p)){ aeToast('请输入正确的手机号'); return; }
+  }
+  aeStartCountdown();
+  aeToast('验证码已发送');
+}
+function aePhoneInput(field, value){
+  myState.phoneChange[field] = value;
+  // 局部更新主按钮 disabled 状态，避免 renderMy 导致输入框失焦
+  const pc = myState.phoneChange;
+  const btn = document.querySelector('.ae-phone-modal .ae-primary-btn');
+  if(btn){
+    const ok = pc.step===1
+      ? pc.currentCode.length===6
+      : (pc.newPhone.length===11 && pc.newCode.length===6);
+    btn.classList.toggle('disabled', !ok);
+  }
+}
+function aeNextPhoneChangeStep(){
+  const pc = myState.phoneChange;
+  if(pc.step===1){
+    if(!/^\d{6}$/.test(pc.currentCode)){ aeToast('请输入 6 位验证码'); return; }
+    aeStopCountdown();
+    myState.phoneChange.step = 2;
+    myState.phoneChange.countdown = 0;
+    myState.phoneChange.currentCode = '';
+    renderMy();
+  } else if(pc.step===2){
+    if(!/^1[3-9]\d{9}$/.test(pc.newPhone)){ aeToast('请输入正确的手机号'); return; }
+    if(!/^\d{6}$/.test(pc.newCode)){ aeToast('请输入 6 位验证码'); return; }
+    const newP = pc.newPhone;
+    const mask = newP.slice(0,3)+'****'+newP.slice(-4);
+    aeStopCountdown();
+    myState.accountInfo.phone = newP;
+    myState.accountInfo.maskPhone = mask;
+    if(myState.accountInfo.nickname.includes('****')) myState.accountInfo.nickname = mask;
+    myState.phoneChange.visible = false;
+    renderMy();
+    aeToast('手机号已更新');
+  }
+}
+// ── 注销账号 2 步 ──
+function aeOpenAccountClose(){ myState.accountClose = {visible:true, step:1}; renderMy(); }
+function aeCancelAccountClose(){ myState.accountClose.visible = false; renderMy(); }
+function aeConfirmAccountCloseStep1(){ myState.accountClose.step = 2; renderMy(); }
+function aeConfirmAccountCloseFinal(){
+  myState.accountClose.visible = false;
+  renderMy();
+  aeToast('账号注销已提交');
+  setTimeout(()=>{
+    if(window.HeartCareAPI) HeartCareAPI.logout().catch(function(){});
+    localStorage.removeItem('hc_token');
+    localStorage.removeItem('hc_user');
+    window.location.href = '/web/login.html';
+  }, 1500);
+}
+// 极简 toast
+function aeToast(msg){
+  const id='aeToastNode';
+  let el = document.getElementById(id);
+  if(!el){
+    el = document.createElement('div'); el.id=id;
+    el.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;font-size:13px;padding:8px 14px;border-radius:6px;z-index:1100;pointer-events:none;opacity:0;transition:opacity .15s';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 1300);
+}
+
+// ═══════════════════════════════════════
+// 获取心脏风险数据（mock）
+// ═══════════════════════════════════════
+// ── 设备绑定 ──
+let qrCodeReader = null;
+function doBindDevice(){
+  const input = document.getElementById('bindDeviceInput');
+  const deviceId = input ? input.value.trim() : '';
+  if(!deviceId){ alert('请输入设备编号'); return; }
+  if(!window.HeartCareAPI){ alert('API 未就绪'); return; }
+  const btn = input.nextElementSibling;
+  btn.disabled=true; btn.textContent='绑定中...';
+  HeartCareAPI.bindDevice(deviceId).then(r=>{
+    if(r.ok){
+      alert('绑定成功！');
+      // 刷新设备列表 + 设置为当前设备 + 重新加载数据
+      refreshDeviceList().then(function(){
+        // 切换到最新绑定的设备
+        if(appData.devices && appData.devices.length>0){
+          myState.currentDeviceId = appData.devices[appData.devices.length-1].device_id;
+          try{ localStorage.setItem('hc_device', myState.currentDeviceId); }catch(e){}
+        }
+        // 先切回主视图再渲染，确保设备列表更新
+        myState.currentView = 'main';
+        navStack = [];
+        renderMy();
+        loadDailyReport();
+        loadCardiacRisks();
+      });
+    }
+    else alert(r.error || '绑定失败');
+  }).catch(e=>{ alert('网络错误'); }).finally(()=>{ if(btn){btn.disabled=false;btn.textContent='确认绑定';} });
+}
+
+async function startQRScan(){
+  const video=document.getElementById('qrVideo');
+  const ph=document.getElementById('qrPlaceholder');
+  const res=document.getElementById('qrResult');
+  if(!video || !ph) return;
+
+  // 1. Try Expo bridge
+  if(window.HeartCareBridge && window.HeartCareBridge.scanQR){
+    res.textContent='正在识别二维码...';
+    const result = await window.HeartCareBridge.scanQR();
+    if(result && result.data){
+      res.textContent='✅ 已识别: '+result.data+'，请点击「确认绑定」';
+      document.getElementById('bindDeviceInput').value=result.data;
+      return;
+    }
+    if(result && result.error === 'camera_permission_denied'){
+      res.textContent='请在设置中开启相机权限';
+      return;
+    }
+    // If scanner returns error, fall through to manual input
+    res.textContent='请手动输入设备编号';
+    return;
+  }
+
+  // 2. Try old Android bridge
+  if(window.HeartCareNative && window.HeartCareNative.startScanQR){
+    window.HeartCareNative.startScanQR();
+    return;
+  }
+
+  // 3. Fallback: browser camera via ZXing
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject=stream; video.style.display='block'; ph.style.display='none';
+    res.textContent='正在扫码...';
+    qrCodeReader = new ZXing.BrowserMultiFormatReader();
+    qrCodeReader.decodeFromVideoDevice(null, 'qrVideo', (result, err)=>{
+      if(result){
+        res.textContent='✅ 已识别: '+result.text+'，请点击「确认绑定」';
+        stopQRScan();
+        document.getElementById('bindDeviceInput').value=result.text;
+      }
+    });
+  }catch(e){
+    res.textContent='相机不可用，请手动输入设备编号';
+    ph.style.display='flex'; video.style.display='none';
+  }
+}
+function stopQRScan(){
+  const video=document.getElementById('qrVideo');
+  const ph=document.getElementById('qrPlaceholder');
+  if(qrCodeReader){ try{qrCodeReader.reset();}catch(e){} qrCodeReader=null; }
+  if(video && video.srcObject){
+    try{ video.srcObject.getTracks().forEach(t=>t.stop()); }catch(e){}
+    video.srcObject=null; video.style.display='none';
+  }
+  if(ph) ph.style.display='flex';
+}
+
+// ── 实时监测 ──
+let realtimePollTimer = null;
+let realtimeChartData = [];
+async function pollRealtimeOnce(deviceId){
+  try{
+    const rd = await HeartCareAPI.getRealtime(deviceId);
+    myState.realtimeData = rd || {};
+    myState.realtimeLoaded = true;
+    myState.deviceOnline = !!(rd && rd.online);
+    if(myState.currentView==='realtime') renderMy();
+    const ts=document.getElementById('realtimeUpdateTime');
+    if(ts) ts.textContent = (rd&&rd.online)?('更新于 '+new Date().toLocaleTimeString('zh-CN')):'';
+    // 趋势: 在床且有心率才入图
+    if(rd && rd.inBed && rd.heartRate>0){
+      realtimeChartData.push(rd.heartRate);
+      if(realtimeChartData.length>60) realtimeChartData.shift();
+      drawRtMiniChart();
+    }
+  }catch(e){ myState.deviceOnline=false; }
+}
+function startRealtimePolling(deviceId){
+  stopRealtimePolling();
+  if(!window.HeartCareAPI || !deviceId) return;
+  myState.realtimeLoaded = false;
+  realtimeChartData = [];
+  // 历史心率铺底 (用最近实时行)
+  HeartCareAPI.realtimeData(deviceId, 'realtime', 60).then(d=>{
+    if(d&&d.length>0){
+      realtimeChartData=d.map(r=>r.heart_rate||0).filter(v=>v>0).slice(-60);
+      myState.realtimeChartLabel = d[0]?new Date(d[0].received_at).toLocaleString('zh-CN'):'';
+      drawRtMiniChart();
+    }
+  }).catch(()=>{});
+  pollRealtimeOnce(deviceId);
+  realtimePollTimer = setInterval(()=>pollRealtimeOnce(deviceId), 3000);
+}
+function stopRealtimePolling(){
+  if(realtimePollTimer){ clearInterval(realtimePollTimer); realtimePollTimer=null; }
+}
+function drawRtMiniChart(){
+  const c=document.getElementById('rtMiniChart');
+  if(!c || realtimeChartData.length<2) return;
+  const ctx=c.getContext('2d');
+  const w=c.parentElement.offsetWidth||300, h=80;
+  c.width=w*2; c.height=h*2; c.style.width=w+'px'; c.style.height=h+'px';
+  ctx.scale(2,2);
+  ctx.clearRect(0,0,w,h);
+  const pad=10, cw=w-pad*2, ch=h-pad*2;
+  const max=Math.max(...realtimeChartData,80)+5, min=Math.max(0,Math.min(...realtimeChartData)-5);
+  const range=max-min||1;
+  ctx.strokeStyle='#c43a2c'; ctx.lineWidth=1.5; ctx.beginPath();
+  realtimeChartData.forEach((v,i)=>{
+    const x=pad+i/(realtimeChartData.length-1)*cw, y=pad+ch-(v-min)/range*ch;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }); ctx.stroke();
+  ctx.fillStyle='#8a9baa'; ctx.font='8px sans-serif';
+  ctx.fillText(max+'bpm',w-45,pad+8);
+  ctx.fillText(min+'bpm',w-45,h-pad);
+}
+
+// ── 切换当前设备 ──
+function switchToDevice(deviceId, index){
+  if(myState.currentDeviceId === deviceId) return;
+  myState.currentDeviceId = deviceId;
+  myState.selectedDeviceIdx = index;
+  try{ localStorage.setItem('hc_device', deviceId); }catch(e){}
+  // 重载所有数据
+  loadDailyReport();
+  loadCardiacRisks();
+  // 重渲染
+  renderDaily();
+  renderMy();
+  // 如果长期Tab可见, 也刷新
+  if(!document.getElementById('tab-longterm').classList.contains('hidden')){
+    renderLongterm();
+  }
+}
+
+// 更新"我的设备"列表导航
+function refreshDeviceList(){
+  if(!window.HeartCareAPI) return Promise.resolve();
+  return HeartCareAPI.getDevices().then(devices=>{
+    appData.devices = devices || [];
+    if(devices && devices.length>0){
+      // 保持用户当前选择的设备, 首次加载才用第一个(优先本地持久化)
+      if(!myState.currentDeviceId || !devices.find(d=>d.device_id===myState.currentDeviceId)){
+        var saved=null; try{ saved=localStorage.getItem('hc_device'); }catch(e){}
+        var found = saved && devices.find(function(d){return d.device_id===saved;});
+        myState.currentDeviceId = found ? saved : devices[0].device_id;
+      }
+    }
+  }).catch(()=>{});
+}
+
+function doUnbindDevice(deviceId){
+  if(!deviceId || !window.HeartCareAPI) return;
+  if(!confirm('确定解绑设备 '+deviceId+' ？')) return;
+  HeartCareAPI.unbindDevice(deviceId).then(function(r){
+    if(r && r.ok){
+      alert('已解绑');
+      appData.devices = appData.devices.filter(function(d){ return d.device_id !== deviceId; });
+      myState.currentView='main'; renderMy();
+    } else {
+      alert('解绑失败: ' + ((r && r.error) || '未知错误'));
+    }
+  }).catch(function(e){ alert('解绑失败'); });
+}
+// 监听实时页面的进入
+const origMyNavigate = myNavigate;
+myNavigate = function(view){
+  if(view==='realtime'){
+    var dev = (appData.devices[myState.selectedDeviceIdx]||{}).device_id || myState.currentDeviceId;
+    startRealtimePolling(dev);
+  } else {
+    stopRealtimePolling();
+  }
+  if(view==='user'){ myState.profileEdit=false; loadProfileForView(); }
+  if(view==='sim'){ myState.simDevice=null; loadSimDeviceForView(); }
+  origMyNavigate(view);
+};
+
+function loadProfileForView(){
+  if(!window.HeartCareAPI) return;
+  HeartCareAPI.getProfile().then(function(p){
+    myState.profile = p || {};
+    if(myState.currentView==='user') renderMy();
+  }).catch(function(){ myState.profile = {}; if(myState.currentView==='user') renderMy(); });
+}
+
+function loadSimDeviceForView(){
+  if(!window.HeartCareAPI) return;
+  var dev = (appData.devices[myState.selectedDeviceIdx]||{}).device_id || myState.currentDeviceId;
+  if(!dev) return;
+  HeartCareAPI.deviceDetail(dev).then(function(d){
+    myState.simDevice = d || null;
+    if(myState.currentView==='sim') renderMy();
+  }).catch(function(){});
+}
+
+function doSaveProfile(){
+  var nickname=(document.getElementById('pfNickname').value||'').trim();
+  var gender=document.getElementById('pfGender').value;
+  var birthYear=parseInt(document.getElementById('pfBirthYear').value,10);
+  var heightCm=parseInt(document.getElementById('pfHeight').value,10);
+  var weightKg=parseFloat(document.getElementById('pfWeight').value);
+  if(!birthYear||!heightCm||!weightKg){ alert('请填写出生年份、身高、体重'); return; }
+  HeartCareAPI.saveProfile({nickname:nickname,gender:gender,birthYear:birthYear,heightCm:heightCm,weightKg:weightKg}).then(function(r){
+    if(r&&r.ok){
+      myState.profile=Object.assign({},myState.profile,{nickname:nickname,gender:gender,birthYear:birthYear,heightCm:heightCm,weightKg:weightKg});
+      myState.profileEdit=false;
+      renderMy();
+      alert('已保存');
+    } else { alert((r&&r.error)||'保存失败'); }
+  }).catch(function(){ alert('网络错误'); });
+}
+
+function getCardiacRisks(){
+  return [
+    {id:'hypertensive',status:'yellow',level:'warning',icon:'🟡',title:'高血压风险',summary:'静息心率接近上限 + HRV 偏低，提示长期血压负荷',diseaseTags:['原发性高血压','继发性高血压','高血压性心脏病','左心室肥厚'],assessment:'夜间静息心率 69bpm 接近正常上限（70bpm 边缘），HRV (SDNN) 33ms 显著低于健康参考 >50ms——两项信号组合提示交感神经长期处于优势状态，是高血压性心脏病的典型早期表现。',dataPoints:[{label:'静息心率',value:'69bpm',ref:'警戒 >70 持续',status:'border'},{label:'HRV (SDNN)',value:'33ms',ref:'正常 >50ms',status:'low'},{label:'夜间心率回落',value:'20%',ref:'正常 ≥10%',status:'ok'}],suggestions:['减盐至每日 <5g（约一啤酒瓶盖）','规律有氧运动：快走 30 分钟/天，每周 5 天','控制体重 BMI <24，限酒戒烟'],linkText:'查看心率与 HRV 长期趋势'},
+    {id:'heart-failure',status:'yellow',level:'warning',icon:'🟡',title:'心脏负荷评估',summary:'夜间负荷偏高 + HRV 偏低 + 睡眠片段化',diseaseTags:['慢性心力衰竭','扩张型心肌病','肥厚型心肌病'],assessment:'静息心率 69bpm 边缘 + HRV 33ms 偏低 + 夜间翻身 93 次（远超正常 <60）+ 深睡比例 18% 处于下限——多维度信号提示心脏整夜未能充分"降压休息"。',dataPoints:[{label:'静息心率',value:'69bpm',ref:'警戒 >75bpm',status:'border'},{label:'HRV (SDNN)',value:'33ms',ref:'正常 >50ms',status:'low'},{label:'夜间翻身',value:'93次',ref:'正常 <60次',status:'high'}],suggestions:['低盐 <5g/日、限液（夜间饮水 <300ml）','耐受范围内规律有氧','严格控制血压、血糖、血脂等基础病'],linkText:'查看心率与 HRV 长期趋势'},
+    {id:'scd',status:'yellow',level:'warning',icon:'🟡',title:'心电图异常',summary:'HRV 偏低但未达高危阈值，未见恶性心律失常信号',diseaseTags:['心源性猝死 (SCD)','室性心动过速','心室颤动','长 QT 综合征'],assessment:'HRV 33ms 位于 20-50ms 轻度区间，未达 <20ms 高危阈值。本夜未检测到室性早搏、QT 间期正常。',dataPoints:[{label:'HRV (SDNN)',value:'33ms',ref:'高危 <20ms',status:'border'},{label:'室性早搏密度',value:'0次/h',ref:'高危 >10次/h',status:'ok'},{label:'QT 间期',value:'正常范围',ref:'正常 <450ms',status:'ok'}],suggestions:['严格控制冠心病、高血压、糖尿病等基础病','避免清晨/寒冷天气剧烈运动','定期复查电解质，警惕低钾低镁'],linkText:'查看 HRV 长期趋势'},
+    {id:'afib',status:'green',level:'normal',icon:'🟢',title:'房颤风险评估',summary:'节律均匀、P 波清晰，未见房颤波形',diseaseTags:['阵发性房颤','持续性房颤','永久性房颤'],assessment:'ECG 各导联 P 波清晰可辨，R-R 间期均匀（变异系数 <5%），夜间心率 55-69bpm 平稳无突发剧烈波动。',dataPoints:[{label:'P 波',value:'清晰',ref:'正常存在',status:'ok'},{label:'R-R 间期变异系数',value:'<5%',ref:'正常 <12%',status:'ok'}],suggestions:['限酒：女性每日 <1 杯、男性 <2 杯','保证 7 小时优质睡眠'],linkText:'查看心率长期趋势'},
+    {id:'cad',status:'green',level:'normal',icon:'🟢',title:'冠心病风险',summary:'ST 段平直、T 波直立，夜间心率正常回落',diseaseTags:['稳定型心绞痛','不稳定型心绞痛','急性心肌梗死'],assessment:'ECG ST 段平直无抬高/压低，T 波直立形态正常；夜间心率从入睡时 69bpm 平稳回落至 55bpm（回落幅度 20%），符合健康人应答规律。',dataPoints:[{label:'ST 段',value:'平直',ref:'无抬高/压低',status:'ok'},{label:'T 波形态',value:'直立',ref:'形态正常',status:'ok'},{label:'夜间心率回落',value:'20%',ref:'正常 ≥10%',status:'ok'}],suggestions:['低盐低脂饮食 + 每周 ≥150 分钟中等强度有氧','严格控制血压、血脂、血糖三高'],linkText:'查看心动图长期趋势'},
+    {id:'av-block',status:'green',level:'normal',icon:'🟢',title:'房室传导异常',summary:'PR 间期正常、无漏搏、未见长间歇',diseaseTags:['一度房室传导阻滞','二度房室传导阻滞','完全性房室传导阻滞'],assessment:'ECG 示 PR 间期在 120-200ms 正常范围内，QRS 波形态、时限正常（<120ms），本夜未记录到任何漏搏或 >2.0s 长间歇，夜间最低心率 55bpm 表明传导系统储备功能良好。',dataPoints:[{label:'PR 间期',value:'正常范围',ref:'120-200ms',status:'ok'},{label:'QRS 时限',value:'正常',ref:'<120ms',status:'ok'},{label:'夜间最低心率',value:'55bpm',ref:'正常 ≥50bpm',status:'ok'}],suggestions:['出现头晕、黑朦、晕厥立即心电图检查'],linkText:'查看心率长期趋势'},
+    {id:'pvc',status:'green',level:'normal',icon:'🟢',title:'室性早搏风险',summary:'本夜未检测到室性早搏与心律不齐',diseaseTags:['偶发室性早搏','频发室性早搏','多形性室性早搏'],assessment:'整夜心电监测未检出一例室性早搏（0次/h），房性早搏亦为 0 次/h，未见 R on T 现象——提示心室肌电活动稳定，无异常兴奋灶。',dataPoints:[{label:'室性早搏频次',value:'0次/h',ref:'警戒 >10次/h',status:'ok'},{label:'房性早搏频次',value:'0次/h',ref:'正常 <5次/h',status:'ok'},{label:'R on T 现象',value:'未见',ref:'极高危',status:'ok'}],suggestions:['限制咖啡因 <300mg/日','戒烟限酒、避免熬夜'],linkText:'查看心动图长期趋势'},
+    {id:'osas',status:'yellow',level:'warning',icon:'🟡',title:'睡眠呼吸暂停风险',summary:'单次暂停超阈值 + 鼾声频发，需关注上气道阻塞',diseaseTags:['阻塞性睡眠呼吸暂停','中枢性睡眠呼吸暂停'],assessment:'AHI 1.0 次/h 仍在健康区（<5），但最长呼吸暂停 17 秒已超过 10 秒观察阈值，鼾声 5 次中最长持续 18 秒。',dataPoints:[{label:'AHI',value:'1.0次/h',ref:'轻度 5-15',status:'ok'},{label:'最长呼吸暂停',value:'17秒',ref:'阈值 ≤10秒',status:'high'},{label:'鼾声次数',value:'5次/夜',ref:'正常 <3次',status:'high'}],suggestions:['侧卧睡姿替代仰卧，可减少 30-50% 暂停事件','睡前 3 小时避免饮酒、镇静类药物','控制体重 BMI <24，颈围 <40cm'],linkText:'查看呼吸暂停与鼾声趋势'},
+    {id:'copd',status:'green',level:'normal',icon:'🟢',title:'慢阻肺风险',summary:'呼吸节律稳定、无夜间咳嗽',diseaseTags:['慢性阻塞性肺疾病','肺气肿','慢性支气管炎'],assessment:'夜间呼吸频率稳定在 12-19 次/分（正常成人 12-20），全程无咳嗽事件记录，提示气道通畅、肺通气功能正常，无慢阻肺早期征象。',dataPoints:[{label:'夜间呼吸频率',value:'12-19次/分',ref:'正常 12-20',status:'ok'},{label:'夜间咳嗽',value:'0次',ref:'正常 <3次',status:'ok'}],suggestions:['戒烟（最重要，可逆转早期 COPD）'],linkText:'查看呼吸频率长期趋势'}
+  ];
+}
+
+// ═══════════════════════════════════════
+// 初始化
+// ═══════════════════════════════════════
+// API就绪后加载用户数据 + 设备列表 + 日报
+if(window.HeartCareAPI){
+  loadAppData();
+  setTimeout(function(){
+    refreshDeviceList();
+    // 拿到设备ID后加载真实日报 + 心脏评估
+    setTimeout(function(){
+      var d = new Date();
+      // 尝试今天和昨天的日期
+      loadDailyReport(d.toISOString().slice(0,10));
+      loadCardiacRisks();
+    }, 800);
+    // WS订阅实时推送
+    HeartCareAPI.wsSubscribe(function(data){
+      if(myState.currentView==='realtime' && data.deviceId===myState.currentDeviceId){
+        myState.realtimeData = data.data;
+        myState.deviceOnline = true;
+      }
+    });
+  }, 500);
+} else {
+  // 无API时尝试从localStorage读
+  try { var raw = localStorage.getItem('hc_user'); if(raw) appData.user = JSON.parse(raw); } catch(e){}
+}
+renderDaily();
+</script>
+</body>
+</html>

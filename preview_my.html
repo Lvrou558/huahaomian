@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>话好眠 · 我的页面完整预览</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    color: #14443a;
+  }
+  .phone-frame {
+    max-width: 414px;
+    margin: 0 auto;
+    background: #F4FBF9;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 18px 4px;
+    font-size: 14px; font-weight: 600;
+  }
+  .sb-time { color: #1a1a1a; }
+  .sb-right { font-size: 13px; color: #1a1a1a; }
+
+  /* ===== 视图切换 ===== */
+  .view { display: none; padding-bottom: 80px; }
+  .view.active { display: block; }
+
+  /* ===== 分组标题 ===== */
+  .section-label-row { padding: 12px 16px 4px; }
+  .section-label { font-size: 15px; font-weight: 700; color: #14443a; }
+
+  /* ===== 账号卡（横向） ===== */
+  .account-card {
+    display: flex; align-items: center;
+    margin: 8px 14px 12px;
+    padding: 14px 16px;
+    background: linear-gradient(95deg, #ffffff 0%, #ecf6f1 100%);
+    border-radius: 16px;
+    box-shadow: 0 1px 6px rgba(31, 138, 111, 0.06);
+    cursor: pointer;
+  }
+  .ah-avatar {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #d8e8e1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ah-avatar-emoji { font-size: 28px; color: #5a9a7e; }
+  .ah-name-row {
+    flex: 1; display: flex; align-items: center; gap: 6px;
+    margin-left: 14px;
+  }
+  .ah-name { font-size: 18px; font-weight: 700; color: #14443a; }
+  .ah-edit { font-size: 14px; color: #6a8b82; }
+  .ah-arrow { font-size: 22px; color: #9aa8a2; font-weight: 300; flex-shrink: 0; }
+
+  /* ===== 会员入口卡 ===== */
+  .member-banner {
+    margin: 6px 14px 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #2d2f3e 0%, #3d3528 50%, #4a3618 100%);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(50, 40, 20, 0.18);
+    position: relative; overflow: hidden;
+    cursor: pointer;
+  }
+  .member-banner::before {
+    content: ''; position: absolute;
+    top: -25px; right: -25px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(255, 215, 100, 0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .mb-left { display: flex; align-items: center; gap: 10px; z-index: 1; }
+  .mb-crown { font-size: 26px; line-height: 1; }
+  .mb-text { display: flex; flex-direction: column; gap: 2px; }
+  .mb-title { font-size: 16px; font-weight: 700; color: #f3d990; }
+  .mb-sub { font-size: 13px; color: rgba(255, 255, 255, 0.75); }
+  .mb-cta {
+    z-index: 1;
+    background: linear-gradient(135deg, #f3d990, #d4a548);
+    color: #4a3618;
+    font-size: 13px; font-weight: 700;
+    padding: 6px 14px; border-radius: 999px;
+  }
+
+  /* ===== 我的设备区块 ===== */
+  .my-devices-section { margin: 8px 14px 6px; }
+  .my-devices-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 2px 2px 8px;
+  }
+  .my-devices-title { font-size: 15px; font-weight: 700; color: #14443a; }
+  .my-devices-count { font-size: 12px; color: #6a8b82; }
+
+  .device-card-v2 {
+    display: flex; align-items: center;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 6px rgba(31, 138, 111, 0.06);
+    cursor: pointer;
+  }
+  .dc2-icon {
+    width: 42px; height: 42px;
+    background: #ecf6f1;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 12px; flex-shrink: 0;
+  }
+  .dc2-icon-emoji { font-size: 22px; }
+  .dc2-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .dc2-name-row { display: flex; align-items: center; gap: 5px; }
+  .dc2-name { font-size: 15px; font-weight: 700; color: #14443a; }
+  .dc2-online { font-size: 9px; margin-left: 2px; }
+  .dc2-online.online { color: #1F8A6F; }
+  .dc2-sn { font-size: 11px; color: #95a5a0; font-family: monospace; }
+  .dc2-user { font-size: 12px; color: #6a8b82; }
+  .dc2-arrow { font-size: 22px; color: #9aa8a2; font-weight: 300; flex-shrink: 0; margin-left: 4px; }
+
+  .my-devices-add {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; padding: 12px;
+    background: #fff; border-radius: 14px;
+    border: 1.5px dashed #c5d4ce; margin-top: 2px;
+    cursor: pointer;
+  }
+  .md-add-icon { font-size: 15px; color: #1F8A6F; font-weight: 700; }
+  .md-add-text { font-size: 14px; color: #1F8A6F; font-weight: 600; }
+
+  /* ===== 通用菜单（带副标题） ===== */
+  .menu-list { padding: 8px 14px 0; display: flex; flex-direction: column; gap: 8px; }
+  .menu-item {
+    background: #fff; border-radius: 14px;
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    cursor: pointer;
+  }
+  .menu-icon-wrap {
+    width: 42px; height: 42px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .menu-icon { font-size: 22px; line-height: 1; }
+  .menu-text {
+    flex: 1; margin-left: 14px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .menu-title { font-size: 16px; font-weight: 700; color: #14443a; }
+  .menu-subtitle { font-size: 11px; color: #8a978f; }
+  .menu-arrow { font-size: 22px; color: #9aa8a2; line-height: 1; font-weight: 300; }
+  .menu-title-flat { flex: 1; margin-left: 14px; font-size: 16px; font-weight: 700; color: #14443a; }
+
+  /* ===== subpage header ===== */
+  .subpage-header {
+    position: sticky; top: 0; z-index: 100;
+    height: 50px;
+    display: flex; align-items: center;
+    padding: 0 8px;
+    background: rgba(244, 246, 248, 0.96);
+    backdrop-filter: blur(10px);
+  }
+  .back-btn {
+    width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+  }
+  .back-arrow {
+    font-size: 26px; color: #1a2c24; font-weight: 400;
+    line-height: 1; margin-top: -2px; margin-left: -2px;
+  }
+  .subpage-title {
+    position: absolute; left: 60px; right: 60px;
+    text-align: center;
+    font-size: 17px; font-weight: 700;
+    color: #1a2c24;
+    pointer-events: none;
+  }
+
+  /* ===== 设备详情 header ===== */
+  .dd-header {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 14px 14px;
+    background: linear-gradient(180deg, #ecf6f1 0%, #f4fbf9 100%);
+  }
+  .dd-illust {
+    width: 70px; height: 70px; border-radius: 50%;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(31, 138, 111, 0.10);
+    margin-bottom: 8px;
+  }
+  .dd-illust-box {
+    width: 36px; height: 36px;
+    background: #f4fbf9;
+    border: 1.5px solid #d8e8e1;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dd-illust-dot {
+    width: 6px; height: 6px;
+    background: #1F8A6F;
+    border-radius: 50%;
+  }
+  .dd-name-row {
+    display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+  }
+  .dd-name-text { font-size: 16px; font-weight: 700; color: #14443a; }
+  .dd-name-edit { font-size: 12px; color: #6a8b82; }
+  .dd-meta { display: flex; align-items: center; gap: 8px; }
+  .dd-meta-online { font-size: 11px; font-weight: 600; }
+  .dd-meta-online.online { color: #1F8A6F; }
+  .dd-meta-sn { font-size: 10px; color: #95a5a0; font-family: monospace; }
+  .dd-unbind-btn {
+    margin: 18px 28px 20px;
+    background: #fff; color: #c43a2c;
+    text-align: center; padding: 12px;
+    border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    border: 1px solid #f0d2cb;
+    cursor: pointer;
+  }
+
+  /* ===== 实时页 ===== */
+  .rt-card {
+    background: #fff; border-radius: 14px;
+    margin: 10px 14px; padding: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .rt-online-card { display: flex; align-items: center; justify-content: space-between; }
+  .rt-online-label { font-size: 13px; color: #6a8b82; }
+  .rt-online-pill {
+    display: inline-block; margin-top: 4px;
+    padding: 4px 12px; border-radius: 999px;
+    background: #e6f4ee; color: #1d6e54;
+    font-size: 12px; font-weight: 600;
+  }
+  .rt-signal-bars { font-size: 22px; }
+  .rt-card-head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .rt-card-title { font-size: 14px; font-weight: 700; color: #14443a; }
+  .rt-title-row { display: flex; align-items: center; gap: 6px; }
+  .rt-status-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: #e6f4ee; color: #1d6e54; font-size: 11px; font-weight: 600;
+  }
+  .rt-value-wrap { display: flex; align-items: baseline; gap: 3px; }
+  .rt-value { font-size: 24px; font-weight: 800; color: #14443a; }
+  .rt-unit { font-size: 11px; color: #6a8b82; }
+  .rt-signal-axis {
+    display: flex; justify-content: space-between;
+    padding: 0 4px; font-size: 9px; color: #8a978f;
+    margin-top: 6px;
+  }
+  .rt-signal-bar {
+    position: relative;
+    height: 6px; background: linear-gradient(90deg, #ffd2c2 0%, #b6e5d2 60%, #7fcba3 100%);
+    border-radius: 3px; margin: 4px 4px 0;
+  }
+  .rt-signal-pointer {
+    position: absolute; top: -3px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #fff; border: 2px solid #1F8A6F;
+    transform: translateX(-50%);
+  }
+  .rt-signal-legend {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #8a978f;
+    padding: 4px 4px 0;
+  }
+  .rt-chart-wrap {
+    height: 80px; background: #f7faf8; border-radius: 8px;
+    margin-top: 10px;
+  }
+  .rt-bottom-tip {
+    text-align: center; font-size: 11px; color: #95a5a0;
+    padding: 16px 0;
+  }
+
+  /* ===== 被监测人信息 ===== */
+  .user-cover {
+    background: linear-gradient(135deg, #ecf6f1, #d4eadf);
+    padding: 24px 20px;
+    color: #14443a;
+  }
+  .user-cover-name { font-size: 26px; font-weight: 800; }
+  .user-cover-age { font-size: 18px; font-weight: 600; margin-top: 2px; }
+  .user-cover-sub { font-size: 12px; color: #5a7a70; margin-top: 4px; }
+
+  .user-card {
+    background: #fff; border-radius: 14px;
+    margin: 10px 14px; padding: 12px 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .user-card-title {
+    font-size: 14px; font-weight: 700; color: #14443a;
+    padding: 4px 0 10px;
+    border-bottom: 1px dashed #eef4f1;
+    margin-bottom: 8px;
+  }
+  .user-field {
+    display: flex; padding: 8px 0;
+    border-bottom: 1px dashed #f5f8f6;
+    font-size: 13px;
+  }
+  .user-field:last-child { border-bottom: none; }
+  .user-field-label { flex: 0 0 110px; color: #6a8b82; }
+  .user-field-text { flex: 1; color: #14443a; font-weight: 500; text-align: right; }
+  .required-star { color: #c43a2c; margin-right: 2px; }
+
+  /* ===== 设备自适应 ===== */
+  .adapt-card {
+    background: #fff; border-radius: 14px;
+    margin: 80px 14px 14px; padding: 24px 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    text-align: center;
+  }
+  .adapt-tip-line { font-size: 14px; color: #6a8b82; line-height: 1.7; }
+  .adapt-tip-bold { font-size: 17px; font-weight: 800; color: #c43a2c; padding: 8px 0; }
+  .adapt-divider { height: 1px; background: #eef4f1; margin: 14px 0; }
+  .adapt-btn {
+    margin: 0 auto; padding: 12px 0;
+    background: linear-gradient(135deg, #1F8A6F, #2ba884);
+    color: #fff; border-radius: 12px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+  }
+  .adapt-meta { margin-top: 14px; text-align: left; }
+  .adapt-meta-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 0; font-size: 12px; color: #6a8b82;
+  }
+  .adapt-meta-value { color: #14443a; font-weight: 600; }
+
+  /* ===== 监测参数 ===== */
+  .param-section {
+    background: #fff; margin: 10px 14px; padding: 14px 16px;
+    border-radius: 14px;
+  }
+  .param-label { font-size: 14px; color: #6a8b82; }
+  .param-time-row {
+    display: flex; align-items: center; gap: 6px; margin-top: 10px;
+  }
+  .param-time-chip {
+    background: #f4fbf9;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; color: #14443a; font-weight: 600;
+    border: 1px solid #d8e8e1;
+  }
+  .param-time-sep { font-size: 12px; color: #6a8b82; }
+  .param-select-chip {
+    display: inline-flex; gap: 4px; align-items: center;
+    background: #f4fbf9;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; color: #14443a; font-weight: 600;
+    border: 1px solid #d8e8e1;
+    margin-top: 8px;
+  }
+
+  /* ===== 4G 卡 ===== */
+  .sim-main-card {
+    background: linear-gradient(135deg, #2c4d7a 0%, #4a73a8 100%);
+    color: #fff;
+    margin: 80px 14px 12px;
+    padding: 18px;
+    border-radius: 14px;
+  }
+  .sim-main-title { font-size: 14px; opacity: 0.9; }
+  .sim-iccid { font-size: 11px; opacity: 0.7; font-family: monospace; margin: 4px 0 14px; }
+  .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sim-grid-cell { font-size: 12px; }
+  .sim-cell-status { font-weight: 700; color: #d4f0e2; }
+  .sim-footnote { font-size: 11px; color: #95a5a0; padding: 4px 22px; }
+
+  /* ===== 预警设置 ===== */
+  .alert-emergency {
+    background: #fff; margin: 10px 14px;
+    padding: 14px 16px; border-radius: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .alert-emergency-title { flex: 1; font-size: 14px; font-weight: 700; color: #14443a; }
+  .alert-emergency-input {
+    flex: 0 0 130px; font-size: 13px;
+    padding: 6px 10px; border: 1px solid #d8e8e1; border-radius: 8px;
+    background: #f4fbf9;
+  }
+  .alert-section {
+    background: #fff; margin: 10px 14px; padding: 14px 16px;
+    border-radius: 14px;
+  }
+  .alert-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #eef4f1;
+    margin-bottom: 10px;
+  }
+  .alert-section-title { font-size: 14px; font-weight: 700; color: #14443a; }
+  .alert-switch {
+    width: 38px; height: 22px;
+    background: #1F8A6F; border-radius: 999px;
+    position: relative;
+  }
+  .alert-switch::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px;
+    background: #fff; border-radius: 50%;
+    top: 2px; right: 2px;
+  }
+  .alert-label { font-size: 12px; color: #6a8b82; margin: 6px 0 4px; }
+  .alert-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .alert-chip {
+    background: #f4fbf9;
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 12px; color: #14443a; font-weight: 600;
+    border: 1px solid #d8e8e1;
+  }
+  .alert-sep { font-size: 12px; color: #6a8b82; }
+  .alert-check-list { display: flex; gap: 14px; margin-top: 8px; }
+  .alert-check-row { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6a8b82; }
+  .alert-check-box {
+    width: 16px; height: 16px;
+    border: 1.5px solid #c5d4ce;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 10px; font-weight: 700;
+  }
+  .alert-check-box.checked { background: #1F8A6F; border-color: #1F8A6F; }
+  .alert-save-btn {
+    margin: 18px 14px; padding: 12px;
+    background: #1F8A6F; color: #fff;
+    border-radius: 12px; text-align: center;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== 分享设备 ===== */
+  .share-hero {
+    background: linear-gradient(135deg, #ecf6f1, #d4eadf);
+    margin: 10px 14px; padding: 24px;
+    border-radius: 14px; text-align: center;
+  }
+  .share-hero-emoji { font-size: 36px; }
+  .share-hero-title { font-size: 17px; font-weight: 700; color: #14443a; padding: 8px 0 4px; }
+  .share-hero-sub { font-size: 12px; color: #6a8b82; padding-bottom: 14px; }
+  .share-invite-btn {
+    padding: 10px 20px;
+    background: #1F8A6F; color: #fff;
+    border-radius: 999px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    display: inline-block;
+  }
+  .share-card {
+    background: #fff; margin: 10px 14px;
+    padding: 14px 16px; border-radius: 14px;
+  }
+  .share-card-title { font-size: 14px; font-weight: 700; color: #14443a; padding-bottom: 10px; }
+  .share-empty { font-size: 12px; color: #95a5a0; text-align: center; padding: 18px 0; }
+
+  /* ===== 更多设置 ===== */
+  .more-list {
+    background: #fff; margin: 10px 14px; border-radius: 14px;
+    overflow: hidden;
+  }
+  .more-item {
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f4f2;
+    cursor: pointer;
+  }
+  .more-item:last-child { border-bottom: none; }
+  .more-item-label { flex: 1; font-size: 14px; color: #14443a; }
+  .more-item-extra { font-size: 12px; color: #95a5a0; margin-right: 6px; }
+  .more-item-arrow { font-size: 18px; color: #9aa8a2; }
+
+  /* ===== 会员订阅页 ===== */
+  .mp-hero {
+    background: linear-gradient(135deg, #1a1d2a 0%, #2d3245 50%, #3d2e0e 100%);
+    color: #fff;
+    padding: 30px 24px 50px;
+    position: relative;
+  }
+  .mp-crown-big { font-size: 36px; text-align: center; }
+  .mp-brand { text-align: center; }
+  .mp-brand-name { font-size: 22px; font-weight: 800; color: #f3d990; }
+  .mp-brand-pro { font-size: 16px; color: #d4a548; margin-left: 4px; }
+  .mp-tagline { font-size: 12px; color: rgba(255, 255, 255, 0.7); text-align: center; padding: 8px 0; }
+  .mp-status-pill {
+    margin: 8px auto 0; padding: 6px 14px;
+    background: rgba(243, 217, 144, 0.15);
+    border: 1px solid #f3d990;
+    border-radius: 999px;
+    display: inline-flex; gap: 6px; color: #f3d990;
+    font-size: 12px;
+  }
+  .mp-features {
+    margin: -30px 14px 12px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    position: relative; z-index: 2;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .mp-features-title { font-size: 15px; font-weight: 700; color: #14443a; margin-bottom: 12px; }
+  .mp-feature-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px dashed #eef4f1;
+  }
+  .mp-feature-item:last-child { border-bottom: none; }
+  .mp-feature-icon { font-size: 24px; }
+  .mp-feature-text { display: flex; flex-direction: column; gap: 2px; }
+  .mp-feature-title { font-size: 14px; font-weight: 700; color: #14443a; }
+  .mp-feature-cmp { font-size: 11px; color: #6a8b82; }
+  .mp-pricing { display: flex; gap: 10px; margin: 12px 14px; }
+  .mp-price-card {
+    flex: 1; background: #fff;
+    padding: 14px 12px;
+    border: 2px solid #eef4f1;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .mp-price-card.recommended { border-color: #f3d990; background: linear-gradient(180deg, #fffaed, #fff); }
+  .mp-price-badge {
+    background: linear-gradient(135deg, #f3d990, #d4a548);
+    color: #4a3618;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px;
+    display: inline-block; margin-bottom: 4px;
+  }
+  .mp-price-name { font-size: 13px; color: #6a8b82; }
+  .mp-price-num { font-size: 24px; font-weight: 800; color: #14443a; padding: 4px 0; }
+  .mp-price-period, .mp-price-equiv, .mp-price-orig {
+    font-size: 11px; color: #95a5a0; display: block;
+  }
+  .mp-price-orig { text-decoration: line-through; }
+  .mp-cta-wrap { padding: 12px 14px; }
+  .mp-cta-trial {
+    background: linear-gradient(135deg, #f3d990, #d4a548);
+    color: #4a3618;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 16px; font-weight: 800;
+    cursor: pointer;
+  }
+  .mp-cta-sub { font-size: 11px; color: #6a8b82; text-align: center; padding: 6px; }
+
+  /* ===== 账号与服务 ===== */
+  .acc-section { margin: 12px 14px; }
+  .acc-section-title { font-size: 13px; font-weight: 700; color: #6a8b82; padding: 4px 4px 8px; }
+  .acc-card {
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .acc-member-card { padding: 14px 16px; }
+  .acc-mc-head { display: flex; align-items: center; gap: 10px; }
+  .acc-mc-icon { font-size: 28px; }
+  .acc-mc-status { font-size: 15px; font-weight: 700; color: #14443a; display: block; }
+  .acc-mc-expire { font-size: 11px; color: #6a8b82; display: block; }
+  .acc-row {
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .acc-divider { height: 1px; background: #f0f4f2; margin: 0 16px; }
+  .acc-row-left { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .acc-row-title { font-size: 14px; color: #14443a; font-weight: 600; }
+  .acc-row-title.danger { color: #c43a2c; }
+  .acc-row-sub { font-size: 11px; color: #95a5a0; }
+  .acc-row-value { font-size: 13px; color: #6a8b82; }
+  .acc-arrow { font-size: 18px; color: #9aa8a2; }
+  .acc-switch {
+    width: 38px; height: 22px;
+    background: #1F8A6F; border-radius: 999px;
+    position: relative;
+  }
+  .acc-switch::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px;
+    background: #fff; border-radius: 50%;
+    top: 2px; right: 2px;
+  }
+
+  /* ===== 联系我们 ===== */
+  .cu-banner {
+    background: linear-gradient(135deg, #ecf6f1, #d4eadf);
+    text-align: center; padding: 24px;
+    margin: 10px 14px; border-radius: 14px;
+  }
+  .cu-banner-emoji { font-size: 36px; }
+  .cu-banner-title { font-size: 17px; font-weight: 700; color: #14443a; padding: 6px 0 4px; display: block; }
+  .cu-banner-sub { font-size: 12px; color: #6a8b82; }
+  .cu-section { margin: 10px 14px; }
+  .cu-section-title { font-size: 13px; font-weight: 700; color: #6a8b82; padding: 6px 4px 8px; }
+  .cu-row {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff;
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .cu-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .cu-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .cu-title { font-size: 14px; font-weight: 700; color: #14443a; }
+  .cu-sub { font-size: 11px; color: #6a8b82; }
+  .cu-arrow { font-size: 18px; color: #9aa8a2; }
+  .cu-faq {
+    background: #fff; padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .cu-faq-q { font-size: 13px; font-weight: 700; color: #14443a; display: block; padding-bottom: 4px; }
+  .cu-faq-a { font-size: 12px; color: #6a8b82; line-height: 1.5; }
+
+  /* ===== 问题反馈 ===== */
+  .fb-card {
+    background: #fff; margin: 12px 14px;
+    padding: 16px; border-radius: 14px;
+  }
+  .fb-emoji { font-size: 36px; text-align: center; display: block; }
+  .fb-title { font-size: 16px; font-weight: 700; color: #14443a; text-align: center; padding: 8px 0; }
+  .fb-sub { font-size: 12px; color: #6a8b82; text-align: center; padding-bottom: 14px; }
+  .fb-textarea {
+    width: 100%; min-height: 100px;
+    border: 1px solid #d8e8e1;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+    background: #f4fbf9;
+    resize: vertical;
+  }
+  .fb-submit {
+    margin-top: 12px;
+    padding: 12px;
+    background: #1F8A6F; color: #fff;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== 底部 tabbar ===== */
+  .tabbar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 414px;
+    display: flex; background: #fff;
+    border-top: 1px solid #f0f0f0;
+    padding: 8px 0 16px;
+    z-index: 200;
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    font-size: 11px; color: #7B928C;
+  }
+  .tab-item.active { color: #1F8A6F; font-weight: 700; }
+  .tab-emoji { font-size: 20px; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- 顶部状态栏 -->
+  <div class="status-bar">
+    <div class="sb-time">18:00</div>
+    <div class="sb-right">📶 5G ⛁31%</div>
+  </div>
+
+  <!-- =================== Level 1：主页 =================== -->
+  <div class="view active" id="view-main">
+    <div class="section-label-row">
+      <span class="section-label">👤 我的账户</span>
+    </div>
+    <div class="account-card" onclick="goTo('account')">
+      <div class="ah-avatar"><span class="ah-avatar-emoji">👤</span></div>
+      <div class="ah-name-row">
+        <span class="ah-name">138****8000</span>
+        <span class="ah-edit">✎</span>
+      </div>
+      <span class="ah-arrow">›</span>
+    </div>
+
+    <div class="member-banner" onclick="goTo('membership')">
+      <div class="mb-left">
+        <span class="mb-crown">✨</span>
+        <div class="mb-text">
+          <span class="mb-title">话好眠 Pro 会员</span>
+          <span class="mb-sub">免费试用中（剩 2 天）</span>
+        </div>
+      </div>
+      <span class="mb-cta">管理 ›</span>
+    </div>
+
+    <div class="my-devices-section">
+      <div class="my-devices-head">
+        <span class="my-devices-title">📦 我的设备</span>
+        <span class="my-devices-count">已绑定 1 台</span>
+      </div>
+      <div class="device-card-v2" onclick="goTo('deviceDetail')">
+        <div class="dc2-icon"><span class="dc2-icon-emoji">🛏</span></div>
+        <div class="dc2-body">
+          <div class="dc2-name-row">
+            <span class="dc2-name">睡眠监测仪 X2</span>
+            <span class="dc2-online online">●</span>
+          </div>
+          <span class="dc2-sn">X2LTE_S01B02N847</span>
+          <span class="dc2-user">被监测人：吕柔　年龄：19</span>
+        </div>
+        <span class="dc2-arrow">›</span>
+      </div>
+      <div class="my-devices-add">
+        <span class="md-add-icon">＋</span>
+        <span class="md-add-text">添加设备</span>
+      </div>
+    </div>
+
+    <div class="menu-list">
+      <div class="menu-item" onclick="goTo('account')">
+        <div class="menu-icon-wrap" style="background: #fff1de;"><span class="menu-icon">🔐</span></div>
+        <div class="menu-text">
+          <span class="menu-title">账号与服务</span>
+          <span class="menu-subtitle">账号管理、会员服务等</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('contact')">
+        <div class="menu-icon-wrap" style="background: #e8f4ec;"><span class="menu-icon">☎️</span></div>
+        <div class="menu-text">
+          <span class="menu-title">联系我们</span>
+          <span class="menu-subtitle">电话、邮箱、在线客服等</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('feedback')">
+        <div class="menu-icon-wrap" style="background: #e3f0ff;"><span class="menu-icon">💬</span></div>
+        <div class="menu-text">
+          <span class="menu-title">问题反馈</span>
+          <span class="menu-subtitle">意见反馈与建议</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="alert('已退出登录（模拟）')">
+        <div class="menu-icon-wrap" style="background: #fde7e7;"><span class="menu-icon">↩️</span></div>
+        <div class="menu-text">
+          <span class="menu-title">退出登录</span>
+          <span class="menu-subtitle">安全退出当前账号</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== Level 2：设备详情 =================== -->
+  <div class="view" id="view-deviceDetail">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">睡眠监测仪 X2</span>
+    </div>
+    <div class="dd-header">
+      <div class="dd-illust"><div class="dd-illust-box"><div class="dd-illust-dot"></div></div></div>
+      <div class="dd-name-row">
+        <span class="dd-name-text">睡眠监测仪 X2</span>
+        <span class="dd-name-edit">✎</span>
+      </div>
+      <div class="dd-meta">
+        <span class="dd-meta-online online">● 在线</span>
+        <span class="dd-meta-sn">X2LTE_S01B02N847</span>
+      </div>
+    </div>
+    <div class="menu-list">
+      <div class="menu-item" onclick="goTo('realtime')">
+        <div class="menu-icon-wrap" style="background: #dff4ff;"><span class="menu-icon">📡</span></div>
+        <span class="menu-title-flat">实时</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('user')">
+        <div class="menu-icon-wrap" style="background: #ece7ff;"><span class="menu-icon">👤</span></div>
+        <span class="menu-title-flat">被监测人信息</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('adapt')">
+        <div class="menu-icon-wrap" style="background: #fff1de;"><span class="menu-icon">⏳</span></div>
+        <span class="menu-title-flat">设备自适应</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('params')">
+        <div class="menu-icon-wrap" style="background: #e3f0ff;"><span class="menu-icon">⚙️</span></div>
+        <span class="menu-title-flat">监测参数设置</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('sim')">
+        <div class="menu-icon-wrap" style="background: #ffe1e1;"><span class="menu-icon">📅</span></div>
+        <span class="menu-title-flat">4G卡信息</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('alert')">
+        <div class="menu-icon-wrap" style="background: #ffe1ec;"><span class="menu-icon">🔔</span></div>
+        <span class="menu-title-flat">预警设置</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('share')">
+        <div class="menu-icon-wrap" style="background: #ffdfd0;"><span class="menu-icon">📤</span></div>
+        <span class="menu-title-flat">分享设备</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="goTo('more')">
+        <div class="menu-icon-wrap" style="background: #ffe1cb;"><span class="menu-icon">📋</span></div>
+        <span class="menu-title-flat">更多设置</span>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+    <div class="dd-unbind-btn" onclick="alert('确认解绑当前设备？（模拟）')">解绑设备</div>
+  </div>
+
+  <!-- =================== 实时 =================== -->
+  <div class="view" id="view-realtime">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">实时</span>
+    </div>
+    <div class="rt-card rt-online-card">
+      <div>
+        <div class="rt-online-label">设备在线</div>
+        <div class="rt-online-pill">🛏 在床</div>
+      </div>
+      <span class="rt-signal-bars">📶</span>
+    </div>
+    <div class="rt-card">
+      <div class="rt-card-head"><span class="rt-card-title">雷达信号质量</span></div>
+      <div class="rt-signal-axis"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      <div class="rt-signal-bar"><div class="rt-signal-pointer" style="left: 100%;"></div></div>
+      <div class="rt-signal-legend"><span>较弱</span><span>正常</span></div>
+    </div>
+    <div class="rt-card">
+      <div class="rt-card-head">
+        <div class="rt-title-row">
+          <span class="rt-card-title">呼吸曲线</span>
+          <span class="rt-status-pill">正常</span>
+        </div>
+        <div class="rt-value-wrap"><span class="rt-value">7</span><span class="rt-unit">次/分钟</span></div>
+      </div>
+      <div class="rt-chart-wrap">
+        <svg width="100%" height="100%" viewBox="0 0 300 80" preserveAspectRatio="none">
+          <path d="M 0 40 Q 30 20 60 40 T 120 40 T 180 40 T 240 40 T 300 40"
+                fill="none" stroke="#58c7f5" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="rt-card">
+      <div class="rt-card-head">
+        <div class="rt-title-row">
+          <span class="rt-card-title">心率曲线</span>
+          <span class="rt-status-pill">正常</span>
+        </div>
+        <div class="rt-value-wrap"><span class="rt-value">68</span><span class="rt-unit">次/分钟</span></div>
+      </div>
+      <div class="rt-chart-wrap">
+        <svg width="100%" height="100%" viewBox="0 0 300 80" preserveAspectRatio="none">
+          <path d="M 0 50 L 40 50 L 50 30 L 60 70 L 70 50 L 100 50 L 110 30 L 120 70 L 130 50 L 160 50 L 170 30 L 180 70 L 190 50 L 220 50 L 230 30 L 240 70 L 250 50 L 300 50"
+                fill="none" stroke="#ff6b6b" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="rt-bottom-tip">到底啦 ~</div>
+  </div>
+
+  <!-- =================== 被监测人信息 =================== -->
+  <div class="view" id="view-user">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">被监测人信息</span>
+    </div>
+    <div class="user-cover">
+      <div class="user-cover-name">吕柔</div>
+      <div class="user-cover-age">19岁</div>
+      <div class="user-cover-sub">女　出生日期 2006-08</div>
+    </div>
+    <div class="user-card">
+      <div class="user-card-title">基础信息</div>
+      <div class="user-field"><span class="user-field-label"><span class="required-star">*</span>被监测人</span><span class="user-field-text">吕柔</span></div>
+      <div class="user-field"><span class="user-field-label">性别</span><span class="user-field-text">女</span></div>
+      <div class="user-field"><span class="user-field-label">出生年月</span><span class="user-field-text">2006-08</span></div>
+      <div class="user-field"><span class="user-field-label">身高 / 体重</span><span class="user-field-text">152cm · 45kg</span></div>
+      <div class="user-field"><span class="user-field-label">BMI 指数</span><span class="user-field-text">19.5（正常）</span></div>
+      <div class="user-field"><span class="user-field-label">血型</span><span class="user-field-text">O型</span></div>
+    </div>
+    <div class="user-card">
+      <div class="user-card-title">健康史</div>
+      <div class="user-field"><span class="user-field-label">心肺慢病史</span><span class="user-field-text">--</span></div>
+      <div class="user-field"><span class="user-field-label">心血管病史</span><span class="user-field-text">无</span></div>
+      <div class="user-field"><span class="user-field-label">家族病史</span><span class="user-field-text">无</span></div>
+      <div class="user-field"><span class="user-field-label">过敏史</span><span class="user-field-text">无</span></div>
+      <div class="user-field"><span class="user-field-label">手术史</span><span class="user-field-text">无</span></div>
+      <div class="user-field"><span class="user-field-label">当前用药</span><span class="user-field-text">无</span></div>
+    </div>
+    <div class="user-card">
+      <div class="user-card-title">生活习惯</div>
+      <div class="user-field"><span class="user-field-label">吸烟</span><span class="user-field-text">否</span></div>
+      <div class="user-field"><span class="user-field-label">饮酒</span><span class="user-field-text">偶尔</span></div>
+      <div class="user-field"><span class="user-field-label">咖啡因摄入</span><span class="user-field-text">每日 1 杯</span></div>
+      <div class="user-field"><span class="user-field-label">运动频率</span><span class="user-field-text">每周 2-3 次</span></div>
+    </div>
+    <div class="user-card">
+      <div class="user-card-title">紧急联系人</div>
+      <div class="user-field"><span class="user-field-label">姓名</span><span class="user-field-text">吕父</span></div>
+      <div class="user-field"><span class="user-field-label">手机号</span><span class="user-field-text">138****1234</span></div>
+      <div class="user-field"><span class="user-field-label">关系</span><span class="user-field-text">父亲</span></div>
+    </div>
+    <div class="user-card">
+      <div class="user-card-title">睡眠环境</div>
+      <div class="user-field"><span class="user-field-label">睡眠环境</span><span class="user-field-text">卧室</span></div>
+      <div class="user-field"><span class="user-field-label">床垫厚度</span><span class="user-field-text">18cm</span></div>
+      <div class="user-field"><span class="user-field-label">床垫宽度</span><span class="user-field-text">150cm</span></div>
+    </div>
+  </div>
+
+  <!-- =================== 设备自适应 =================== -->
+  <div class="view" id="view-adapt">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">设备自适应</span>
+    </div>
+    <div class="adapt-card">
+      <div class="adapt-tip-line">即将进行设备自适应</div>
+      <div class="adapt-tip-bold">请保证床上无人无重物</div>
+      <div class="adapt-tip-line">再点击设备自适应按钮</div>
+      <div class="adapt-divider"></div>
+      <div class="adapt-btn" onclick="alert('设备自适应中...（模拟）')">设备自适应</div>
+      <div class="adapt-meta">
+        <div class="adapt-meta-row">
+          <span>无人压敏：</span>
+          <span class="adapt-meta-value">4095 2026/04/26 20:11:58</span>
+        </div>
+        <div class="adapt-meta-row">
+          <span>有人压敏：</span>
+          <span class="adapt-meta-value">4095 2026/05/19 06:54:25</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 监测参数 =================== -->
+  <div class="view" id="view-params">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">监测参数设置</span>
+    </div>
+    <div class="param-section">
+      <div class="param-label">睡眠报告统计时间</div>
+      <div class="param-time-row">
+        <span class="param-time-chip">当日 19:00 ⌄</span>
+        <span class="param-time-sep">至</span>
+        <span class="param-time-chip">次日 11:30 ⌄</span>
+      </div>
+    </div>
+    <div class="param-section">
+      <div class="param-label">离床时间判定设置</div>
+      <span class="param-select-chip">1分钟 ⌄</span>
+    </div>
+    <div class="param-section">
+      <div class="param-label">呼吸率/心率统计时长</div>
+      <span class="param-select-chip">10分钟 ⌄</span>
+    </div>
+  </div>
+
+  <!-- =================== 4G 卡 =================== -->
+  <div class="view" id="view-sim">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">物联卡</span>
+    </div>
+    <div class="sim-main-card">
+      <div class="sim-main-title">4G卡信息</div>
+      <div class="sim-iccid">ICCID: 89860422190001234567</div>
+      <div class="sim-grid">
+        <div class="sim-grid-cell">中国移动</div>
+        <div class="sim-grid-cell">当前设备：<span class="sim-cell-status">已激活</span></div>
+        <div class="sim-grid-cell">套餐余量：1.2GB</div>
+        <div class="sim-grid-cell">套餐有效时间：186天</div>
+      </div>
+    </div>
+    <div class="sim-footnote">* 如需查询4G卡信息或充值，请用微信扫描设备背部二维码操作</div>
+  </div>
+
+  <!-- =================== 预警设置 =================== -->
+  <div class="view" id="view-alert">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">预警设置</span>
+    </div>
+    <div class="alert-emergency">
+      <span class="alert-emergency-title">紧急联系人电话</span>
+      <input class="alert-emergency-input" type="text" value="138****1234" />
+    </div>
+    <div class="alert-section">
+      <div class="alert-section-head">
+        <span class="alert-section-title">心率预警</span>
+        <div class="alert-switch"></div>
+      </div>
+      <div class="alert-label">心率预警时间</div>
+      <div class="alert-row">
+        <span class="alert-chip">当日 22:00 ⌄</span>
+        <span class="alert-sep">至</span>
+        <span class="alert-chip">次日 07:00 ⌄</span>
+      </div>
+      <div class="alert-label">心率预警阈值</div>
+      <div class="alert-row">
+        <span class="alert-chip">低于 45 ⌄</span>
+        <span class="alert-sep">/</span>
+        <span class="alert-chip">高于 110 ⌄</span>
+      </div>
+      <div class="alert-check-list">
+        <div class="alert-check-row"><div class="alert-check-box checked">✓</div><span>微信</span></div>
+        <div class="alert-check-row"><div class="alert-check-box checked">✓</div><span>电话</span></div>
+        <div class="alert-check-row"><div class="alert-check-box">　</div><span>短信</span></div>
+      </div>
+    </div>
+    <div class="alert-section">
+      <div class="alert-section-head">
+        <span class="alert-section-title">呼吸率预警</span>
+        <div class="alert-switch"></div>
+      </div>
+      <div class="alert-label">呼吸率预警阈值</div>
+      <div class="alert-row">
+        <span class="alert-chip">低于 8 ⌄</span>
+        <span class="alert-sep">/</span>
+        <span class="alert-chip">高于 26 ⌄</span>
+      </div>
+    </div>
+    <div class="alert-section">
+      <div class="alert-section-head">
+        <span class="alert-section-title">夜间长时离床未归预警</span>
+        <div class="alert-switch"></div>
+      </div>
+      <div class="alert-label">离床时长阈值</div>
+      <div class="alert-row">
+        <span class="alert-chip">30分钟 ⌄</span>
+      </div>
+    </div>
+    <div class="alert-save-btn">保存预警</div>
+  </div>
+
+  <!-- =================== 分享设备 =================== -->
+  <div class="view" id="view-share">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">分享设备</span>
+    </div>
+    <div class="share-hero">
+      <div class="share-hero-emoji">📤</div>
+      <div class="share-hero-title">把设备分享给家人</div>
+      <div class="share-hero-sub">家人接收邀请后可查看睡眠与预警数据</div>
+      <div class="share-invite-btn" onclick="alert('已生成邀请链接（模拟）')">生成邀请链接</div>
+    </div>
+    <div class="share-card">
+      <div class="share-card-title">已共享成员 (0)</div>
+      <div class="share-empty">暂无共享成员，点击上方按钮邀请家人</div>
+    </div>
+  </div>
+
+  <!-- =================== 更多设置 =================== -->
+  <div class="view" id="view-more">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">更多设置</span>
+    </div>
+    <div class="more-list">
+      <div class="more-item">
+        <span class="more-item-label">固件升级</span>
+        <span class="more-item-extra">v2.4.1</span>
+        <span class="more-item-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-item-label">恢复出厂设置</span>
+        <span class="more-item-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-item-label">权限调用记录</span>
+        <span class="more-item-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-item-label">当前版本</span>
+        <span class="more-item-extra">v1.2.0</span>
+        <span class="more-item-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-item-label">检查小程序更新</span>
+        <span class="more-item-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-item-label">清除缓存</span>
+        <span class="more-item-arrow">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 会员订阅 =================== -->
+  <div class="view" id="view-membership">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">话好眠 Pro</span>
+    </div>
+    <div class="mp-hero">
+      <div class="mp-crown-big">👑</div>
+      <div class="mp-brand"><span class="mp-brand-name">话好眠</span><span class="mp-brand-pro">Pro 会员</span></div>
+      <div class="mp-tagline">解锁完整健康监测能力，看到你心脏长期改善的每一步</div>
+      <div style="text-align: center;"><span class="mp-status-pill">免费试用中（剩 2 天）</span></div>
+    </div>
+    <div class="mp-features">
+      <div class="mp-features-title">✨ 开通后立享 4 大特权</div>
+      <div class="mp-feature-item">
+        <span class="mp-feature-icon">📊</span>
+        <div class="mp-feature-text">
+          <span class="mp-feature-title">长期趋势 30 天 / 全周期</span>
+          <span class="mp-feature-cmp">免费版：仅 7 天 · Pro：完整 30 天 + 全周期</span>
+        </div>
+      </div>
+      <div class="mp-feature-item">
+        <span class="mp-feature-icon">🎯</span>
+        <div class="mp-feature-text">
+          <span class="mp-feature-title">同龄人对比 + 14 天均值</span>
+          <span class="mp-feature-cmp">看到自己在同龄人中的位置</span>
+        </div>
+      </div>
+      <div class="mp-feature-item">
+        <span class="mp-feature-icon">🔊</span>
+        <div class="mp-feature-text">
+          <span class="mp-feature-title">睡眠声音完整监测</span>
+          <span class="mp-feature-cmp">鼾声 / 梦话 / 咳嗽 录音回放 + 长期频次趋势</span>
+        </div>
+      </div>
+      <div class="mp-feature-item">
+        <span class="mp-feature-icon">💡</span>
+        <div class="mp-feature-text">
+          <span class="mp-feature-title">行为见效分析</span>
+          <span class="mp-feature-cmp">长期图自动标注：哪些打卡真的让你的健康指标改善</span>
+        </div>
+      </div>
+    </div>
+    <div class="mp-pricing">
+      <div class="mp-price-card" onclick="alert('订阅月付（模拟）')">
+        <div class="mp-price-name">月付</div>
+        <div class="mp-price-num">¥19.9</div>
+        <span class="mp-price-period">/ 月</span>
+      </div>
+      <div class="mp-price-card recommended" onclick="alert('订阅年付（模拟）')">
+        <div class="mp-price-badge">⭐ 限时新人价</div>
+        <div class="mp-price-name">年付</div>
+        <div class="mp-price-num">¥98</div>
+        <span class="mp-price-orig">原价 ¥168</span>
+        <span class="mp-price-equiv">约 ¥8.2 / 月</span>
+      </div>
+    </div>
+    <div class="mp-cta-wrap">
+      <div class="mp-cta-trial">🎁 立即开启 7 天免费试用</div>
+      <div class="mp-cta-sub">试用期内随时取消 · 试用结束后按月付 ¥19.9 自动续费</div>
+    </div>
+  </div>
+
+  <!-- =================== 账号与服务 =================== -->
+  <div class="view" id="view-account">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">账号与服务</span>
+    </div>
+    <div class="acc-section">
+      <div class="acc-section-title">我的会员</div>
+      <div class="acc-card acc-member-card">
+        <div class="acc-mc-head">
+          <span class="acc-mc-icon">✨</span>
+          <div>
+            <span class="acc-mc-status">免费试用中</span>
+            <span class="acc-mc-expire">2026-06-01 到期</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acc-section">
+      <div class="acc-section-title">订阅管理</div>
+      <div class="acc-card">
+        <div class="acc-row">
+          <div class="acc-row-left">
+            <span class="acc-row-title">自动续费</span>
+            <span class="acc-row-sub">到期前 24 小时自动续费</span>
+          </div>
+          <div class="acc-switch"></div>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-row">
+          <div class="acc-row-left">
+            <span class="acc-row-title danger">取消订阅</span>
+            <span class="acc-row-sub">取消后当前周期会员仍然有效</span>
+          </div>
+          <span class="acc-arrow">›</span>
+        </div>
+      </div>
+    </div>
+    <div class="acc-section">
+      <div class="acc-section-title">账号信息</div>
+      <div class="acc-card">
+        <div class="acc-row">
+          <span class="acc-row-title" style="flex:1;">手机号</span>
+          <span class="acc-row-value">138****8000</span>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-row">
+          <span class="acc-row-title" style="flex:1;">注册时间</span>
+          <span class="acc-row-value">2024-12-03</span>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-row">
+          <span class="acc-row-title" style="flex:1;">用户协议</span>
+          <span class="acc-arrow">›</span>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-row">
+          <span class="acc-row-title" style="flex:1;">隐私政策</span>
+          <span class="acc-arrow">›</span>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-row">
+          <span class="acc-row-title danger" style="flex:1;">注销账号</span>
+          <span class="acc-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 联系我们 =================== -->
+  <div class="view" id="view-contact">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">联系我们</span>
+    </div>
+    <div class="cu-banner">
+      <div class="cu-banner-emoji">☎️</div>
+      <span class="cu-banner-title">话好眠 客服</span>
+      <span class="cu-banner-sub">工作时间：每日 9:00 - 21:00</span>
+    </div>
+    <div class="cu-section">
+      <div class="cu-section-title">联系方式</div>
+      <div class="cu-row">
+        <div class="cu-icon" style="background: #e3f4ff;">📞</div>
+        <div class="cu-text">
+          <span class="cu-title">客服热线</span>
+          <span class="cu-sub">400-100-8888（每日 9:00-21:00）</span>
+        </div>
+        <span class="cu-arrow">›</span>
+      </div>
+      <div class="cu-row">
+        <div class="cu-icon" style="background: #e3f5ea;">💬</div>
+        <div class="cu-text">
+          <span class="cu-title">客服微信</span>
+          <span class="cu-sub">huahaomian-cs（点击复制）</span>
+        </div>
+        <span class="cu-arrow">›</span>
+      </div>
+      <div class="cu-row">
+        <div class="cu-icon" style="background: #fdf0e3;">✉️</div>
+        <div class="cu-text">
+          <span class="cu-title">客服邮箱</span>
+          <span class="cu-sub">support@huahaomian.com</span>
+        </div>
+        <span class="cu-arrow">›</span>
+      </div>
+    </div>
+    <div class="cu-section">
+      <div class="cu-section-title">常见问题</div>
+      <div class="cu-faq">
+        <span class="cu-faq-q">Q：设备无法连接怎么办？</span>
+        <span class="cu-faq-a">A：请检查蓝牙是否开启，并保持设备距离手机 1 米内，重启设备后重试。</span>
+      </div>
+      <div class="cu-faq">
+        <span class="cu-faq-q">Q：监测数据不准确怎么办？</span>
+        <span class="cu-faq-a">A：进入「设备自适应」重新校准，并确保床上无重物、设备贴合床垫。</span>
+      </div>
+      <div class="cu-faq">
+        <span class="cu-faq-q">Q：4G 卡流量不足如何续费？</span>
+        <span class="cu-faq-a">A：在「4G卡信息」页面查看流量与有效期，到期前会自动提醒续费。</span>
+      </div>
+      <div class="cu-faq">
+        <span class="cu-faq-q">Q：会员订阅怎么取消？</span>
+        <span class="cu-faq-a">A：进入「账号与服务 → 订阅管理」，关闭自动续费或取消订阅。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 问题反馈 =================== -->
+  <div class="view" id="view-feedback">
+    <div class="subpage-header">
+      <div class="back-btn" onclick="goBack()"><span class="back-arrow">‹</span></div>
+      <span class="subpage-title">问题反馈</span>
+    </div>
+    <div class="fb-card">
+      <span class="fb-emoji">💬</span>
+      <div class="fb-title">告诉我们你遇到的问题</div>
+      <div class="fb-sub">每一条反馈我们都会认真阅读</div>
+      <textarea class="fb-textarea" placeholder="请描述你遇到的问题，越详细越好..."></textarea>
+      <div class="fb-submit" onclick="alert('反馈已提交（模拟）')">提交反馈</div>
+    </div>
+  </div>
+
+  <!-- 底部 tabbar -->
+  <div class="tabbar">
+    <div class="tab-item"><span class="tab-emoji">📅</span><span>每日</span></div>
+    <div class="tab-item"><span class="tab-emoji">📊</span><span>长期</span></div>
+    <div class="tab-item active"><span class="tab-emoji">👤</span><span>我的</span></div>
+  </div>
+</div>
+
+<script>
+  // 视图栈式导航：每次 goTo push，goBack pop
+  const navStack = ['main'];
+
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function goTo(id) {
+    navStack.push(id);
+    showView(id);
+  }
+
+  function goBack() {
+    if (navStack.length > 1) {
+      navStack.pop();
+      showView(navStack[navStack.length - 1]);
+    }
+  }
+</script>
+</body>
+</html>

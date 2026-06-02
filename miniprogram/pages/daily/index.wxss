@@ -4,15 +4,31 @@
 .week-selector { background: #1a2a3a; border-radius: 18rpx; padding: 24rpx 20rpx; margin-bottom: 14rpx; }
 .week-header { display: flex; align-items: center; margin-bottom: 24rpx; }
 .week-title { font-size: 48rpx; font-weight: 700; color: #fff; }
-.week-subtitle { font-size: 24rpx; color: #8a9baa; margin-left: 16rpx; }
+.week-subtitle { font-size: 24rpx; color: #8a9baa; margin-left: 16rpx; flex: 1; }
 .icon-calendar { font-size: 32rpx; }
+/* 右上角日历入口（替换原 date-bar） */
+.week-calendar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 14rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+.week-calendar-btn .icon-calendar { font-size: 30rpx; }
+.week-cal-hover { background: rgba(255, 255, 255, 0.18); }
 
 .week-days { display: flex; justify-content: space-between; align-items: center; }
 .day-item { display: flex; flex-direction: column; align-items: center; }
-.day-circle { width: 80rpx; height: 80rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2rpx solid rgba(255,255,255,0.2); }
+.day-circle { width: 80rpx; height: 80rpx; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx solid rgba(255,255,255,0.2); gap: 2rpx; }
 .day-circle.active { border-color: #ff8a65; background: conic-gradient(from 0deg, #ff8a65 0deg, rgba(255,138,101,0.3) 0deg, rgba(255,255,255,0.1) 360deg); }
-.day-text { font-size: 28rpx; color: #8a9baa; }
+.day-text { font-size: 28rpx; color: #8a9baa; line-height: 1; }
+.day-num { font-size: 28rpx; color: #b5c4d0; line-height: 1; font-weight: 600; }
 .day-circle.active .day-text { color: #fff; }
+.day-circle.active .day-num { color: #fff; }
 
 /* 日期条 */
 .date-bar { background: #2a3a4a; border-radius: 16rpx; padding: 24rpx 28rpx; display: flex; justify-content: flex-start; align-items: center; margin-bottom: 14rpx; }
@@ -25,15 +41,17 @@
 .modal-content { position: relative; background: #2a3a4a; border-radius: 24rpx; padding: 32rpx; width: 85%; max-width: 600rpx; }
 .modal-header { display: flex; align-items: center; margin-bottom: 32rpx; }
 .modal-title { font-size: 36rpx; font-weight: 700; color: #fff; }
-.modal-subtitle { font-size: 28rpx; color: #8a9baa; margin-left: 16rpx; }
+.modal-subtitle { font-size: 24rpx; color: #8a9baa; margin-left: 16rpx; }
 .modal-close { margin-left: auto; width: 56rpx; height: 56rpx; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 32rpx; }
+.modal-month-nav { width: 60rpx; height: 60rpx; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 40rpx; background: rgba(255,255,255,0.08); border-radius: 50%; }
+.modal-month-nav:active { background: rgba(255,255,255,0.18); }
 
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16rpx; }
 .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 12rpx; font-size: 28rpx; color: #fff; }
 .calendar-day.has-data { background: rgba(255,255,255,0.1); }
 .calendar-day.today { background: #ff8a65; }
 
-.top-status { background: #fff; border-radius: 14rpx; padding: 14rpx 16rpx; display:flex; justify-content:space-between; font-size:22rpx; color:#2a4a43; margin-bottom: 14rpx; }
+.top-status { background: #fff; border-radius: 14rpx; padding: 12rpx 16rpx; display:flex; justify-content:space-between; align-items:center; font-size:22rpx; color:#2a4a43; margin-bottom: 14rpx; line-height:1.4; }
 .status-link { color:#1f8a6f; }
 .temple-icon-entry {
   margin-bottom: 14rpx;
@@ -49,27 +67,477 @@
   box-shadow: 0 6rpx 14rpx rgba(148, 111, 67, 0.12);
 }
 .temple-icon-emoji { font-size: 42rpx; line-height: 1; }
-.temple-icon-text { margin-top: 8rpx; font-size: 21rpx; color: #8c6a43; font-weight: 600; line-height: 1.2; }
+.temple-icon-text { margin-top: 8rpx; font-size: 28rpx; color: #8c6a43; font-weight: 600; line-height: 1.2; }
+.temple-in-sleep { margin: 0 0 16rpx; }
+.sleep-section-title {
+  margin-top: 22rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #eef4f1;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f443c;
+  line-height: 1.4;
+}
+
+/* ===== 顶部「昨晚总览」独立卡片 ===== */
+.overview-card {
+  background: linear-gradient(165deg, #f3fbf7 0%, #ffffff 50%, #f0f7fd 100%);
+  border: 1rpx solid #e3f1ea;
+  padding: 24rpx 22rpx;
+}
+
+/* 标题栏 */
+.overview-header {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 18rpx;
+}
+.overview-emoji { font-size: 32rpx; line-height: 1; }
+.overview-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #14443a;
+  letter-spacing: 1rpx;
+  flex: 1;
+}
+.overview-date {
+  font-size: 22rpx;
+  color: #7a8c84;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 4rpx 14rpx;
+  border-radius: 10rpx;
+  border: 1rpx solid #e6f0ea;
+}
+
+/* 综合总结块 */
+.nightly-summary {
+  padding: 18rpx;
+  background: #ffffff;
+  border: 1rpx solid #e6f0ea;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 14rpx rgba(31, 138, 111, 0.04);
+}
+.nightly-summary-headline {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f8a6f;
+  margin-bottom: 10rpx;
+  line-height: 1.45;
+}
+.nightly-summary-progress {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.nsp-bar {
+  flex: 1;
+  height: 12rpx;
+  background: #ecf3ef;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+.nsp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4cd964 0%, #1f8a6f 100%);
+  border-radius: 6rpx;
+  transition: width 0.4s ease;
+}
+.nsp-count {
+  font-size: 28rpx;
+  color: #4a6a60;
+  font-weight: 600;
+  min-width: 60rpx;
+  text-align: right;
+}
+.nightly-summary-paragraphs {
+  margin-top: 16rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed #d8e8e0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.nightly-summary-paragraphs.no-divider {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.ns-para {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.ns-para-label {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f8a6f;
+  letter-spacing: 0.5rpx;
+}
+.ns-para-text {
+  font-size: 28rpx;
+  color: #2e4a44;
+  line-height: 1.6;
+}
+
+/* 双环上方的"近 7 天恢复趋势"跳转链接 */
+.recovery-link-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6rpx;
+  margin: 14rpx 4rpx 6rpx;
+  font-size: 28rpx;
+  color: #1f8a6f;
+  font-weight: 600;
+}
+.recovery-link-text { line-height: 1; }
+.recovery-link-arrow { font-size: 28rpx; line-height: 1; }
+.recovery-link-row:active { opacity: 0.6; }
+
+/* ===== 双环恢复度（新版美化） ===== */
+.recovery-rings-row {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: stretch;
+  margin-top: 24rpx;
+  padding: 24rpx 12rpx;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1rpx solid #e6f0ea;
+  border-radius: 16rpx;
+  gap: 16rpx;
+}
+
+.recovery-ring-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+/* 圆环外层容器，提供阴影与边框 */
+.recovery-ring-outer {
+  width: 184rpx;
+  height: 184rpx;
+  border-radius: 50%;
+  padding: 7rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.recovery-ring-box.body .recovery-ring-outer {
+  background: linear-gradient(145deg, #d9f4e3, #f7fcf9);
+  box-shadow: 0 10rpx 26rpx rgba(31, 138, 111, 0.18),
+              inset 0 2rpx 6rpx rgba(255, 255, 255, 0.9);
+}
+.recovery-ring-box.mind .recovery-ring-outer {
+  background: linear-gradient(145deg, #d9e8f9, #f7faff);
+  box-shadow: 0 10rpx 26rpx rgba(58, 108, 219, 0.18),
+              inset 0 2rpx 6rpx rgba(255, 255, 255, 0.9);
+}
+
+.recovery-ring {
+  width: 170rpx;
+  height: 170rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 中间白色镂空圆（用 ::before 模拟） */
+.recovery-ring::before {
+  content: '';
+  position: absolute;
+  top: 14rpx;
+  left: 14rpx;
+  right: 14rpx;
+  bottom: 14rpx;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: inset 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.ring-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rpx;
+}
+.ring-score {
+  font-size: 60rpx;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2rpx;
+}
+.recovery-ring-box.body .ring-score { color: #1f8a6f; }
+.recovery-ring-box.mind .ring-score { color: #3a6cdb; }
+
+.ring-unit {
+  font-size: 28rpx;
+  color: #a3b5ad;
+  font-weight: 600;
+  margin-top: 2rpx;
+}
+
+.ring-label {
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  color: #4a5e57;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.ring-status-pill {
+  margin-top: 8rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.recovery-ring-box.body .ring-status-pill {
+  color: #1f8a6f;
+  background: #e6f5ee;
+  border: 1rpx solid #c8e8d8;
+}
+.recovery-ring-box.mind .ring-status-pill {
+  color: #3a6cdb;
+  background: #ebf1fd;
+  border: 1rpx solid #cfdcf8;
+}
+
+/* ===== 核心数据 5 项网格 ===== */
+.core-metrics-grid {
+  margin-top: 18rpx;
+  background: #ffffff;
+  border: 1rpx solid #e6f0ea;
+  border-radius: 16rpx;
+  padding: 4rpx 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  box-shadow: 0 4rpx 14rpx rgba(31, 138, 111, 0.04);
+}
+.core-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 4rpx;
+  position: relative;
+}
+.core-metric + .core-metric::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22rpx;
+  bottom: 22rpx;
+  width: 1rpx;
+  background: #ecf3ef;
+}
+.core-metric-label {
+  font-size: 22rpx;
+  color: #7a8c84;
+  font-weight: 500;
+}
+.core-metric-value-wrap {
+  margin-top: 10rpx;
+  display: flex;
+  align-items: baseline;
+  gap: 2rpx;
+}
+.core-metric-value {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #14443a;
+  line-height: 1.1;
+}
+.core-metric-unit {
+  font-size: 22rpx;
+  color: #7a8c84;
+  font-weight: 500;
+}
+
+/* 今晚医学建议两项 */
+.sleep-suggestion-grid {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+.sleep-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 18rpx 20rpx;
+  background: linear-gradient(135deg, #f0faf5 0%, #ffffff 100%);
+  border: 1rpx solid #d9efe3;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 14rpx rgba(31, 138, 111, 0.05);
+}
+.ss-icon {
+  font-size: 44rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.ss-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  flex: 1;
+  min-width: 0;
+}
+.ss-label {
+  font-size: 28rpx;
+  color: #4a7a6c;
+  font-weight: 500;
+}
+.ss-value {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #14443a;
+  line-height: 1.1;
+  letter-spacing: 0.5rpx;
+}
+.ss-sub {
+  font-size: 22rpx;
+  color: #7a8c84;
+  margin-top: 2rpx;
+}
+
+/* 子板块标题首项去除上分隔线 */
+.sleep-section-title--first {
+  margin-top: 8rpx;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* ===== 今日建议打卡（顶部卡内） ===== */
+.today-checkins {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  background: #ffffff;
+  border: 1rpx solid #e6f0ea;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 14rpx rgba(31, 138, 111, 0.04);
+}
+.today-checkins-head {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 14rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx dashed #d8e8e0;
+}
+.tc-head-emoji { font-size: 28rpx; }
+.tc-head-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #14443a;
+  flex: 1;
+}
+.tc-head-meta {
+  font-size: 28rpx;
+  color: #7a8c84;
+  background: #f0f7e9;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+}
+.tc-head-deadline {
+  font-size: 22rpx;
+  color: #1f8a6f;
+  background: #ecfaf3;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  font-weight: 600;
+  border: 1rpx solid #c8e8d6;
+}
+
+.today-checkin-item {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 14rpx 8rpx;
+  border-bottom: 1rpx solid #f0f6f3;
+  transition: background 0.2s, transform 0.15s;
+  border-radius: 10rpx;
+}
+.today-checkin-item-hover {
+  background: #f0faf5;
+  transform: scale(0.985);
+}
+.today-checkin-item:last-child { border-bottom: none; }
+.today-checkin-item.checked .tc-item-title {
+  color: #7a8c84;
+  text-decoration: line-through;
+}
+.today-checkin-item.checked .tc-item-sub { color: #aab9b3; }
+.tc-item-emoji {
+  font-size: 36rpx;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 56rpx;
+  text-align: center;
+}
+.tc-item-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.tc-item-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #14443a;
+  line-height: 1.35;
+}
+.tc-item-sub {
+  font-size: 22rpx;
+  color: #6a7a81;
+  line-height: 1.45;
+}
+.tc-check-box {
+  flex-shrink: 0;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 2rpx solid #c5d4ce;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.today-checkin-item.checked .tc-check-box {
+  background: #1f8a6f;
+  border-color: #1f8a6f;
+}
+.tc-check-icon {
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1;
+}
 .card { background:#fff; border-radius:18rpx; padding:20rpx; margin-bottom:14rpx; box-shadow:0 4rpx 14rpx rgba(37,114,93,0.06); }
 .hero-card { background: linear-gradient(165deg,#ecfaf5 0%,#fff 62%); }
 .hero-grid { display:flex; align-items:center; justify-content:space-between; }
 .recover,.duration { width: 32%; }
 .percent { font-size:44rpx; font-weight:700; color:#18433b; line-height:1; }
-.recover-title,.dur-note { font-size:22rpx; color:#61837a; margin-top:8rpx; }
-.recover-note,.dur-sub { font-size:22rpx; color:#2d9c7f; margin-top:6rpx; }
+.recover-title,.dur-note { font-size:28rpx; color:#61837a; margin-top:8rpx; }
+.recover-note,.dur-sub { font-size:28rpx; color:#2d9c7f; margin-top:6rpx; }
 .score-center { width: 34%; text-align:center; }
 .score-ring { width:150rpx; height:150rpx; border-radius:50%; margin:0 auto; background: conic-gradient(#26a69a 0 313deg, #dff0ea 313deg 360deg); display:flex; align-items:center; justify-content:center; color:#0f453d; font-weight:700; font-size:30rpx; }
-.score-tip { display:block; margin-top:10rpx; color:#1f8a6f; font-size:22rpx; }
+.score-tip { display:block; margin-top:10rpx; color:#1f8a6f; font-size:28rpx; }
 .dur-value { font-size:48rpx; font-weight:700; color:#153e36; line-height:1; text-align:right; }
 .hero-second { margin-top:10rpx; width:40%; }
-.hero-text { margin-top:10rpx; font-size:23rpx; color:#4f7269; line-height:1.55; }
-.hero-note { margin-top:8rpx; font-size:22rpx; color:#2f9a7e; }
-.hero-action { margin-top:12rpx; text-align:right; color:#1f8a6f; font-size:23rpx; }
+.hero-text { margin-top:10rpx; font-size:28rpx; color:#4f7269; line-height:1.55; }
+.hero-note { margin-top:8rpx; font-size:28rpx; color:#2f9a7e; }
+.hero-action { margin-top:12rpx; text-align:right; color:#1f8a6f; font-size:28rpx; }
 .section-title { font-size:28rpx; font-weight:700; color:#1f443c; margin-bottom:8rpx; }
 .fold-head { display:flex; justify-content:space-between; align-items:center; }
-.fold-action { color:#1f8a6f; font-size:22rpx; }
-.sub-title { font-size:23rpx; color:#577970; line-height:1.6; }
-.time-row { display:flex; justify-content:space-between; color:#688b82; font-size:22rpx; margin-bottom:10rpx; }
+.fold-action { color:#1f8a6f; font-size:28rpx; }
+.sub-title { font-size:24rpx; color:#577970; line-height:1.6; }
+.time-row { display:flex; justify-content:space-between; color:#688b82; font-size:28rpx; margin-bottom:10rpx; }
 .chart-lg { width:100%; height:220rpx; background:#f8fcfb; border-radius:12rpx; }
 .chart-sm { width:100%; height:150rpx; background:#f8fcfb; border-radius:12rpx; margin-top:10rpx; }
 .heart-chart { height:178rpx; }
@@ -87,7 +555,7 @@
   font-weight: 500;
 }
 .heart-tab.ai {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #62bde6;
   border: 2rpx solid #9fdbf5;
   border-radius: 14rpx;
@@ -108,60 +576,60 @@
   margin-top: 12rpx;
   padding: 0 80rpx 0 70rpx;
   color: #8da1a9;
-  font-size: 20rpx;
+  font-size: 28rpx;
 }
-.cycle-tags,.legend-row { margin-top:10rpx; display:flex; flex-wrap:wrap; gap:10rpx 14rpx; font-size:21rpx; color:#5a7e74; }
+.cycle-tags,.legend-row { margin-top:10rpx; display:flex; flex-wrap:wrap; gap:10rpx 14rpx; font-size:28rpx; color:#5a7e74; }
 .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:10rpx; margin-top:10rpx; }
 .metric-box { border:1rpx solid #e3f0ec; border-radius:12rpx; padding:14rpx; background:#fbfefd; }
-.m-label { color:#6a8b82; font-size:21rpx; }
+.m-label { color:#6a8b82; font-size:28rpx; }
 .m-value { margin-top:6rpx; color:#16443c; font-size:34rpx; font-weight:700; }
-.m-level { margin-top:4rpx; color:#2e9f82; font-size:21rpx; }
-.mini-title { margin-top:12rpx; font-size:24rpx; color:#21463e; font-weight:600; }
+.m-level { margin-top:4rpx; color:#2e9f82; font-size:28rpx; }
+.mini-title { margin-top:12rpx; font-size:28rpx; color:#21463e; font-weight:600; }
 .movement-head { margin-top: 12rpx; display:flex; justify-content:space-between; align-items:flex-end; }
 .movement-title-wrap { display:flex; align-items:center; gap:8rpx; }
 .movement-title { font-size: 30rpx; line-height: 1.2; color:#3a6960; font-weight: 600; }
-.movement-help { font-size: 20rpx; color:#8ba8a0; line-height: 1; }
+.movement-help { font-size: 28rpx; color:#8ba8a0; line-height: 1; }
 .movement-count-wrap { display:flex; align-items:baseline; gap:6rpx; color:#2b3940; }
 .movement-count-label { font-size: 34rpx; line-height: 1; font-weight: 500; color:#4a5a60; }
 .movement-count-value { font-size: 58rpx; line-height: 0.95; font-weight: 500; color:#1e2d32; }
 .movement-count-unit { font-size: 28rpx; line-height: 1; color:#55666d; }
 .movement-chart { margin-top: 10rpx; background:#f8fcfb; border:1rpx solid #e6f0ed; border-radius:12rpx; }
-.movement-axis { margin-top: 10rpx; font-size: 19rpx; color:#8ca6a0; }
-.movement-legend { margin-top: 10rpx; display:flex; justify-content:center; gap:28rpx; color:#587169; font-size:24rpx; }
+.movement-axis { margin-top: 10rpx; font-size: 28rpx; color:#8ca6a0; }
+.movement-legend { margin-top: 10rpx; display:flex; justify-content:center; gap:28rpx; color:#587169; font-size:28rpx; }
 .movement-legend-item { display:flex; align-items:center; gap:10rpx; line-height: 1; }
 .movement-dot { width: 32rpx; height: 5rpx; border-radius: 999rpx; display:inline-block; }
 .movement-dot-activity { background:#4fc3d8; }
 .movement-dot-turnover { background:#c95b77; }
-.axis { margin-top:8rpx; font-size:20rpx; color:#8ca6a0; letter-spacing:1rpx; }
-.trend-axis { margin-top:8rpx; display:flex; justify-content:space-between; font-size:18rpx; color:#8ca6a0; letter-spacing:0; }
+.axis { margin-top:8rpx; font-size:28rpx; color:#8ca6a0; letter-spacing:1rpx; }
+.trend-axis { margin-top:8rpx; display:flex; justify-content:space-between; font-size:28rpx; color:#8ca6a0; letter-spacing:0; }
 .ecg-head { margin-top: 16rpx; }
 .ecg-title-wrap { display:flex; align-items:center; gap:12rpx; }
 .ecg-title { font-size: 30rpx; font-weight: 700; color:#1f443c; }
-.ecg-ai-tag { font-size:20rpx; color:#3b89d9; border:1rpx solid #9ed1ff; background:#f3f9ff; border-radius:999rpx; padding:4rpx 12rpx; }
+.ecg-ai-tag { font-size:28rpx; color:#3b89d9; border:1rpx solid #9ed1ff; background:#f3f9ff; border-radius:999rpx; padding:4rpx 12rpx; }
 .ecg-chart { margin-top:10rpx; width:100%; height:190rpx; background:#fff; border:1rpx solid #e6efec; border-radius:12rpx; }
-.ecg-axis { margin-top:8rpx; display:flex; justify-content:space-between; color:#9cb2ac; font-size:18rpx; }
+.ecg-axis { margin-top:8rpx; display:flex; justify-content:space-between; color:#9cb2ac; font-size:28rpx; }
 .ecg-index-title { margin-top:18rpx; font-size:30rpx; font-weight:700; color:#1f443c; }
 .heart-index-gauge { margin-top:10rpx; width:100%; height:76rpx; background:#fff; border:1rpx solid #e6efec; border-radius:12rpx; }
-.heart-index-labels { margin-top:8rpx; display:flex; justify-content:space-between; color:#6f8f87; font-size:24rpx; padding:0 8rpx; }
-.expand-link { margin-top:12rpx; text-align:right; color:#1f8a6f; font-size:23rpx; }
+.heart-index-labels { margin-top:8rpx; display:flex; justify-content:space-between; color:#6f8f87; font-size:28rpx; padding:0 8rpx; }
+.expand-link { margin-top:12rpx; text-align:right; color:#1f8a6f; font-size:28rpx; }
 .sound-collapse-row { display:flex; justify-content:flex-end; margin: 4rpx 6rpx 12rpx; }
 .improve-card { position: relative; }
 .sound-collapse-row.in-improve-card { margin: 10rpx 0 0; justify-content: flex-end; }
 .sound-collapse-btn { width: 48rpx; height: 34rpx; border-radius: 8rpx; border:1rpx solid #cfe4dd; background:#e9f5f1; display:flex; align-items:center; justify-content:center; box-shadow:0 2rpx 5rpx rgba(46,107,88,0.10); }
-.sound-collapse-icon { color:#3f6d61; font-size:18rpx; line-height:1; transform: translateY(-1rpx) rotate(0deg); transition: transform .2s ease, color .2s ease; }
+.sound-collapse-icon { color:#3f6d61; font-size:28rpx; line-height:1; transform: translateY(-1rpx) rotate(0deg); transition: transform .2s ease, color .2s ease; }
 .sound-collapse-icon.expanded { transform: translateY(-1rpx) rotate(180deg); }
 .btn-row { margin-top:12rpx; display:flex; gap:10rpx; }
-.btn { flex:1; border-radius:999rpx; font-size:22rpx; padding:0; line-height:72rpx; height:72rpx; }
+.btn { flex:1; border-radius:999rpx; font-size:28rpx; padding:0; line-height:72rpx; height:72rpx; }
 .btn.primary { background:#1f8a6f; color:#fff; }
 .btn.ghost { background:#edf8f4; color:#1f8a6f; border:1rpx solid #cfe8df; }
-.tip { margin-top:8rpx; color:#7c9790; font-size:20rpx; line-height:1.5; }
+.tip { margin-top:8rpx; color:#7c9790; font-size:28rpx; line-height:1.5; }
 .mt12 { margin-top:12rpx; }
-.list-item { margin-top:8rpx; font-size:23rpx; color:#4f7269; line-height:1.58; }
+.list-item { margin-top:8rpx; font-size:28rpx; color:#4f7269; line-height:1.58; }
 .end-card { padding: 22rpx 20rpx 24rpx; }
-.risk-item { margin-top: 10rpx; font-size: 23rpx; color:#476a62; line-height: 1.66; }
-.advice-item { margin-top: 14rpx; font-size: 24rpx; color:#325c52; font-weight: 600; line-height: 1.5; }
-.advice-sub { margin-top: 6rpx; margin-left: 8rpx; font-size: 22rpx; color:#51756d; line-height: 1.62; }
-.link-row { margin-top:12rpx; display:flex; flex-direction:column; gap:8rpx; color:#1f8a6f; font-size:22rpx; }
+.risk-item { margin-top: 10rpx; font-size: 28rpx; color:#476a62; line-height: 1.66; }
+.advice-item { margin-top: 14rpx; font-size: 28rpx; color:#325c52; font-weight: 600; line-height: 1.5; }
+.advice-sub { margin-top: 6rpx; margin-left: 8rpx; font-size: 28rpx; color:#51756d; line-height: 1.62; }
+.link-row { margin-top:12rpx; display:flex; flex-direction:column; gap:8rpx; color:#1f8a6f; font-size:28rpx; }
 
 /* ========== 新设计样式 ========== */
 .hero-top {
@@ -198,7 +666,7 @@
 
 .axis-tick {
   color: #7a8493;
-  font-size: 20rpx;
+  font-size: 28rpx;
   line-height: 1;
 }
 
@@ -221,7 +689,7 @@
 }
 
 .axis-time-top {
-  font-size: 24rpx;
+  font-size: 28rpx;
   line-height: 1.2;
   color: #2f3a49;
   font-weight: 700;
@@ -229,7 +697,7 @@
 
 .axis-time-bottom {
   margin-top: 2rpx;
-  font-size: 22rpx;
+  font-size: 28rpx;
   line-height: 1.2;
   color: #4f5c6c;
   font-weight: 600;
@@ -249,13 +717,13 @@
 
 .axis-day {
   margin-top: 6rpx;
-  font-size: 20rpx;
+  font-size: 28rpx;
   color: #7f8b99;
 }
 
 .axis-duration {
   margin-top: 2rpx;
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #334155;
   font-weight: 700;
 }
@@ -311,19 +779,19 @@
 }
 
 .ring-unit {
-  font-size: 20rpx;
+  font-size: 28rpx;
   color: #4cd964;
   margin-top: 4rpx;
 }
 
 .ring-label {
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #4f7269;
   margin-top: 10rpx;
 }
 
 .ring-status {
-  font-size: 21rpx;
+  font-size: 28rpx;
   color: #1f8a6f;
   margin-top: 4rpx;
   font-weight: 500;
@@ -350,7 +818,7 @@
 }
 
 .core-data-label {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #666;
 }
 
@@ -373,7 +841,7 @@
 }
 
 .evaluation-text {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #2d6a4f;
   line-height: 1.6;
 }
@@ -408,14 +876,14 @@
 .win-title {
   margin-top: 10rpx;
   color: #2c5f53;
-  font-size: 24rpx;
+  font-size: 28rpx;
   font-weight: 600;
 }
 
 .win-desc {
   margin-top: 10rpx;
   color: #5e7f76;
-  font-size: 21rpx;
+  font-size: 28rpx;
   line-height: 1.45;
 }
 
@@ -423,7 +891,7 @@
   margin-top: 14rpx;
   text-align: right;
   color: #1f8a6f;
-  font-size: 23rpx;
+  font-size: 28rpx;
 }
 
 .sleep-phase-card {
@@ -451,7 +919,7 @@
 }
 
 .phase-time-tick {
-  font-size: 18rpx;
+  font-size: 28rpx;
   color: rgba(152, 178, 191, 0.78);
   line-height: 1;
 }
@@ -480,8 +948,14 @@
 }
 
 .phase-text {
-  font-size: 22rpx;
+  font-size: 28rpx;
   line-height: 1.4;
+}
+.phase-pct {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #2cd2c4;
+  margin-left: 4rpx;
 }
 
 .phase-legend-item.active {
@@ -509,7 +983,7 @@
 }
 
 .cycle-analysis-title {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #d4e7f3;
   font-weight: 700;
   margin-bottom: 12rpx;
@@ -528,7 +1002,7 @@
 
 .cycle-item-title {
   display: block;
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #f0f8ff;
   font-weight: 700;
   line-height: 1.45;
@@ -556,7 +1030,7 @@
 }
 
 .cycle-segment-text {
-  font-size: 18rpx;
+  font-size: 28rpx;
   color: #ffffff;
   font-weight: 600;
   line-height: 1;
@@ -566,7 +1040,7 @@
 .cycle-recovery-text {
   display: block;
   margin-top: 10rpx;
-  font-size: 21rpx;
+  font-size: 28rpx;
   color: #a8cae4;
   line-height: 1.5;
 }
@@ -605,7 +1079,7 @@
 }
 
 .hp-score-pill {
-  font-size: 20rpx;
+  font-size: 28rpx;
   font-weight: 600;
   padding: 4rpx 12rpx;
   border-radius: 6rpx;
@@ -638,7 +1112,7 @@
 }
 
 .hp-score-unit {
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #6a7a81;
 }
 
@@ -729,7 +1203,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 8rpx;
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #7a8b96;
   font-weight: 500;
 }
@@ -762,13 +1236,13 @@
 }
 
 .index-cover-title {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 600;
   color: #1f443c;
 }
 
 .index-cover-status {
-  font-size: 20rpx;
+  font-size: 28rpx;
   font-weight: 600;
   padding: 4rpx 12rpx;
   border-radius: 6rpx;
@@ -801,7 +1275,7 @@
 }
 
 .index-cover-label {
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #6a7a81;
 }
 
@@ -826,7 +1300,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8rpx 0 0 0;
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #7a8b96;
   font-weight: 500;
 }
@@ -874,13 +1348,13 @@
 }
 
 .card-collapse-btn {
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #1f8a6f;
-  font-weight: 500;
+  font-weight: normal;
 }
 
 .card-subtitle {
-  font-size: 23rpx;
+  font-size: 24rpx;
   color: #577970;
   line-height: 1.6;
   margin-bottom: 14rpx;
@@ -900,7 +1374,7 @@
 }
 
 .metric-name {
-  font-size: 20rpx;
+  font-size: 24rpx;
   color: #6a8b82;
   line-height: 1.4;
   margin-bottom: 6rpx;
@@ -917,7 +1391,8 @@
 .metric-note {
   font-size: 20rpx;
   color: #2e9f82;
-  line-height: 1.2;
+  line-height: 1.3;
+  font-weight: normal;
 }
 
 /* ★ 3. 心率数据卡 */
@@ -933,7 +1408,7 @@
 }
 
 .card-title-bold {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 700;
   color: #1f443c;
 }
@@ -945,7 +1420,7 @@
   gap: 6rpx;
   padding: 4rpx 10rpx;
   border-radius: 4rpx;
-  font-size: 18rpx;
+  font-size: 28rpx;
   line-height: 1.2;
 }
 
@@ -964,13 +1439,111 @@
   color: #B5391A;
 }
 
+.status-pill.orange {
+  background: #fdecde;
+  color: #b86518;
+}
+
 .pill-icon {
-  font-size: 16rpx;
+  font-size: 26rpx;
   line-height: 1;
 }
 
 .pill-text {
   font-weight: 500;
+}
+
+/* mini 状态胶囊（用在心脏副标题、呼吸渐变条标题旁） */
+.status-pill.mini {
+  padding: 2rpx 10rpx;
+  font-size: 22rpx;
+  border-radius: 6rpx;
+}
+.status-pill.mini .pill-icon { font-size: 22rpx; }
+
+/* ===== 状态行（4 个折叠卡的"不展开就能看的状态摘要"） ===== */
+.status-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6rpx 4rpx;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.8;
+}
+.sl-label {
+  color: #6a8b82;
+  font-weight: 500;
+  font-size: 22rpx;
+}
+.sl-value {
+  color: #14443a;
+  font-weight: 700;
+  font-size: 22rpx;
+  margin-left: 2rpx;
+}
+.sl-divider {
+  color: #c5d4ce;
+  margin: 0 6rpx;
+  font-weight: 600;
+}
+
+/* 一行紧凑版状态行（睡眠健康卡专用：时长/深睡/翻身 3 项压成一行） */
+.status-line.status-line--one-row {
+  flex-wrap: nowrap;
+  gap: 3rpx 3rpx;
+  font-size: 21rpx;
+  overflow: hidden;
+}
+.status-line--one-row .sl-label,
+.status-line--one-row .sl-value {
+  font-size: 21rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-line--one-row .sl-divider {
+  margin: 0 4rpx;
+}
+.status-line--one-row .status-pill.mini {
+  padding: 2rpx 8rpx;
+  flex-shrink: 0;
+}
+.status-line--one-row .status-pill.mini .pill-text {
+  font-size: 20rpx;
+}
+.status-line--one-row .status-pill.mini .pill-icon {
+  font-size: 20rpx;
+}
+
+/* 心脏具体数据 副标题行（夜间心率 ✅未见异常 · 心动图 ✅未见异常） */
+.card-subtitle-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+.card-sub-label {
+  font-size: 26rpx;
+  color: #577970;
+}
+.card-sub-divider {
+  color: #b5c4d0;
+  margin: 0 4rpx;
+}
+
+/* 呼吸健康指数标题行（标题 + ✅优秀 胶囊 同一行） */
+.breath-overview-gauge {
+  margin-top: 12rpx;
+}
+.hi-compact-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+.hi-compact-title-row .hi-compact-title {
+  margin-bottom: 0;
 }
 
 /* 图表区域 */
@@ -995,7 +1568,7 @@
 }
 
 .range-unit {
-  font-size: 20rpx;
+  font-size: 28rpx;
   color: #6a7a81;
   line-height: 1;
 }
@@ -1012,7 +1585,7 @@
 .chart-axis-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 18rpx;
+  font-size: 22rpx;
   color: #8ca6a0;
   padding: 8rpx 16rpx 0;
   margin-bottom: 16rpx;
@@ -1037,7 +1610,7 @@
 
 .analysis-headline {
   display: block;
-  font-size: 22rpx;
+  font-size: 28rpx;
   font-weight: 600;
   color: #1a1a1a;
   margin-bottom: 12rpx;
@@ -1055,7 +1628,7 @@
   color: #0F6E56;
   padding: 2rpx 6rpx;
   border-radius: 3rpx;
-  font-size: 19rpx;
+  font-size: 28rpx;
   font-weight: 600;
   margin: 0 2rpx;
   line-height: 1.2;
@@ -1075,7 +1648,7 @@
 
 .bullet-dot {
   color: #3DB9F0;
-  font-size: 20rpx;
+  font-size: 28rpx;
   line-height: 1.2;
   min-width: 16rpx;
 }
@@ -1085,7 +1658,7 @@
 }
 
 .bullet-text {
-  font-size: 20rpx;
+  font-size: 24rpx;
   color: #577970;
   line-height: 1.5;
   flex: 1;
@@ -1119,8 +1692,841 @@
 .ecg-axis-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 18rpx;
+  font-size: 28rpx;
   color: #9cb2ac;
   padding: 8rpx 16rpx 0;
   margin-bottom: 16rpx;
 }
+
+/* ========== 心脏健康指数紧凑条 ========== */
+/* ===== 顶部"昨夜心脏总览"专属样式 ===== */
+.heart-overview-card {
+  background: linear-gradient(165deg, #fff5f5 0%, #ffffff 50%, #f5fbf9 100%);
+  border: 1rpx solid #ffe1e1;
+}
+/* 心脏健康指数渐变条（顶部） */
+.heart-overview-gauge {
+  margin-top: 4rpx;
+  margin-bottom: 16rpx;
+  padding-bottom: 14rpx;
+  border-bottom: 1rpx solid #eef4f1;
+}
+.heart-overview-gauge .hi-compact-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1a2c24;
+  margin-bottom: 12rpx;
+}
+/* 4 项核心指标（移至心脏具体数据顶部） */
+.heart-detail-metrics {
+  margin: 16rpx 0 14rpx;
+}
+/* 文字总概（底部） */
+.heart-overview-text {
+  font-size: 26rpx;
+  color: #2e4a44;
+  line-height: 1.7;
+  padding: 14rpx 4rpx 4rpx;
+  border-top: 1rpx dashed #eef4f1;
+}
+
+/* ===== 今日心脏疾病风险（总览核心区块，字体加大以突出） ===== */
+.cardiac-risk-section {
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed #eef4f1;
+}
+
+/* 免责说明（顶部，让用户清楚这是风险评估而非诊断） */
+.cr-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 6rpx;
+  padding: 10rpx 14rpx;
+  margin-bottom: 12rpx;
+  background: #f3f8f6;
+  border-radius: 10rpx;
+  border-left: 3rpx solid #c5d4ce;
+}
+.cr-disc-icon {
+  font-size: 22rpx;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+.cr-disc-text {
+  font-size: 22rpx;
+  color: #5a6f6a;
+  line-height: 1.5;
+  flex: 1;
+}
+.cardiac-risk-title {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 14rpx;
+  padding: 0 4rpx;
+}
+.cr-title-icon { font-size: 34rpx; }
+.cr-title-text {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #14443a;
+  letter-spacing: 0.5rpx;
+  flex: 1;
+}
+.cr-title-count {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #b86518;
+  background: #fdecde;
+  padding: 3rpx 14rpx;
+  border-radius: 999rpx;
+}
+
+/* 风险卡（核心区块，加大间距和左侧色带） */
+.cardiac-risk-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 22rpx;
+  margin-bottom: 12rpx;
+  border-left: 8rpx solid #d9b35c;
+  box-shadow: 0 3rpx 12rpx rgba(0,0,0,0.05);
+}
+/* 轻度风险 → 黄色 */
+.cardiac-risk-card.warning { border-left-color: #d9b35c; background: #fffbf3; }
+/* 中度风险 → 橙色 */
+.cardiac-risk-card.orange { border-left-color: #d4923a; background: #fff7ef; }
+/* 重度风险 → 红色 */
+.cardiac-risk-card.alert { border-left-color: #c43a2c; background: #fff1ee; }
+.cardiac-risk-card.info { border-left-color: #4caf84; background: #f5fdf8; }
+/* 正常项目（聚合卡）→ 绿色 */
+.cardiac-risk-card.normal { border-left-color: #4caf84; background: #f5fdf8; }
+
+/* 正常项目折叠分割线（与 web 端 cr-normal-divider 同步） */
+.cr-normal-divider {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 0;
+  margin: 8rpx 0;
+  border-top: 1rpx dashed #d0dcd6;
+  font-size: 22rpx;
+  color: #8a9baa;
+  font-weight: 500;
+}
+.cr-normal-divider:active { color: #1F8A6F; }
+.cardiac-risk-card.normal-group {
+  border-left-color: #4caf84;
+  background: #f5fdf8;
+}
+.cardiac-risk-card.normal-group .cr-title { color: #14443a; }
+.cardiac-risk-card.normal-group .cr-summary { color: #2e6a52; }
+.cardiac-risk-card.normal-group .cr-body { border-top-color: #c8e8d6; }
+/* 聚合卡内每个绿色子项目（更紧凑展示） */
+.normal-sub-item {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  margin-top: 10rpx;
+  border: 1rpx solid #d8ede1;
+}
+.normal-sub-item:first-child { margin-top: 0; }
+.ng-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3rpx;
+  margin-bottom: 8rpx;
+}
+.ng-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  flex-wrap: wrap;
+  margin-bottom: 2rpx;
+}
+.ng-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #14443a;
+  line-height: 1.35;
+}
+.ng-summary {
+  font-size: 24rpx;
+  color: #5a6f6a;
+  line-height: 1.4;
+}
+
+/* 重度风险标题强调红色 */
+.cardiac-risk-card.alert .cr-title { color: #8c241a; }
+.cardiac-risk-card.alert .cr-summary { color: #a14530; font-weight: 600; }
+
+.cr-hover { opacity: 0.7; }
+
+.cr-head {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+.cr-icon { font-size: 40rpx; flex-shrink: 0; }
+.cr-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.cr-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+.cr-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #14443a;
+  line-height: 1.35;
+}
+/* 急 / 慢 / 急·慢 徽章 */
+.cr-ac-badge {
+  display: inline-block;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  font-size: 18rpx;
+  font-weight: 700;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+/* 急性 → 暖红色 */
+.cr-ac-acute {
+  background: #fbe2dd;
+  color: #b54a3a;
+  border: 1rpx solid #f0c5bd;
+}
+/* 慢性 → 冷蓝色 */
+.cr-ac-chronic {
+  background: #dde7f3;
+  color: #3a5a8a;
+  border: 1rpx solid #c4d4e7;
+}
+/* 急·慢 兼具 → 中性紫 */
+.cr-ac-both {
+  background: #ece1f4;
+  color: #6a3aa0;
+  border: 1rpx solid #d4c1e3;
+}
+.cr-summary {
+  font-size: 24rpx;
+  color: #5a6f6a;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.cr-arrow {
+  font-size: 22rpx;
+  color: #9aa8a2;
+  font-weight: 600;
+  margin-left: 6rpx;
+}
+
+/* 关联疾病标签行 */
+.cr-disease-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 16rpx;
+  padding-bottom: 14rpx;
+  border-bottom: 1rpx dashed #e8e4d8;
+}
+.cr-disease-tags-label {
+  font-size: 22rpx;
+  color: #7a8c84;
+  font-weight: 600;
+}
+.cr-disease-tag {
+  display: inline-block;
+  font-size: 20rpx;
+  color: #8c6c12;
+  background: #fbf3dc;
+  padding: 3rpx 10rpx;
+  border-radius: 6rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.cardiac-risk-card.alert .cr-disease-tag {
+  color: #8c241a;
+  background: #fce4de;
+}
+.cardiac-risk-card.info .cr-disease-tag {
+  color: #1d6e54;
+  background: #e6f5ee;
+}
+
+/* 着色判定规则文本块 */
+.cr-coloring-text {
+  font-size: 22rpx;
+  color: #4a5a63;
+  line-height: 1.8;
+  white-space: pre-line;
+  background: #fafcfb;
+  padding: 12rpx 16rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #eef2f0;
+}
+
+/* 展开后 */
+.cr-body {
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx dashed #ede1c8;
+}
+.cardiac-risk-card.orange .cr-body { border-top-color: #ecd9c2; }
+.cardiac-risk-card.alert .cr-body { border-top-color: #f0d2cb; }
+.cardiac-risk-card.info .cr-body { border-top-color: #c8e8d6; }
+
+.cr-detail-block {
+  margin-bottom: 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.cr-detail-block:last-child { margin-bottom: 0; }
+.cr-detail-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #14443a;
+}
+.cr-detail-text {
+  font-size: 24rpx;
+  color: #4a5a63;
+  line-height: 1.65;
+}
+.cr-suggestion {
+  font-size: 24rpx;
+  color: #2e6a52;
+  line-height: 1.7;
+  padding: 2rpx 0;
+}
+
+/* 数据依据：三列布局（标签 / 值 / 参考），右侧用色带表达 status */
+.cr-data-list {
+  margin-top: 4rpx;
+  border: 1rpx solid rgba(217,179,92,0.25);
+  border-radius: 10rpx;
+  overflow: hidden;
+  background: rgba(255, 251, 240, 0.6);
+}
+.cardiac-risk-card.info .cr-data-list {
+  border-color: rgba(76, 175, 132, 0.25);
+  background: rgba(245, 253, 248, 0.6);
+}
+.cardiac-risk-card.alert .cr-data-list {
+  border-color: rgba(196,58,44,0.25);
+  background: rgba(255, 241, 238, 0.6);
+}
+.cr-data-row {
+  display: flex;
+  align-items: center;
+  padding: 10rpx 14rpx;
+  font-size: 21rpx;
+  line-height: 1.4;
+  border-bottom: 1rpx solid rgba(217,179,92,0.15);
+}
+.cr-data-row:last-child { border-bottom: none; }
+.cardiac-risk-card.info .cr-data-row {
+  border-bottom-color: rgba(76, 175, 132, 0.15);
+}
+.cr-data-label {
+  flex: 0 0 38%;
+  color: #5a6a63;
+}
+.cr-data-value {
+  flex: 0 0 24%;
+  font-weight: 700;
+  color: #14443a;
+}
+.cr-data-ref {
+  flex: 1;
+  text-align: right;
+  font-size: 20rpx;
+  color: #8a978f;
+}
+/* 数据状态：low/high/border = 偏离, ok = 正常 */
+.cr-data-row.low .cr-data-value,
+.cr-data-row.high .cr-data-value,
+.cr-data-row.border .cr-data-value {
+  color: #b86a18;
+}
+.cardiac-risk-card.alert .cr-data-row.low .cr-data-value,
+.cardiac-risk-card.alert .cr-data-row.high .cr-data-value,
+.cardiac-risk-card.alert .cr-data-row.border .cr-data-value {
+  color: #a14530;
+}
+.cr-data-row.ok .cr-data-value { color: #1f8a6f; }
+
+.cr-link {
+  margin-top: 8rpx;
+  padding: 10rpx 14rpx;
+  background: rgba(31, 138, 111, 0.08);
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6rpx;
+  font-size: 22rpx;
+  color: #1f8a6f;
+  font-weight: 600;
+}
+.cr-link-arrow { font-size: 22rpx; }
+.cr-link:active { opacity: 0.6; }
+
+/* 无风险时的积极状态 */
+.cr-no-risk {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 16rpx 14rpx;
+  background: #ecfaf3;
+  border: 1rpx solid #c8e8d6;
+  border-radius: 12rpx;
+  margin-top: 14rpx;
+}
+.cr-no-risk-icon { font-size: 26rpx; }
+.cr-no-risk-text {
+  font-size: 22rpx;
+  color: #1d6e54;
+  font-weight: 600;
+}
+/* 心脏具体数据内的心脏健康指数（移至折叠区顶部） */
+.heart-detail-gauge {
+  margin-top: 4rpx;
+  margin-bottom: 18rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #eef4f1;
+}
+
+/* "心脏具体数据" 折叠卡的"展开"按钮 — 与睡眠卡 fold-action 完全一致 */
+.heart-main-card .card-collapse-btn {
+  color: #1f8a6f;
+  font-weight: normal;
+}
+
+.hi-compact {
+  margin-top: 14rpx;
+  margin-bottom: 6rpx;
+}
+
+.hi-compact-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f443c;
+  margin-bottom: 12rpx;
+}
+
+.hi-gauge-wrap {
+  position: relative;
+  height: 48rpx;
+  padding: 0 4rpx;
+  background: #fafcfb;
+  border-radius: 14rpx;
+  border: 1rpx solid #eef2f0;
+}
+
+.hi-bar {
+  position: absolute;
+  left: 12rpx;
+  right: 12rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 26rpx;
+  border-radius: 13rpx;
+  background: linear-gradient(90deg, #ef9a9a 0%, #f4c5bd 22%, #f6e1da 42%, #f0ece9 50%, #d4e2ea 58%, #b6d4e6 78%, #8ec2dc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.hi-tick {
+  width: 2rpx;
+  height: 46%;
+  background: rgba(255, 255, 255, 0.85);
+  display: block;
+  border-radius: 1rpx;
+}
+
+.hi-pointer {
+  position: absolute;
+  top: 2rpx;
+  bottom: 2rpx;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.hi-ptr-line {
+  width: 2rpx;
+  height: 100%;
+  background: #2c3a3a;
+  border-radius: 1rpx;
+}
+
+.hi-ptr-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22rpx;
+  height: 22rpx;
+  background: #fff;
+  border: 2rpx solid #2c3a3a;
+  border-radius: 50%;
+}
+
+/* 呼吸健康指数 + 呼吸暂停统计 */
+.breath-gauge { margin-top: 4rpx; margin-bottom: 18rpx; }
+
+.breath-stats-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  background: #fafcfb;
+  border: 1rpx solid #eef2f0;
+  border-radius: 12rpx;
+  padding: 18rpx 8rpx;
+  margin-bottom: 14rpx;
+}
+.breath-stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.breath-stat-item.highlight .breath-stat-num { color: #58c7f5; }
+.breath-stat-num {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #2e3035;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+.breath-stat-unit {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: inherit;
+  margin-left: 2rpx;
+}
+.breath-stat-label {
+  margin-top: 10rpx;
+  font-size: 28rpx;
+  color: #6a7a81;
+}
+.breath-stat-divider {
+  width: 1rpx;
+  background: #e6ece9;
+  margin: 6rpx 0;
+}
+
+.hi-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8rpx;
+  padding: 0 4rpx;
+  font-size: 22rpx;
+  color: #8a99a3;
+}
+/* ===== 声音监测 8 项指标 2 列网格 ===== */
+.sound-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+.sound-box {
+  background: #fafffd;
+  border: 1rpx solid #e6f0ea;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  position: relative;
+}
+.sound-box.tappable {
+  background: linear-gradient(135deg, #f0faf5 0%, #ffffff 80%);
+  border-color: #c8e8d6;
+}
+.sb-label {
+  font-size: 24rpx;
+  color: #4a6a60;
+  font-weight: 500;
+}
+.sb-value {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #14443a;
+  line-height: 1.1;
+}
+.sb-level {
+  font-size: 22rpx;
+  color: #1f8a6f;
+  font-weight: 600;
+}
+.sb-hint {
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: #1f8a6f;
+  font-weight: 600;
+  letter-spacing: 0.2rpx;
+}
+
+/* ===== 声音录音弹窗 ===== */
+.sound-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(20, 30, 26, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40rpx;
+}
+.sound-modal-card {
+  width: 100%;
+  max-width: 640rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.25);
+}
+.sm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 28rpx 16rpx;
+  border-bottom: 1rpx solid #eef4f1;
+}
+.sm-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #14443a;
+  flex: 1;
+}
+.sm-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f0f4f1;
+  color: #6a7a81;
+  text-align: center;
+  line-height: 56rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.sm-body {
+  padding: 8rpx 28rpx 28rpx;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.sm-empty {
+  text-align: center;
+  padding: 60rpx 0;
+  font-size: 28rpx;
+  color: #9aa8a2;
+}
+.sm-rec-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f3f7f5;
+}
+.sm-rec-item:last-child { border-bottom: none; }
+.sm-rec-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.sm-rec-time {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #14443a;
+}
+.sm-rec-label {
+  font-size: 28rpx;
+  color: #6a7a81;
+}
+.sm-rec-play {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: #1f8a6f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(31, 138, 111, 0.3);
+}
+.sm-rec-play-icon {
+  color: #ffffff;
+  font-size: 28rpx;
+  margin-left: 4rpx;
+}
+
+/* ===== 声音监测示例数据横幅 ===== */
+.sound-demo-banner {
+  margin: 0 0 14rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #fff9e8 0%, #fef3d3 100%);
+  border: 1rpx solid #f0e5cf;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4rpx 14rpx rgba(180, 130, 30, 0.1);
+}
+.sdb-left {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  flex: 1;
+}
+.sdb-icon { font-size: 38rpx; line-height: 1; }
+.sdb-text { display: flex; flex-direction: column; gap: 4rpx; }
+.sdb-title { font-size: 28rpx; font-weight: 700; color: #5a3a0e; }
+.sdb-sub { font-size: 28rpx; color: #8a6a3a; }
+.sdb-cta {
+  background: linear-gradient(135deg, #d4a548, #b3851e);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+  margin-left: 14rpx;
+}
+
+/* ===== 付费弹窗（与长期页共用） ===== */
+.pw-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 30, 26, 0.6);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40rpx;
+}
+.pw-card {
+  width: 100%;
+  max-width: 640rpx;
+  background: #ffffff;
+  border-radius: 22rpx;
+  overflow: hidden;
+  box-shadow: 0 20rpx 50rpx rgba(0, 0, 0, 0.25);
+}
+.pw-header {
+  background: linear-gradient(135deg, #f6e8c3 0%, #f3d990 100%);
+  padding: 36rpx 22rpx 28rpx;
+  text-align: center;
+}
+.pw-icon-circle {
+  width: 110rpx; height: 110rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff, #fef3d3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 58rpx;
+  margin: 0 auto 14rpx;
+  box-shadow: 0 8rpx 20rpx rgba(180, 130, 30, 0.22);
+}
+.pw-title { font-size: 34rpx; font-weight: 800; color: #5a3a0e; margin-bottom: 6rpx; }
+.pw-sub { font-size: 28rpx; color: #8a6a3a; }
+.pw-body { padding: 20rpx 26rpx 18rpx; }
+.pw-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  padding: 14rpx 0;
+  border-bottom: 1rpx dashed #f0e5cf;
+}
+.pw-feature:last-of-type { border-bottom: none; }
+.pw-feature-icon {
+  width: 56rpx; height: 56rpx;
+  border-radius: 14rpx;
+  background: #faf3e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+.pw-feature-text { flex: 1; }
+.pw-feature-title { font-size: 28rpx; font-weight: 700; color: #1a2c24; display: block; margin-bottom: 4rpx; }
+.pw-feature-sub { font-size: 28rpx; color: #7a8a83; line-height: 1.5; display: block; }
+.pw-price-row {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+.pw-price-card {
+  background: #fafffd;
+  border: 2rpx solid #eef4f1;
+  border-radius: 16rpx;
+  padding: 24rpx 14rpx 18rpx;
+  text-align: center;
+  position: relative;
+}
+.pw-price-card.recommended {
+  border-color: #d4a548;
+  background: linear-gradient(135deg, #fff9e8 0%, #fff 100%);
+  box-shadow: 0 8rpx 18rpx rgba(180, 130, 30, 0.18);
+}
+.pw-price-badge {
+  position: absolute;
+  top: -12rpx; left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #d4a548, #b3851e);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 4rpx 8rpx rgba(180, 130, 30, 0.3);
+  white-space: nowrap;
+}
+.pw-price-name { font-size: 28rpx; color: #7a8a83; display: block; margin-bottom: 6rpx; }
+.pw-price-num { font-size: 40rpx; font-weight: 800; color: #1a2c24; display: block; line-height: 1.1; }
+.pw-price-card.recommended .pw-price-num { color: #c0850f; }
+.pw-price-orig {
+  font-size: 28rpx;
+  color: #b0aea2;
+  text-decoration: line-through;
+  display: block;
+  margin-top: 4rpx;
+  min-height: 26rpx;
+}
+.pw-price-equiv { font-size: 28rpx; color: #1f8a6f; font-weight: 600; display: block; margin-top: 2rpx; }
+.pw-actions {
+  padding: 8rpx 26rpx 26rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.pw-btn-primary {
+  background: linear-gradient(135deg, #d4a548, #b3851e);
+  color: #fff;
+  text-align: center;
+  padding: 22rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  box-shadow: 0 8rpx 18rpx rgba(180, 130, 30, 0.36);
+}
+.pw-btn-ghost { text-align: center; padding: 12rpx; font-size: 28rpx; color: #7a8a83; }
