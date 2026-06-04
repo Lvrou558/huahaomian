@@ -63,7 +63,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
 .modal-month-nav:hover{background:rgba(255,255,255,0.18)}
 .modal-close{width:28px;height:28px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;cursor:pointer;border:none}
 .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.calendar-weekday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:4px}
+.calendar-weekday-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:4px}
 .calendar-weekday{text-align:center;font-size:11px;color:#8a9baa;padding:2px 0}
 .calendar-day{height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;font-size:14px;color:#fff;cursor:pointer;position:relative}
 .calendar-day.empty{pointer-events:none;opacity:0}
@@ -417,7 +417,8 @@ canvas.ecg-waveform{width:100%;height:90px;background:#fff;border:1px solid #e6e
 .ae-modal-cancel{color:#6a8b82}
 .ae-modal-save{color:#1F8A6F;font-weight:700;text-align:right}
 .ae-modal-title{flex:1;text-align:center;font-size:15px;font-weight:700;color:#14443a}
-.ae-avatar-modal,.ae-input-modal,.ae-phone-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:12px 12px 0 0;z-index:999;max-width:420px;margin:0 auto}
+.ae-avatar-modal,.ae-phone-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:12px 12px 0 0;z-index:999;max-width:420px;margin:0 auto}
+.ae-input-modal,.ae-nickname-modal{position:fixed;left:14px;right:14px;top:50%;transform:translateY(-50%);background:#fff;border-radius:16px;z-index:999;max-width:360px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
 .ae-avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px}
 .ae-avatar-item{aspect-ratio:1;background:#f4fbf9;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid transparent;cursor:pointer}
 .ae-avatar-item.selected{border-color:#1F8A6F;background:#ecf6f1}
@@ -1971,7 +1972,7 @@ function renderMy(){
     // 昵称编辑
     if(s.editingNickname){
       h+=`<div class="ae-modal-mask" onclick="aeCancelNicknameEdit()"></div>`;
-      h+=`<div class="ae-input-modal" onclick="event.stopPropagation()">`;
+      h+=`<div class="ae-nickname-modal" onclick="event.stopPropagation()">`;
       h+=`  <div class="ae-modal-head"><span class="ae-modal-cancel" onclick="aeCancelNicknameEdit()">取消</span><span class="ae-modal-title">修改昵称</span><span class="ae-modal-save" onclick="aeSaveNickname()">保存</span></div>`;
       h+=`  <div class="ae-modal-body">`;
       h+=`    <input class="ae-input" id="aeNicknameInput" maxlength="20" placeholder="2-20 个字符" value="${(s.nicknameDraft||'').replace(/"/g,'&quot;')}" oninput="aeNicknameDraftInput(this.value)"/>`;
@@ -2083,6 +2084,9 @@ function aeSaveNickname(){
   if(v.length<2){ aeToast('昵称至少 2 个字符'); return; }
   if(v.length>20){ aeToast('昵称最多 20 个字符'); return; }
   myState.accountInfo.nickname = v;
+  // 同步回 appData.user + localStorage，确保主页名称即时更新
+  if(appData.user){ appData.user.nickname = v; }
+  try { var u=JSON.parse(localStorage.getItem('hc_user')||'{}'); u.nickname=v; localStorage.setItem('hc_user',JSON.stringify(u)); } catch(e){}
   myState.editingNickname = false;
   renderMy();
   aeToast('昵称已更新');
