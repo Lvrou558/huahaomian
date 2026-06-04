@@ -62,10 +62,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
 .modal-month-nav{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;background:rgba(255,255,255,0.08);border-radius:50%;cursor:pointer;border:none}
 .modal-month-nav:hover{background:rgba(255,255,255,0.18)}
 .modal-close{width:28px;height:28px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;cursor:pointer;border:none}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.calendar-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:14px;color:#fff;cursor:pointer}
-.calendar-day.has-data{background:rgba(255,255,255,0.1)}
-.calendar-day.today{background:#ff8a65;font-weight:700}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calendar-weekday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:4px}
+.calendar-weekday{text-align:center;font-size:11px;color:#8a9baa;padding:2px 0}
+.calendar-day{height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;font-size:14px;color:#fff;cursor:pointer;position:relative}
+.calendar-day.empty{pointer-events:none;opacity:0}
+.calendar-day.has-data{background:rgba(31,138,111,0.25);color:#fff}
+.calendar-day.today{border:1.5px solid #ff8a65;font-weight:700}
+.calendar-day.selected{background:#1f8a6f;color:#fff;font-weight:700}
+.calendar-day.future{color:#6a8b82;cursor:default;pointer-events:none}
+.calendar-day:not(.has-data):not(.today):not(.selected):not(.empty):not(.future){color:#8a9baa}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:#4cd964;position:absolute;bottom:3px}
 
 /* ===== 顶部状态栏 ===== */
 .top-status{background:#fff;border-radius:7px;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#2a4a43;margin-bottom:7px}
@@ -444,6 +451,30 @@ canvas.ecg-waveform{width:100%;height:90px;background:#fff;border:1px solid #e6e
 .ae-secondary-btn,.ae-danger-btn{flex:1;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer}
 .ae-secondary-btn{background:#ecf6f1;color:#14443a}
 .ae-danger-btn{background:#c43a2c;color:#fff}
+
+/* ===== 性别选择弹层 ===== */
+.ae-gender-modal{position:fixed;left:14px;right:14px;top:50%;transform:translateY(-50%);background:#fff;border-radius:16px;padding:24px 20px 20px;z-index:999;max-width:360px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
+.ae-gender-title{text-align:center;font-size:17px;font-weight:800;color:#14443a;margin-bottom:20px}
+.ae-gender-options{display:flex;gap:12px}
+.ae-gender-opt{flex:1;height:80px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px solid #e8f0ec;background:#f9fdfb;cursor:pointer;transition:all .15s}
+.ae-gender-opt:hover{background:#ecf6f1}
+.ae-gender-opt.selected{border-color:#1F8A6F;background:#ecf6f1;box-shadow:0 4px 12px rgba(31,138,111,0.15)}
+.ae-gender-opt-icon{font-size:28px;line-height:1}
+.ae-gender-opt-label{font-size:14px;font-weight:700;color:#14443a}
+.ae-gender-cancel{display:block;text-align:center;margin-top:14px;font-size:13px;color:#8a978f;cursor:pointer;padding:8px}
+
+/* ===== 生日滚轮选择弹层 ===== */
+.ae-birthday-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:16px 16px 0 0;z-index:999;max-width:420px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,10px)}
+.ae-bday-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid #f0f4f2}
+.ae-bday-cancel{color:#6a8b82;font-size:14px;cursor:pointer}
+.ae-bday-confirm{color:#1F8A6F;font-size:14px;font-weight:700;cursor:pointer}
+.ae-bday-title{font-size:15px;font-weight:700;color:#14443a}
+.ae-bday-wheels{display:flex;height:200px;position:relative;overflow:hidden}
+.ae-bday-wheel{flex:1;overflow-y:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;padding:80px 0}
+.ae-bday-wheel::-webkit-scrollbar{width:0}
+.ae-bday-item{height:40px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#b0bdb6;cursor:pointer;scroll-snap-align:center;user-select:none}
+.ae-bday-item.selected{color:#14443a;font-weight:800;font-size:18px}
+.ae-bday-overlay{position:absolute;left:8px;right:8px;top:50%;transform:translateY(-50%);height:42px;background:rgba(31,138,111,0.06);border-top:1px solid rgba(31,138,111,0.2);border-bottom:1px solid rgba(31,138,111,0.2);pointer-events:none;border-radius:2px}
 .hc-range{font-size:11px;color:#7a8c84}
 .hc-toolbar{display:flex;justify-content:space-between;align-items:center}
 .hc-tabs{display:flex;gap:4px}
@@ -882,24 +913,34 @@ function hideCalendar(){ showCalendarModal=false; document.getElementById('calen
 function prevCalendarMonth(){ calendarMonth--; if(calendarMonth<0){calendarMonth=11;calendarYear--;} renderCalendar(); }
 function nextCalendarMonth(){ calendarMonth++; if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); }
 
+let calendarSelected = null; // 预览态选中日期 'YYYY-MM-DD'
 function renderCalendar(){
   const m=calendarMonth+1;
   document.getElementById('calendarYearMonth').textContent = `${calendarYear}年${String(m).padStart(2,'0')}月`;
   const daysInMonth = new Date(calendarYear, m, 0).getDate();
-  const today = new Date();
+  const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay(); // 0=周日 → 补齐前导空格
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   let html='';
+  // 星期头行
+  html+=`<div class="calendar-weekday-row">${['日','一','二','三','四','五','六'].map(w=>`<span class="calendar-weekday">${w}</span>`).join('')}</div>`;
+  // 1 号前导空单元格
+  for(let i=0;i<firstDayOfWeek;i++){ html+=`<div class="calendar-day empty"></div>`; }
   for(let i=1;i<=daysInMonth;i++){
-    const date = new Date(calendarYear, calendarMonth, i);
-    const isToday = date.toDateString()===today.toDateString();
-    const hasData = date <= today;
-    html+=`<div class="calendar-day${isToday?' today':''}${hasData?' has-data':''}" onclick="selectCalendarDay(${i})">${i}</div>`;
+    const ds=`${calendarYear}-${String(m).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const isToday = ds===todayStr;
+    const isPast = new Date(ds+'T00:00:00') < today;
+    const hasData = isPast || isToday; // 预览态：今天及以前视为有数据
+    const isSelected = ds===calendarSelected;
+    const cls=['calendar-day',isToday?'today':'',hasData?'has-data':'',isSelected?'selected':'',(!isPast&&!isToday)?'future':''].filter(Boolean).join(' ');
+    html+=`<div class="${cls}" onclick="selectCalendarDay(${i})">${i}${hasData?'<span class="cal-dot"></span>':''}</div>`;
   }
   document.getElementById('calendarGrid').innerHTML=html;
 }
 
 function selectCalendarDay(day){
-  const d=new Date(calendarYear,calendarMonth,day);
-  // applyDate logic would go here
+  calendarSelected = `${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  // 预览态：仅记录选中并关闭；真实数据加载在服务器版 pickDate 中完成
   hideCalendar();
 }
 
@@ -1471,85 +1512,163 @@ async function renderLongterm(){
 
 function longtermToggleModule(m){longtermState.expanded[m]=!longtermState.expanded[m];renderLongterm();}
 
-function drawLongtermLine(id, data, yMin, yMax, greenLo, greenHi, refLine, unit, color){
+// 长期图表引擎（移植自小程序 drawHealthLineChart）
+// 平滑 Catmull-Rom 曲线 + 健康分区 + 双行日期轴 + Y刻度 + 实测均值线 + 同龄人参考线
+// 注：绿日光晕 / ⚠ 警示 / 归因气泡依赖行为追踪数据，真实 API 暂无 → 按「有数据才显示」原则省略
+// ═══════════════════════════════════════
+var LT_CHART_CFG = {
+  heartRate:  {yMin:40,  yMax:90,  greenLo:50,  greenHi:70,  ref:78,  unit:'bpm',  color:'#e8743b'},
+  hrv:        {yMin:0,   yMax:120, greenLo:50,  greenHi:120, ref:42,  unit:'ms',   color:'#5b9ac9'},
+  heartIndex: {yMin:30,  yMax:100, greenLo:80,  greenHi:100, ref:75,  unit:'分',   color:'#1F8A6F'},
+  breathRate: {yMin:10,  yMax:25,  greenLo:12,  greenHi:20,  ref:16,  unit:'次/分', color:'#5b9ac9'},
+  ahi:        {yMin:0,   yMax:15,  greenLo:0,   greenHi:5,   ref:2,   unit:'/h',   color:'#e8743b'},
+  apnea:      {yMin:0,   yMax:30,  greenLo:0,   greenHi:10,  ref:5,   unit:'秒',   color:'#e8743b'},
+  schedule:   {yMin:40,  yMax:100, greenLo:70,  greenHi:100, ref:75,  unit:'分',   color:'#1F8A6F'},
+  duration:   {yMin:200, yMax:600, greenLo:360, greenHi:540, ref:450, unit:'分钟', color:'#7a6ff0'},
+  efficiency: {yMin:50,  yMax:100, greenLo:85,  greenHi:100, ref:80,  unit:'%',    color:'#1F8A6F'},
+  prep:       {yMin:0,   yMax:60,  greenLo:0,   greenHi:20,  ref:18,  unit:'分钟', color:'#e8743b'},
+  deep:       {yMin:5,   yMax:30,  greenLo:15,  greenHi:25,  ref:18,  unit:'%',    color:'#b15dff'},
+  snore:      {yMin:0,   yMax:20,  greenLo:0,   greenHi:5,   ref:5,   unit:'次',   color:'#5b9ac9'},
+  sleeptalk:  {yMin:0,   yMax:10,  greenLo:0,   greenHi:3,   ref:3,   unit:'次',   color:'#5b9ac9'}
+};
+
+var LT_WK = ['日','一','二','三','四','五','六'];
+
+// 圆角矩形路径（备用）
+function ltRoundRect(ctx,x,y,w,h,r){var rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();}
+
+// "YYYY-MM-DD" → "MM-DD（周X）"
+function ltDateLabel(dateStr){
+  if(dateStr==null) return '';
+  var d=new Date(String(dateStr).replace(/-/g,'/'));
+  if(isNaN(d.getTime())){
+    var mm=String(dateStr).match(/(\d+)\D+(\d+)/);
+    return mm?((''+mm[1]).padStart(2,'0')+'-'+(''+mm[2]).padStart(2,'0')):String(dateStr);
+  }
+  return (''+(d.getMonth()+1)).padStart(2,'0')+'-'+(''+d.getDate()).padStart(2,'0')+'（周'+LT_WK[d.getDay()]+'）';
+}
+
+// 双行日期标签：上行星期（粗）、下行 MM-DD
+function ltTwoLineDate(ctx,label,x,plotB){
+  var m=String(label||'').match(/(\d+)\D+(\d+)[^一-龥]*([一-龥])?/);
+  var mmdd=label||'', wk='';
+  if(m){ mmdd=(''+m[1]).padStart(2,'0')+'-'+(''+m[2]).padStart(2,'0'); wk=m[3]||''; }
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  if(wk){
+    ctx.fillStyle='#5a6b65'; ctx.font='bold 13px sans-serif'; ctx.fillText('周'+wk,x,plotB+16);
+    ctx.fillStyle='#9aa8a2'; ctx.font='12px sans-serif'; ctx.fillText(mmdd,x,plotB+31);
+  } else {
+    ctx.fillStyle='#5a6b65'; ctx.font='bold 13px sans-serif'; ctx.fillText(mmdd,x,plotB+20);
+  }
+}
+
+// 入口：保持 (id, data, yMin, yMax) 签名以兼容现有调用；阈值/配色优先取 LT_CHART_CFG
+function drawLongtermLine(id, data, yMinArg, yMaxArg){
   var canvasId=id+'Chart';
-  var series=(data&&data.length)?data.map(function(d){ return d.value; }):null;
-  if(!series||series.length<1) return; // 无数据不绘制
-  var minV=yMin||50, maxV=yMax||80, rangeV=maxV-minV;
-  const c=setupCanvas(canvasId,380,180);
+  var cfg=LT_CHART_CFG[id]||{};
+  var yMin=(cfg.yMin!=null)?cfg.yMin:(yMinArg!=null?yMinArg:0);
+  var yMax=(cfg.yMax!=null)?cfg.yMax:(yMaxArg!=null?yMaxArg:100);
+  var vals=(data&&data.length)?data.map(function(d){ return Number(d.value); }):null;
+  if(!vals||vals.length<1){
+    var _e=setupCanvas(canvasId,380,220);
+    if(_e){ _e.ctx.clearRect(0,0,_e.w,_e.h); _e.ctx.fillStyle='#aab4b1'; _e.ctx.font='13px sans-serif'; _e.ctx.textAlign='center'; _e.ctx.textBaseline='middle'; _e.ctx.fillText('暂无数据',_e.w/2,_e.h/2); }
+    return;
+  }
+  var labels=data.map(function(d){ return ltDateLabel(d.date); });
+  ltDrawHealthLine(canvasId, vals, labels, yMin, yMax, cfg.greenLo, cfg.greenHi, cfg.ref, cfg.color||'#1F8A6F', cfg.unit||'');
+}
+
+// 核心绘制：viewBox 逻辑坐标 → 画布（非均匀缩放铺满，避免黑边/裁切）
+function ltDrawHealthLine(canvasId, series, dateLabels, yMin, yMax, greenLo, greenHi, refLine, lineColor){
+  var c=setupCanvas(canvasId,380,220);
   if(!c) return;
-  const {ctx,w,h}=c;
-  ctx.clearRect(0,0,w,h);
-  const padL=38,padR=14,padT=22,padB=28,chartW=w-padL-padR,chartH=h-padT-padB;
+  var ctx=c.ctx, cssW=c.w, cssH=c.h;
+  ctx.clearRect(0,0,cssW,cssH);
+  if(!series||series.length<1) return;
 
-  // Helper: value→Y
-  function toY(v){ return padT+chartH*(1-(v-minV)/rangeV); }
+  var VB_W=420, VB_H=245;
+  ctx.save();
+  ctx.scale(cssW/VB_W, cssH/VB_H);
 
-  // L1: 健康分区背景色块（数据驱动，非固定百分比）
-  var gLo=greenLo!=null?greenLo:minV+rangeV*0.15;
-  var gHi=greenHi!=null?greenHi:minV+rangeV*0.55;
-  var greenTop=toY(gHi), greenBot=toY(gLo);
-  // 绿色健康区
-  ctx.fillStyle='rgba(199,232,220,0.48)';
-  ctx.fillRect(padL, greenTop, chartW, greenBot-greenTop);
-  // 上下亚健康区（珊瑚红淡色）
-  ctx.fillStyle='rgba(245,181,164,0.35)';
-  ctx.fillRect(padL, padT, chartW, greenTop-padT);
-  ctx.fillRect(padL, greenBot, chartW, (padT+chartH)-greenBot);
+  var plotL=34, plotR=404, plotT=20, plotB=200;
+  var plotW=plotR-plotL, plotH=plotB-plotT;
+  function toY(v){ return plotB-((v-yMin)/(yMax-yMin))*plotH; }
+  var n=series.length;
+  var xCenters=[];
+  if(n===1){ xCenters=[(plotL+plotR)/2]; }
+  else { for(var i=0;i<n;i++){ xCenters.push(plotL+22+(plotW-44)*i/(n-1)); } }
 
-  // L2: 横向网格线
-  ctx.strokeStyle='rgba(170,180,178,0.22)';ctx.lineWidth=0.5;ctx.setLineDash([3,4]);
-  for(var i=0;i<=4;i++){var gy=padT+(chartH/4)*i;ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(w-padR,gy);ctx.stroke();}
+  // L1 背景渐变
+  var bg=ctx.createLinearGradient(0,0,0,VB_H);
+  bg.addColorStop(0,'#F4FBF9'); bg.addColorStop(1,'#ffffff');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,VB_W,VB_H);
+
+  // L2 健康分区（绿带 + 上/下亚健康红带，由 greenLo/greenHi 推导）
+  var zones=[];
+  if(greenLo!=null&&greenHi!=null){
+    zones.push({from:greenHi,to:greenLo,color:'#C7E8DC',alpha:0.42});
+    if(greenHi<yMax) zones.push({from:yMax,to:greenHi,color:'#F5C8BD',alpha:0.40});
+    if(greenLo>yMin) zones.push({from:greenLo,to:yMin,color:'#F5C8BD',alpha:0.40});
+  }
+  zones.forEach(function(z){
+    ctx.globalAlpha=z.alpha; ctx.fillStyle=z.color;
+    var y1=toY(z.from), y2=toY(z.to);
+    ctx.fillRect(plotL,Math.min(y1,y2),plotW,Math.abs(y2-y1));
+  });
+  ctx.globalAlpha=1;
+
+  // L3 网格（淡虚线）
+  ctx.strokeStyle='rgba(170,170,170,0.18)'; ctx.lineWidth=0.6; ctx.setLineDash([3,4]);
+  for(var g=0;g<=6;g++){ var gy=toY(yMin+(yMax-yMin)/6*g); ctx.beginPath(); ctx.moveTo(plotL,gy); ctx.lineTo(plotR,gy); ctx.stroke(); }
   ctx.setLineDash([]);
 
-  // L3: Y轴刻度
-  ctx.fillStyle='#8A978F';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
-  for(var i=0;i<=4;i++){var tv=Math.round(maxV-((maxV-minV)/4)*i);ctx.fillText(String(tv)+(unit||''),padL-5,padT+(chartH/4)*i);}
+  // L4 Y 刻度（max / mid / min）
+  ctx.fillStyle='#8A978F'; ctx.font='12px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  [yMax, Math.round((yMax+yMin)/2), yMin].forEach(function(v){ ctx.fillText(''+v, plotL+3, toY(v)); });
 
-  // L4: Catmull-Rom → Bezier 平滑曲线
-  var n=series.length, step=chartW/Math.max(1,n-1);
-  var points=[];
-  for(var i=0;i<n;i++){points.push({x:padL+i*step, y:toY(series[i]), v:series[i], idx:i});}
-
-  var lineColor=color||'#5b9ac9';
-  ctx.strokeStyle=lineColor;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.lineJoin='round';
+  // L5 平滑折线（Catmull-Rom → Bezier）
+  var pts=[];
+  for(var p=0;p<n;p++){ pts.push({x:xCenters[p], y:toY(series[p])}); }
+  ctx.strokeStyle=lineColor; ctx.lineWidth=2.6; ctx.lineCap='round'; ctx.lineJoin='round';
   ctx.beginPath();
-  if(points.length>0) ctx.moveTo(points[0].x, points[0].y);
-  for(var i=0;i<points.length-1;i++){
-    var p0=points[i-1]||points[i], p1=points[i], p2=points[i+1], p3=points[i+2]||p2;
-    var cp1x=p1.x+(p2.x-p0.x)/6, cp1y=p1.y+(p2.y-p0.y)/6;
-    var cp2x=p2.x-(p3.x-p1.x)/6, cp2y=p2.y-(p3.y-p1.y)/6;
-    ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,p2.x,p2.y);
+  if(pts.length>0) ctx.moveTo(pts[0].x,pts[0].y);
+  for(var k=0;k<pts.length-1;k++){
+    var q0=pts[k-1]||pts[k], q1=pts[k], q2=pts[k+1], q3=pts[k+2]||q2;
+    var c1x=q1.x+(q2.x-q0.x)/6, c1y=q1.y+(q2.y-q0.y)/6;
+    var c2x=q2.x-(q3.x-q1.x)/6, c2y=q2.y-(q3.y-q1.y)/6;
+    ctx.bezierCurveTo(c1x,c1y,c2x,c2y,q2.x,q2.y);
   }
+  if(pts.length===1){ ctx.lineTo(pts[0].x,pts[0].y); }
   ctx.stroke();
 
-  // L5: 14天均值虚线
-  var avgV=series.reduce(function(a,b){return a+b;},0)/series.length;
-  var avgY=toY(avgV);
-  ctx.strokeStyle='#14443A';ctx.lineWidth=1.2;ctx.globalAlpha=0.72;ctx.setLineDash([5,4]);
-  ctx.beginPath();ctx.moveTo(padL,avgY);ctx.lineTo(w-padR,avgY);ctx.stroke();
-  ctx.globalAlpha=1.0;ctx.setLineDash([]);
-
-  // L6: 同龄人参考线
-  if(refLine!=null){
-    var refY=toY(refLine);
-    ctx.strokeStyle='#8A9BAA';ctx.lineWidth=1;ctx.globalAlpha=0.78;ctx.setLineDash([5,4]);
-    ctx.beginPath();ctx.moveTo(padL,refY);ctx.lineTo(w-padR,refY);ctx.stroke();
-    ctx.globalAlpha=1.0;ctx.setLineDash([]);
-  }
-
-  // L7: 数据点
-  points.forEach(function(p){
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=lineColor;ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);ctx.fill();
+  // 数据点（白圈 + 实心点），点多时自适应缩小
+  var sf=n>=20?0.55:(n>=14?0.75:1.0);
+  pts.forEach(function(pt){
+    var r=4.2*sf;
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(pt.x,pt.y,r+2*sf,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=lineColor; ctx.beginPath(); ctx.arc(pt.x,pt.y,r,0,Math.PI*2); ctx.fill();
   });
 
-  // L8: 当前值标注（最后一个点）
-  if(points.length>0){
-    var lp=points[points.length-1];
-    ctx.fillStyle='#1d2c4a';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
-    ctx.fillText((unit?lp.v+unit:lp.v),lp.x,lp.y-10);
+  // L6 实测均值线（品牌深绿虚线）
+  var mean=series.reduce(function(a,b){return a+b;},0)/n;
+  ctx.strokeStyle='#14443A'; ctx.lineWidth=1.4; ctx.setLineDash([5,4]); ctx.globalAlpha=0.78;
+  ctx.beginPath(); ctx.moveTo(plotL,toY(mean)); ctx.lineTo(plotR,toY(mean)); ctx.stroke();
+  ctx.globalAlpha=1; ctx.setLineDash([]);
+
+  // L7 同龄人参考线（冷灰蓝虚线）
+  if(refLine!=null && refLine>=yMin && refLine<=yMax){
+    ctx.strokeStyle='#8A9BAA'; ctx.lineWidth=1; ctx.setLineDash([5,4]); ctx.globalAlpha=0.85;
+    ctx.beginPath(); ctx.moveTo(plotL,toY(refLine)); ctx.lineTo(plotR,toY(refLine)); ctx.stroke();
+    ctx.globalAlpha=1; ctx.setLineDash([]);
   }
+
+  // L12 X 轴双行日期（均匀取约 7 个标签，含首尾，避免重叠）
+  var maxLabels=7, idxs=[];
+  if(n<=maxLabels){ for(var li=0;li<n;li++) idxs.push(li); }
+  else { for(var lj=0;lj<maxLabels;lj++){ var ix=Math.round(lj*(n-1)/(maxLabels-1)); if(idxs.indexOf(ix)<0) idxs.push(ix); } }
+  idxs.forEach(function(t){ ltTwoLineDate(ctx, dateLabels[t]||('D'+(t+1)), xCenters[t], plotB); });
+
+  ctx.restore();
 }
 // ═══════════════════════════════════════
 // 我的 Tab
@@ -1565,14 +1684,17 @@ let myState={
   },
   // 头像 emoji 候选池
   avatarOptions:['👤','😀','😎','🧑','👨','👩','👴','👵','🧓','🐱','🐶','🦊','🌸','🌟','💪'],
-  // 4 个弹层状态
+  // 弹层状态
   avatarPicker:{visible:false},
+  genderPicker:{visible:false},
+  birthdayPicker:{visible:false, years:[], months:[], days:[], selYear:2000, selMonth:1, selDay:1},
   editingNickname:false,
   nicknameDraft:'',
   phoneChange:{visible:false, step:1, currentCode:'', newPhone:'', newCode:'', countdown:0},
   accountClose:{visible:false, step:1}
 };
 let _aeCountdownTimer = null;
+myState._bdayScrollTimer = null;
 let appData = { user: null, devices: [] };
 
 function loadAppData(){
@@ -1779,11 +1901,14 @@ function renderMy(){
     h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">我的账户</span></div>`;
     // 大头像区
     h+=`<div class="ae-avatar-section" onclick="aeOpenAvatarPicker()"><div class="ae-avatar-big"><span class="ae-avatar-emoji-big">${ai.avatar}</span></div><span class="ae-avatar-edit-tag">点击修改头像</span></div>`;
-    // 基本资料
-    h+=`<div class="ae-group-title">基本资料</div>`;
+    // 昵称（紧接头像下方，最重要信息优先）
+    h+=`<div class="ae-group-title">昵称</div>`;
     h+=`<div class="ae-card">`;
     h+=`  <div class="ae-row" onclick="aeOpenNicknameEdit()"><span class="ae-row-label">昵称</span><span class="ae-row-value">${ai.nickname}</span><span class="ae-row-arrow">›</span></div>`;
-    h+=`  <div class="ae-divider"></div>`;
+    h+=`</div>`;
+    // 基本资料：性别 + 生日
+    h+=`<div class="ae-group-title">基本资料</div>`;
+    h+=`<div class="ae-card">`;
     h+=`  <div class="ae-row" onclick="aeOpenGenderPicker()"><span class="ae-row-label">性别</span><span class="ae-row-value ${ai.gender==='未设置'?'ae-row-value-empty':''}">${ai.gender}</span><span class="ae-row-arrow">›</span></div>`;
     h+=`  <div class="ae-divider"></div>`;
     h+=`  <div class="ae-row" onclick="aeOpenBirthdayPicker()"><span class="ae-row-label">生日</span><span class="ae-row-value ${!ai.birthday?'ae-row-value-empty':''}">${ai.birthday||'未设置'}</span><span class="ae-row-arrow">›</span></div>`;
@@ -1814,6 +1939,33 @@ function renderMy(){
       h+=`<div class="ae-avatar-modal" onclick="event.stopPropagation()">`;
       h+=`  <div class="ae-modal-head"><span class="ae-modal-cancel" onclick="aeCloseAvatarPicker()">取消</span><span class="ae-modal-title">选择头像</span><span class="ae-modal-placeholder"></span></div>`;
       h+=`  <div class="ae-avatar-grid">${s.avatarOptions.map(a=>`<div class="ae-avatar-item ${s.accountInfo.avatar===a?'selected':''}" onclick="aeSelectAvatar('${a}')"><span class="ae-avatar-grid-emoji">${a}</span></div>`).join('')}</div>`;
+      h+=`</div>`;
+    }
+    // 性别选择（男/女按钮，无需输入）
+    if(s.genderPicker.visible){
+      const g=s.accountInfo.gender;
+      h+=`<div class="ae-modal-mask" onclick="aeCloseGenderPicker()"></div>`;
+      h+=`<div class="ae-gender-modal" onclick="event.stopPropagation()">`;
+      h+=`  <div class="ae-gender-title">选择性别</div>`;
+      h+=`  <div class="ae-gender-options">`;
+      h+=`    <div class="ae-gender-opt ${g==='男'?'selected':''}" onclick="aeSelectGender('男')"><span class="ae-gender-opt-icon">👨</span><span class="ae-gender-opt-label">男</span></div>`;
+      h+=`    <div class="ae-gender-opt ${g==='女'?'selected':''}" onclick="aeSelectGender('女')"><span class="ae-gender-opt-icon">👩</span><span class="ae-gender-opt-label">女</span></div>`;
+      h+=`  </div>`;
+      h+=`  <span class="ae-gender-cancel" onclick="aeCloseGenderPicker()">取消</span>`;
+      h+=`</div>`;
+    }
+    // 生日滚轮选择（年/月/日三列滚动）
+    if(s.birthdayPicker.visible){
+      var by=myState.birthdayPicker;
+      h+=`<div class="ae-modal-mask" onclick="aeCloseBirthdayPicker()"></div>`;
+      h+=`<div class="ae-birthday-modal" onclick="event.stopPropagation()">`;
+      h+=`  <div class="ae-bday-head"><span class="ae-bday-cancel" onclick="aeCloseBirthdayPicker()">取消</span><span class="ae-bday-title">选择生日</span><span class="ae-bday-confirm" onclick="aeConfirmBirthday()">确定</span></div>`;
+      h+=`  <div class="ae-bday-wheels">`;
+      h+=`    <div class="ae-bday-wheel" id="aeBdayYear" onscroll="aeOnBdayScroll('year')">${by.years.map(y=>`<div class="ae-bday-item ${y===by.selYear?'selected':''}" onclick="aeBdayTap('year',${y})">${y}年</div>`).join('')}</div>`;
+      h+=`    <div class="ae-bday-wheel" id="aeBdayMonth" onscroll="aeOnBdayScroll('month')">${by.months.map(m=>`<div class="ae-bday-item ${m===by.selMonth?'selected':''}" onclick="aeBdayTap('month',${m})">${m}月</div>`).join('')}</div>`;
+      h+=`    <div class="ae-bday-wheel" id="aeBdayDay" onscroll="aeOnBdayScroll('day')">${by.days.map(d=>`<div class="ae-bday-item ${d===by.selDay?'selected':''}" onclick="aeBdayTap('day',${d})">${d}日</div>`).join('')}</div>`;
+      h+=`    <div class="ae-bday-overlay"></div>`;
+      h+=`  </div>`;
       h+=`</div>`;
     }
     // 昵称编辑
@@ -1935,25 +2087,93 @@ function aeSaveNickname(){
   renderMy();
   aeToast('昵称已更新');
 }
+// ── 性别选择：男/女按钮直接点击 ──
 function aeOpenGenderPicker(){
-  // 简易 ActionSheet：用 prompt 替代
-  const choice = window.prompt('选择性别：输入数字\n1=男  2=女  3=不便透露', '');
-  if(!choice) return;
-  const map = {'1':'男','2':'女','3':'不便透露'};
-  if(map[choice]){
-    myState.accountInfo.gender = map[choice];
-    renderMy();
-    aeToast('已保存');
-  }
+  myState.genderPicker.visible=true; renderMy();
 }
+function aeCloseGenderPicker(){
+  myState.genderPicker.visible=false; renderMy();
+}
+function aeSelectGender(g){
+  myState.accountInfo.gender=g;
+  myState.genderPicker.visible=false;
+  renderMy(); aeToast('已设为 '+g);
+}
+
+// ── 生日滚轮选择：年/月/日三列滚动 ──
 function aeOpenBirthdayPicker(){
-  const cur = myState.accountInfo.birthday || '1980-01-01';
-  const v = window.prompt('请输入生日（YYYY-MM-DD）', cur);
-  if(!v) return;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ aeToast('格式错误，应为 YYYY-MM-DD'); return; }
-  myState.accountInfo.birthday = v;
+  var cur=myState.accountInfo.birthday||'2000-01-01';
+  var parts=cur.split('-');
+  var sy=parseInt(parts[0])||2000, sm=parseInt(parts[1])||1, sd=parseInt(parts[2])||1;
+  var now=new Date(), thisYear=now.getFullYear();
+  var years=[],i;
+  for(i=thisYear;i>=1920;i--) years.push(i);
+  var months=[]; for(i=1;i<=12;i++) months.push(i);
+  var daysInM=new Date(sy,sm,0).getDate();
+  var days=[]; for(i=1;i<=daysInM;i++) days.push(i);
+  if(sd>daysInM) sd=daysInM;
+  myState.birthdayPicker={visible:true, years:years, months:months, days:days, selYear:sy, selMonth:sm, selDay:sd};
   renderMy();
-  aeToast('生日已保存');
+  setTimeout(function(){ aeInitBdayWheels(); }, 100);
+}
+function aeCloseBirthdayPicker(){
+  myState.birthdayPicker.visible=false; renderMy();
+}
+function aeConfirmBirthday(){
+  var bp=myState.birthdayPicker;
+  var y=bp.selYear, m=String(bp.selMonth).padStart(2,'0'), d=String(bp.selDay).padStart(2,'0');
+  myState.accountInfo.birthday=y+'-'+m+'-'+d;
+  myState.birthdayPicker.visible=false;
+  renderMy(); aeToast('生日已保存');
+}
+function aeInitBdayWheels(){
+  var bp=myState.birthdayPicker;
+  ['year','month','day'].forEach(function(col){
+    var el=document.getElementById(col==='year'?'aeBdayYear':col==='month'?'aeBdayMonth':'aeBdayDay');
+    if(!el) return;
+    var selVal=col==='year'?bp.selYear:col==='month'?bp.selMonth:bp.selDay;
+    var items=el.querySelectorAll('.ae-bday-item');
+    var found=false;
+    items.forEach(function(item){ if(item.classList.contains('selected')&&!found){ item.scrollIntoView({block:'center'}); found=true; } });
+  });
+}
+function aeOnBdayScroll(col){
+  clearTimeout(myState._bdayScrollTimer);
+  myState._bdayScrollTimer=setTimeout(function(){
+    var el=document.getElementById(col==='year'?'aeBdayYear':col==='month'?'aeBdayMonth':'aeBdayDay');
+    if(!el) return;
+    var items=el.querySelectorAll('.ae-bday-item');
+    var cy=el.getBoundingClientRect().top+el.getBoundingClientRect().height/2;
+    var best=null,bestDist=1e9;
+    items.forEach(function(item){
+      var ir=item.getBoundingClientRect(), ic=ir.top+ir.height/2;
+      var d=Math.abs(cy-ic);
+      if(d<bestDist){ bestDist=d; best=item; }
+    });
+    if(best){
+      items.forEach(function(it){ it.classList.remove('selected'); });
+      best.classList.add('selected');
+      var bp=myState.birthdayPicker;
+      var val=parseInt(best.textContent);
+      if(col==='year') bp.selYear=val;
+      else if(col==='month'){ bp.selMonth=val; aeRebuildBdayDays(); }
+      else bp.selDay=val;
+    }
+  }, 60);
+}
+function aeBdayTap(col,val){
+  var bp=myState.birthdayPicker;
+  if(col==='year') bp.selYear=val;
+  else if(col==='month'){ bp.selMonth=val; aeRebuildBdayDays(); }
+  else bp.selDay=val;
+  renderMy();
+  setTimeout(function(){ aeInitBdayWheels(); }, 50);
+}
+function aeRebuildBdayDays(){
+  var bp=myState.birthdayPicker;
+  var dim=new Date(bp.selYear,bp.selMonth,0).getDate();
+  bp.days=[]; for(var i=1;i<=dim;i++) bp.days.push(i);
+  if(bp.selDay>dim) bp.selDay=dim;
 }
 function aeOpenWechatBind(){
   if(myState.accountInfo.wechatBound){
