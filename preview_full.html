@@ -749,6 +749,25 @@ canvas.hc-canvas{width:100%;height:180px;background:#f8fcfb;border:1px solid #e6
 .dc2-sn{font-size:11px;color:#7a8c84;display:block;margin-top:2px}
 .dc2-user{font-size:11px;color:#6a8b82;display:block;margin-top:1px}
 .dc2-arrow{font-size:18px;color:#9aa8a2}
+/* === 设备卡加强：改名图标 + 被监测人行 === */
+.dc2-edit-name{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:rgba(31,138,111,0.08);color:#1f8a6f;font-size:13px;margin-left:6px;cursor:pointer;flex-shrink:0;border:none}
+.dc2-edit-name:hover{background:rgba(31,138,111,0.16)}
+.dc2-person{font-size:12px;color:#5d7a73;display:block;margin-top:2px}
+.dc2-person.empty{color:#a0b5ae;font-style:italic}
+/* 改名弹窗 */
+.dn-modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1200;display:flex;align-items:center;justify-content:center}
+.dn-modal.hidden{display:none}
+.dn-mask{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45)}
+.dn-content{position:relative;background:#fff;border-radius:14px;padding:18px;width:84%;max-width:320px;box-shadow:0 8px 28px rgba(0,0,0,0.18)}
+.dn-title{font-size:16px;font-weight:700;color:#14443a;margin-bottom:6px}
+.dn-sub{font-size:12px;color:#7a8c84;margin-bottom:12px}
+.dn-input{width:100%;height:42px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa;box-sizing:border-box;margin-bottom:6px}
+.dn-input:focus{border-color:#1f8a6f}
+.dn-counter{font-size:11px;color:#a0b5ae;text-align:right;margin-bottom:12px}
+.dn-btn-row{display:flex;gap:8px}
+.dn-btn{flex:1;height:40px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.dn-btn-cancel{background:#f0f5f3;color:#6a8b82}
+.dn-btn-save{background:#1f8a6f;color:#fff}
 .my-devices-add{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#fff;border:1px dashed #c5d4ce;border-radius:9px;color:#1f8a6f;font-size:14px;cursor:pointer}
 
 /* ===== 通用菜单 ===== */
@@ -1112,6 +1131,7 @@ function pickDate(dt){
   // 统一入口：日历弹窗选日期 + 星期条点击日期
   calendarSelected = dt;
   hideCalendar();
+  if(typeof loadDailyReport==='function') loadDailyReport(dt);
   renderDaily();
 }
 
@@ -1172,7 +1192,9 @@ let dailyState = {
 };
 
 // ── 真实数据加载 ──
-let dailyData = null;  // API返回的日报数据
+let dailyData = null;       // API返回的日报数据
+let dailyDataDate = null;   // 当前数据对应的日期
+let availableDates = {};    // {dateStr: true} — 哪些日期有真实报告
 
 function loadDailyReport(dateStr){
   var devId = myState.currentDeviceId;
@@ -1181,7 +1203,26 @@ function loadDailyReport(dateStr){
   HeartCareAPI.dailyReport(devId, d).then(function(r){
     if(r && !r.error && r.heart){
       dailyData = r;
+      dailyDataDate = d;
+      availableDates[d] = true;
       renderDaily();
+    } else {
+      // 该日期无报告：清空缓存，触发 mock 提示
+      if(dailyDataDate === d){ dailyData = null; dailyDataDate = null; }
+      renderDaily();
+    }
+  }).catch(function(){
+    if(dailyDataDate === d){ dailyData = null; dailyDataDate = null; }
+    renderDaily();
+  });
+}
+
+function loadAvailableDates(){
+  var devId = myState.currentDeviceId;
+  if(!devId || !window.HeartCareAPI) return;
+  HeartCareAPI.trend(devId, 'sleep_score', 90).then(function(data){
+    if(data && data.length){
+      data.forEach(function(d){ availableDates[d.date] = true; });
     }
   }).catch(function(){});
 }
@@ -1258,7 +1299,9 @@ function renderDaily(){
   h+=`</div></div>`;
 
   // 顶部状态
-  h+=`<div class="top-status"><span>📶 健康监测仪 X2 · 已正常在线 | 昨夜监测数据完整</span><span class="status-link">⚙️ 设备详情</span></div>`;
+  var isMock = !R; // R为null表示无真实数据，显示mock
+  var dateLabel = `${m}月${d}日`;
+  h+=`<div class="top-status"><span>📶 健康监测仪 X2 · 已正常在线 | ${isMock?'<span style="background:#fef0c0;color:#8c6a10;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">📋 示例数据</span> '+dateLabel+' 暂无真实报告':'昨夜监测数据完整'}</span><span class="status-link">⚙️ 设备详情</span></div>`;
 
   // ★ 心脏健康总览
   h+=`<div class="card overview-card heart-overview-card">`;
@@ -1879,8 +1922,51 @@ let myState={
   editingNickname:false,
   nicknameDraft:'',
   phoneChange:{visible:false, step:1, currentCode:'', newPhone:'', newCode:'', countdown:0},
-  accountClose:{visible:false, step:1}
+  accountClose:{visible:false, step:1},
+  // 改名 + 被监测人（按 device_id 持久化在 localStorage）
+  deviceNames:{},       // { device_id: '主卧床垫' }
+  devicePersons:{},     // { device_id: {nickname,gender,birthYear,heightCm,weightKg} }
+  deviceNameEditor:{visible:false, deviceId:'', draft:''}
 };
+// 从 localStorage 恢复设备改名 / 被监测人映射
+(function _loadDeviceCustomization(){
+  try{
+    const n = localStorage.getItem('hc_device_names');
+    if(n) myState.deviceNames = JSON.parse(n) || {};
+    const p = localStorage.getItem('hc_device_persons');
+    if(p) myState.devicePersons = JSON.parse(p) || {};
+  }catch(e){}
+})();
+function _persistDeviceNames(){
+  try{ localStorage.setItem('hc_device_names', JSON.stringify(myState.deviceNames||{})); }catch(e){}
+}
+function _persistDevicePersons(){
+  try{ localStorage.setItem('hc_device_persons', JSON.stringify(myState.devicePersons||{})); }catch(e){}
+}
+// 取设备显示名（用户改过 > 后端 device_name > device_id）
+function getDeviceDisplayName(d){
+  if(!d) return '';
+  const id = d.device_id;
+  return (myState.deviceNames && myState.deviceNames[id]) || d.device_name || id || '';
+}
+// 取设备绑定的被监测人（用户编辑过 > 用户账户 profile 兜底）
+function getDevicePerson(deviceId){
+  if(deviceId && myState.devicePersons && myState.devicePersons[deviceId]){
+    return myState.devicePersons[deviceId];
+  }
+  return myState.profile || {};
+}
+// 渲染设备卡上的「被监测人 · X 岁」短文本
+function fmtDevicePersonLine(deviceId){
+  const p = getDevicePerson(deviceId);
+  const has = p && (p.nickname || p.birthYear);
+  if(!has) return '<span class="dc2-person empty">👤 被监测人 未设置</span>';
+  const cy = new Date().getFullYear();
+  const age = p.birthYear ? (cy - p.birthYear) : null;
+  const nm = p.nickname || '被监测人';
+  const ageTxt = age!=null ? (' · '+age+'岁') : '';
+  return '<span class="dc2-person">👤 '+nm+ageTxt+'</span>';
+}
 let _aeCountdownTimer = null;
 myState._bdayScrollTimer = null;
 let appData = { user: null, devices: [] };
@@ -1923,13 +2009,14 @@ function renderMy(){
       h+=`<div class="device-card-v2" style="justify-content:center;color:#a0b5ae;cursor:default"><span>暂无绑定设备</span></div>`;
     } else {
       devs.forEach(function(d,i){
-        var name = d.device_name || d.device_id || '';
+        var name = getDeviceDisplayName(d) || ('设备 '+d.device_id);
         var online = d.last_seen ? (Date.now() - new Date(d.last_seen).getTime() < 300000) : false;
         var isCurrent = d.device_id === curDevId;
         h+=`<div class="device-card-v2" onclick="switchToDevice('${d.device_id}',${i})" style="${isCurrent?'border:2px solid #1F8A6F;background:#f0faf6':''}">`;
         h+=`<div class="dc2-icon"><span class="dc2-icon-emoji">🛏</span></div>`;
-        h+=`<div class="dc2-body"><div class="dc2-name-row"><span class="dc2-name">${name||'设备 '+d.device_id}</span><span class="dc2-online ${online?'online':'offline'}">${online?'●':'○'}</span></div>`;
+        h+=`<div class="dc2-body"><div class="dc2-name-row"><span class="dc2-name">${name}</span><span class="dc2-online ${online?'online':'offline'}">${online?'●':'○'}</span><button class="dc2-edit-name" title="改名" onclick="event.stopPropagation();openDeviceNameEditor('${d.device_id}')">✎</button></div>`;
         h+=`<span class="dc2-sn">${d.device_id||''}</span>`;
+        h+=fmtDevicePersonLine(d.device_id);
         h+=`<span class="dc2-user">${isCurrent?'🟢 当前显示':(d.is_primary?'⭐ 主设备':'')}</span></div>`;
         h+=`<span class="dc2-arrow" onclick="event.stopPropagation();myState.selectedDeviceIdx=${i};myNavigate('deviceDetail')">›</span>`;
         h+=`</div>`;
@@ -1988,8 +2075,13 @@ function renderMy(){
     h+=`<div class="sim-footnote" style="margin-top:10px">* ICCID、运营商、套餐流量与有效期由物联卡平台管理，本应用暂未接入。如需查询或充值，请用微信扫描设备背部二维码操作。</div></div>`;
   }
   else if(s.currentView==='user'){
+    // 按设备读取被监测人；未设置则回退到账户 profile（首次填表更省心）
+    const _editDid = _currentEditDeviceId();
+    const _editDev = (appData.devices||[]).find(function(x){return x.device_id===_editDid;}) || {};
+    const _editDevName = getDeviceDisplayName(_editDev) || (_editDid?('设备 '+_editDid):'');
     h+=`<div class="subpage-header"><button class="back-btn" onclick="myGoBack()">‹</button><span class="subpage-title">被监测人信息</span></div>`;
-    const p = s.profile;
+    if(_editDevName){ h+=`<div style="font-size:12px;color:#7a8c84;padding:0 4px 6px">设备：${_editDevName}</div>`; }
+    const p = getDevicePerson(_editDid);
     if(!p){
       h+=`<div class="card"><div style="padding:24px;text-align:center;color:#8a9baa">加载中…</div></div>`;
     } else {
@@ -2013,7 +2105,7 @@ function renderMy(){
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">身高 (cm)</label><input id="pfHeight" type="number" style="${inp}" value="${p.heightCm||''}" placeholder="如 170"/></div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">体重 (kg)</label><input id="pfWeight" type="number" style="${inp}" value="${p.weightKg||''}" placeholder="如 65"/></div>`;
         h+=`</div>`;
-        h+=`<div style="display:flex;gap:8px"><button onclick="myState.profileEdit=false;renderMy()" style="flex:1;height:44px;border:1.5px solid #dde5e1;border-radius:10px;background:#fff;color:#6a8b82;font-size:15px;font-weight:700;cursor:pointer">取消</button><button onclick="doSaveProfile()" style="flex:2;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">保存</button></div>`;
+        h+=`<div style="display:flex;gap:8px"><button onclick="myState.profileEdit=false;renderMy()" style="flex:1;height:44px;border:1.5px solid #dde5e1;border-radius:10px;background:#fff;color:#6a8b82;font-size:15px;font-weight:700;cursor:pointer">取消</button><button onclick="doSaveDevicePerson()" style="flex:2;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">保存</button></div>`;
       }
     }
   }
@@ -2637,6 +2729,7 @@ function switchToDevice(deviceId, index){
   // 重载所有数据
   loadDailyReport();
   loadCardiacRisks();
+  loadAvailableDates();
   // 重渲染
   renderDaily();
   renderMy();
@@ -2724,6 +2817,65 @@ function doSaveProfile(){
   }).catch(function(){ alert('网络错误'); });
 }
 
+// ════════════════════════════════════════════
+// 设备改名（按 device_id 持久化到 localStorage）
+// ════════════════════════════════════════════
+function openDeviceNameEditor(deviceId){
+  if(!deviceId) return;
+  var dev = (appData.devices||[]).find(function(x){return x.device_id===deviceId;}) || {device_id:deviceId};
+  var current = getDeviceDisplayName(dev);
+  myState.deviceNameEditor = { visible:true, deviceId:deviceId, draft:current };
+  var modal = document.getElementById('dnModal');
+  if(!modal) return;
+  document.getElementById('dnSubText').textContent = '设备编号 '+deviceId;
+  var input = document.getElementById('dnInput');
+  input.value = current;
+  document.getElementById('dnCounter').textContent = (current||'').length;
+  modal.classList.remove('hidden');
+  setTimeout(function(){ try{input.focus(); input.select();}catch(e){} },50);
+}
+function closeDeviceNameEditor(){
+  myState.deviceNameEditor = {visible:false, deviceId:'', draft:''};
+  var modal = document.getElementById('dnModal');
+  if(modal) modal.classList.add('hidden');
+}
+function saveDeviceName(){
+  var st = myState.deviceNameEditor || {};
+  var did = st.deviceId;
+  if(!did){ closeDeviceNameEditor(); return; }
+  var val = (document.getElementById('dnInput').value||'').trim();
+  if(!val){ alert('设备名称不能为空'); return; }
+  if(val.length>12){ alert('设备名称最多 12 个字'); return; }
+  myState.deviceNames[did] = val;
+  _persistDeviceNames();
+  closeDeviceNameEditor();
+  if(typeof renderMy==='function') renderMy();
+}
+
+// ════════════════════════════════════════════
+// 被监测人（按 device_id 持久化；首次回退到账户 profile）
+// ════════════════════════════════════════════
+function _currentEditDeviceId(){
+  // 从「我的设备」点进来时 selectedDeviceIdx 已设；否则用 currentDeviceId
+  var sel = (appData.devices||[])[myState.selectedDeviceIdx];
+  return (sel && sel.device_id) || myState.currentDeviceId || '';
+}
+function doSaveDevicePerson(){
+  var nickname=(document.getElementById('pfNickname').value||'').trim();
+  var gender=document.getElementById('pfGender').value;
+  var birthYear=parseInt(document.getElementById('pfBirthYear').value,10);
+  var heightCm=parseInt(document.getElementById('pfHeight').value,10);
+  var weightKg=parseFloat(document.getElementById('pfWeight').value);
+  if(!birthYear||!heightCm||!weightKg){ alert('请填写出生年份、身高、体重'); return; }
+  var did = _currentEditDeviceId();
+  if(!did){ alert('未选中设备，无法保存'); return; }
+  myState.devicePersons[did] = {nickname:nickname,gender:gender,birthYear:birthYear,heightCm:heightCm,weightKg:weightKg};
+  _persistDevicePersons();
+  myState.profileEdit = false;
+  if(typeof renderMy==='function') renderMy();
+  alert('已保存');
+}
+
 function getCardiacRisks(){
   return [
     {id:'hypertensive',status:'yellow',level:'warning',icon:'🟡',title:'高血压风险',summary:'静息心率接近上限 + HRV 偏低，提示长期血压负荷',diseaseTags:['原发性高血压','继发性高血压','高血压性心脏病','左心室肥厚'],assessment:'夜间静息心率 69bpm 接近正常上限（70bpm 边缘），HRV (SDNN) 33ms 显著低于健康参考 >50ms——两项信号组合提示交感神经长期处于优势状态，是高血压性心脏病的典型早期表现。',dataPoints:[{label:'静息心率',value:'69bpm',ref:'警戒 >70 持续',status:'border'},{label:'HRV (SDNN)',value:'33ms',ref:'正常 >50ms',status:'low'},{label:'夜间心率回落',value:'20%',ref:'正常 ≥10%',status:'ok'}],suggestions:['减盐至每日 <5g（约一啤酒瓶盖）','规律有氧运动：快走 30 分钟/天，每周 5 天','控制体重 BMI <24，限酒戒烟'],linkText:'查看心率与 HRV 长期趋势'},
@@ -2767,5 +2919,19 @@ if(window.HeartCareAPI){
 }
 renderDaily();
 </script>
+<!-- 设备改名弹窗 -->
+<div class="dn-modal hidden" id="dnModal" onclick="if(event.target.classList.contains('dn-mask')){closeDeviceNameEditor();}">
+  <div class="dn-mask"></div>
+  <div class="dn-content">
+    <div class="dn-title">修改设备名称</div>
+    <div class="dn-sub" id="dnSubText">设备编号 --</div>
+    <input class="dn-input" id="dnInput" type="text" maxlength="12" placeholder="给设备起个好记的名字" oninput="document.getElementById('dnCounter').textContent=this.value.length"/>
+    <div class="dn-counter"><span id="dnCounter">0</span>/12</div>
+    <div class="dn-btn-row">
+      <button class="dn-btn dn-btn-cancel" onclick="closeDeviceNameEditor()">取消</button>
+      <button class="dn-btn dn-btn-save" onclick="saveDeviceName()">保存</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
