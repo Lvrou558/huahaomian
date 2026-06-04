@@ -47,11 +47,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hira
 .week-calendar-btn:hover{background:rgba(255,255,255,0.18)}
 .week-days{display:flex;justify-content:space-between;align-items:center}
 .day-item{display:flex;flex-direction:column;align-items:center;cursor:pointer}
-.day-circle{width:40px;height:40px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);gap:1px}
-.day-circle.active{border-color:#ff8a65;background:conic-gradient(from 0deg,#ff8a65 0deg,rgba(255,138,101,0.3) 0deg,rgba(255,255,255,0.1) 360deg)}
+.day-circle{width:40px;height:40px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);gap:1px;transition:background 0.15s,border-color 0.15s}
+.day-circle.has-data{background:rgba(31,138,111,0.25);border-color:rgba(31,138,111,0.5)}
+.day-circle.today{border:1.5px solid #ff8a65}
+.day-circle.selected{background:#1f8a6f;border-color:#1f8a6f}
+.day-circle.future{opacity:0.4;cursor:default}
 .day-text{font-size:14px;color:#8a9baa;line-height:1}
 .day-num{font-size:14px;color:#b5c4d0;line-height:1;font-weight:600}
-.day-circle.active .day-text,.day-circle.active .day-num{color:#fff}
+.day-circle.has-data .day-text,.day-circle.has-data .day-num{color:#fff}
+.day-circle.today .day-text,.day-circle.today .day-num{color:#fff;font-weight:700}
+.day-circle.selected .day-text,.day-circle.selected .day-num{color:#fff;font-weight:700}
 
 /* ===== 日历弹窗 ===== */
 .calendar-modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;display:flex;align-items:center;justify-content:center}
@@ -497,6 +502,155 @@ canvas.hc-canvas{width:100%;height:180px;background:#f8fcfb;border:1px solid #e6
 .hc-summary{font-size:12px;color:#577970;line-height:1.6;padding:6px;background:#f9fdfb;border-radius:5px}
 .hc-tip{font-size:11px;color:#1f8a6f;margin-bottom:4px;text-align:center}
 
+/* ===== 长期页：全局提示 + Hero ===== */
+.global-tip-card{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f0faf6;border:1px solid #d4ece2;border-radius:8px;margin-bottom:12px;font-size:11px;color:#4a7a6c}
+.global-tip-card .tip-icon{font-size:14px}
+.lt-hero-v2{background:linear-gradient(135deg,#1a3a32 0%,#255a48 100%);border-radius:16px;padding:24px 20px;text-align:center;margin-bottom:16px;color:#fff}
+.lt-hero-v2-title{font-size:14px;font-weight:600;opacity:0.85;margin-bottom:4px}
+.lt-hero-v2-streak{display:flex;align-items:baseline;justify-content:center;gap:4px;margin-bottom:6px}
+.lt-hero-v2-num{font-size:48px;font-weight:800;line-height:1}
+.lt-hero-v2-unit{font-size:16px;font-weight:600;opacity:0.75}
+.lt-hero-v2-sub{font-size:12px;opacity:0.7;margin-bottom:14px}
+.lt-hero-v2-chips{display:flex;justify-content:center;gap:10px}
+.lt-hero-v2-chip{background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px;border:1px solid rgba(255,255,255,0.1)}
+.lt-hero-v2-chip-icon{font-size:18px;line-height:1}
+.lt-hero-v2-chip-label{font-size:10px;opacity:0.7;font-weight:500}
+.lt-hero-v2-chip-num{font-size:22px;font-weight:800;line-height:1}
+.lt-hero-v2-chip-unit{font-size:10px;opacity:0.65}
+
+/* ===== 长期页：模块卡片 ===== */
+.module-card{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.module-header{display:flex;align-items:center;padding:14px 14px;gap:12px;cursor:pointer}
+.module-header:hover{background:#f9fdfb}
+.module-icon-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.module-icon-circle.heart{background:linear-gradient(135deg,#ffe8e5,#ffe0dc)}
+.module-icon-circle.breath{background:linear-gradient(135deg,#e0f0ff,#d8e8f8)}
+.module-icon-circle.sleep{background:linear-gradient(135deg,#e6efe8,#d8e8dc)}
+.module-icon-circle.sound{background:linear-gradient(135deg,#f3e8f8,#e8d8f4)}
+.module-info{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.module-title-row{display:flex;align-items:center;gap:8px}
+.module-title{font-size:15px;font-weight:700;color:#14443a}
+.module-score-pill{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
+.module-score-pill.good,.module-score-pill.excellent{background:#e7f7ee;color:#0f6e56}
+.module-score-pill.warn{background:#fbf3dc;color:#8c6c12}
+.module-focus{font-size:11px;color:#6a8b82;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.module-right{display:flex;align-items:center}
+.module-arrow-new{font-size:20px;color:#9aa8a2;transition:transform .2s}
+.module-card.expanded .module-arrow-new{transform:rotate(90deg)}
+.module-body{padding:0 14px 14px}
+
+/* ===== 长期页：心脏年龄卡 ===== */
+.heart-age-card{background:linear-gradient(135deg,#f7f9fc,#f0f4fa);border:1px solid #e0e6f0;border-radius:12px;padding:16px;margin-bottom:12px}
+.ha-head{margin-bottom:12px}
+.ha-title-row{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+.ha-leaf{font-size:18px}
+.ha-label{font-size:14px;font-weight:700;color:#14443a}
+.ha-age{font-size:36px;font-weight:800;color:#14443a;line-height:1}
+.ha-unit{font-size:13px;color:#6a8b82}
+.ha-actual{font-size:11px;color:#8a978f}
+.ha-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:#e7f7ee;color:#0f6e56}
+.ha-badge.warn{background:#fdecde;color:#b86518}
+.ha-metrics{display:flex;gap:24px}
+.ha-metric{flex:1}
+.ha-mname{font-size:11px;color:#6a8b82;margin-bottom:4px}
+.ha-mvalue-row{display:flex;align-items:baseline;gap:4px}
+.ha-mnum{font-size:20px;font-weight:700;color:#14443a}
+.ha-munit{font-size:11px;color:#8a978f}
+.ha-mdelta{font-size:11px;font-weight:600;padding:1px 6px;border-radius:999px}
+.ha-mdelta.up{background:#e7f7ee;color:#0f6e56}
+.ha-mdelta.down{background:#e7f7ee;color:#0f6e56}
+
+/* ===== 长期页：图表卡片 ===== */
+.hc-card{background:#fff;border:1px solid #eef4f1;border-radius:12px;padding:14px;margin-bottom:10px}
+.hc-card.focused{border-color:#1F8A6F;box-shadow:0 0 0 2px rgba(31,138,111,0.1)}
+.hc-head{margin-bottom:8px}
+.hc-title-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.hc-title{font-size:14px;font-weight:700;color:#14443a}
+.hc-healthy{font-size:11px;padding:2px 8px;border-radius:999px;background:#e7f7ee;color:#0f6e56;font-weight:600}
+.hc-healthy-warn{background:#fdecde;color:#b86518}
+
+/* ===== 长期页：KPI条 + 洞察块 ===== */
+.kpi-strip{display:flex;justify-content:space-around;padding:8px 0;margin-top:4px;border-top:1px solid #f0f6f3}
+.kpi-item{text-align:center}
+.kpi-label{font-size:10px;color:#8a978f;display:block}
+.kpi-value{font-size:16px;font-weight:700;color:#14443a;margin-top:2px}
+.insight-block{margin-top:10px;padding:10px 12px;background:#f9fdfb;border-radius:8px;border:1px dashed #d4ece2}
+.insight-line{font-size:11px;color:#4a6a60;line-height:1.7}
+.insight-line.tip{color:#1f8a6f;margin-top:4px}
+.insight-source{margin-top:4px;font-size:10px;color:#8a978f}
+.weekly-summary-card{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#f0faf6,#e8f5f0);border-radius:12px;padding:16px;margin-top:4px}
+.ws-icon{font-size:28px}
+.ws-text{flex:1}
+.ws-title{font-size:14px;font-weight:700;color:#14443a;display:block}
+.ws-sub{font-size:11px;color:#4a6a60;display:block;margin-top:2px}
+.ws-score{text-align:center}
+.ws-score-line{display:flex;align-items:baseline;justify-content:center;gap:2px}
+.ws-score-num{font-size:28px;font-weight:800;color:#1F8A6F}
+.ws-score-unit{font-size:12px;color:#6a8b82}
+.ws-score-label{font-size:10px;color:#8a978f}
+.lt-stats-row{display:flex;gap:8px;margin-bottom:12px}
+.lt-stat-card{flex:1;background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.03)}
+.lt-stat-num{font-size:20px;font-weight:800;color:#14443a;line-height:1}
+.lt-stat-label{font-size:10px;color:#8a978f;margin:4px 0 2px}
+.lt-stat-delta{font-size:11px;font-weight:600}
+.lt-stat-delta.up{color:#0f6e56}
+.lt-stat-delta.down{color:#b86518}
+.lt-stat-delta.good{color:#0f6e56}
+.lt-story-card{background:#fff;border:1px solid #eef4f1;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.lt-story-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lt-story-icon{font-size:18px}
+.lt-story-title{font-size:13px;font-weight:700;color:#14443a;flex:1}
+.lt-story-badge{font-size:10px;padding:2px 8px;border-radius:999px;background:#e7f7ee;color:#0f6e56;font-weight:600}
+.lt-story-chain{font-size:11px;color:#6a8b82;margin-bottom:4px}
+.lt-story-arrow{margin:0 4px}
+.lt-story-delta{font-weight:600;color:#14443a;margin-left:6px}
+.lt-story-action{font-size:11px;color:#1f8a6f;margin-bottom:6px}
+.lt-story-progress{height:4px;background:#eef4f1;border-radius:2px;overflow:hidden}
+.lt-story-progress-fill{height:100%;background:#1f8a6f;border-radius:2px}
+.hd-risk-row{display:flex;gap:6px;margin-bottom:12px}
+.hd-risk-card{flex:1;background:#fff;border-radius:10px;padding:10px;text-align:center;border:1px solid #eef4f1;font-size:10px}
+.hd-risk-card.ok{border-left:3px solid #4caf84}
+.hd-risk-card.warn{border-left:3px solid #d9b35c}
+.hd-risk-card.caution{border-left:3px solid #c43a2c}
+.hd-risk-icon{font-size:16px;display:block}
+.hd-risk-name{color:#6a8b82;display:block;margin:2px 0}
+.hd-risk-value{font-size:16px;font-weight:700;color:#14443a;display:block}
+.hd-risk-trend{font-size:10px;font-weight:600}
+.hd-risk-trend.improving{color:#0f6e56}
+.hd-risk-trend.declining{color:#b86518}
+.hd-risk-trend.stable{color:#8a978f}
+.hd-risk-tag{display:inline-block;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:600;margin-top:2px}
+.hd-risk-card.ok .hd-risk-tag{background:#e7f7ee;color:#0f6e56}
+.hd-risk-card.warn .hd-risk-tag{background:#fbf3dc;color:#8c6c12}
+.hd-risk-card.caution .hd-risk-tag{background:#fcefe9;color:#b5391a}
+.lt-h{font-size:13px;font-weight:700;color:#14443a;margin:14px 0 8px}
+.lt-win{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:4px solid #4caf84}
+.lt-win.lt-win-blue{border-left-color:#5b9ac9}
+.lt-win.lt-win-coral{border-left-color:#ff8b8b}
+.lt-win-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lt-win-ic-wrap{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.lt-win-ic-wrap.lt-win-ic-green{background:#e7f7ee}
+.lt-win-ic-wrap.lt-win-ic-blue{background:#e8f2fa}
+.lt-win-ic-wrap.lt-win-ic-coral{background:#fef0ed}
+.lt-win-ic{font-size:16px}
+.lt-win-ti{font-size:13px;font-weight:700;color:#14443a;flex:1}
+.lt-win-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.lt-win-badge-green{background:#e7f7ee;color:#0f6e56}
+.lt-win-badge-blue{background:#e8f2fa;color:#3a7ab5}
+.lt-win-badge-coral{background:#fef0ed;color:#b86518}
+.lt-win-flow{font-size:11px;color:#4a6a60;margin-bottom:6px}
+.lt-win-act{font-weight:600;color:#1F8A6F}
+.lt-win-bar{height:4px;background:#eef4f1;border-radius:2px;margin-bottom:4px;overflow:hidden}
+.lt-win-bar-fill{height:100%;border-radius:2px}
+.lt-win-bar-green{background:#4caf84}
+.lt-win-bar-blue{background:#5b9ac9}
+.lt-win-bar-coral{background:#ff8b8b}
+.lt-win-meta{display:flex;justify-content:space-between;font-size:10px;color:#8a978f}
+.lt-win-now{font-weight:600}
+.lt-win-now-green{color:#4caf84}
+.lt-win-now-blue{color:#5b9ac9}
+.lt-win-now-coral{color:#ff8b8b}
+
 /* ===== 睡眠走势KPI ===== */
 .kpi-strip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px}
 .kpi-item{display:flex;flex-direction:column;align-items:center;padding:8px;background:#f9fdfb;border-radius:5px}
@@ -909,7 +1063,17 @@ document.querySelectorAll('.tab-item').forEach(el => {
 // ═══════════════════════════════════════
 // 日历逻辑
 // ═══════════════════════════════════════
-function showCalendar(){ showCalendarModal=true; renderCalendar(); document.getElementById('calendarModal').classList.remove('hidden'); }
+function showCalendar(){
+  showCalendarModal=true;
+  // 打开日历时自动跳到选中日期所在月，确保上下文连贯
+  if(calendarSelected){
+    const sd=new Date(calendarSelected+'T00:00:00');
+    calendarYear=sd.getFullYear();
+    calendarMonth=sd.getMonth();
+  }
+  renderCalendar();
+  document.getElementById('calendarModal').classList.remove('hidden');
+}
 function hideCalendar(){ showCalendarModal=false; document.getElementById('calendarModal').classList.add('hidden'); }
 function prevCalendarMonth(){ calendarMonth--; if(calendarMonth<0){calendarMonth=11;calendarYear--;} renderCalendar(); }
 function nextCalendarMonth(){ calendarMonth++; if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); }
@@ -940,9 +1104,15 @@ function renderCalendar(){
 }
 
 function selectCalendarDay(day){
-  calendarSelected = `${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-  // 预览态：仅记录选中并关闭；真实数据加载在服务器版 pickDate 中完成
+  const dt = `${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  pickDate(dt);
+}
+
+function pickDate(dt){
+  // 统一入口：日历弹窗选日期 + 星期条点击日期
+  calendarSelected = dt;
   hideCalendar();
+  renderDaily();
 }
 
 // ═══════════════════════════════════════
@@ -1062,17 +1232,28 @@ function renderDaily(){
   };
   let h='';
 
-  // 星期选择器
+  // 星期选择器（以 calendarSelected 为锚点；状态与日历弹窗保持一致）
   const weekDays = ['日','一','二','三','四','五','六'];
-  const today = new Date();
-  const selectedDay = today.getDay();
-  const m = today.getMonth()+1, d = today.getDate();
-  h+=`<div class="week-selector"><div class="week-header"><span class="week-title">星期${weekDays[selectedDay]}</span><span class="week-subtitle">${m}月${d}日</span><button class="week-calendar-btn" onclick="showCalendar()">🗓</button></div><div class="week-days">`;
-  const sun=new Date(today); sun.setDate(today.getDate()-today.getDay());
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  if(!calendarSelected) calendarSelected = todayStr; // 首次默认今天
+  const selDate = new Date(calendarSelected+'T00:00:00');
+  const selDayIdx = selDate.getDay();
+  const m = selDate.getMonth()+1, d = selDate.getDate();
+  h+=`<div class="week-selector"><div class="week-header"><span class="week-title">星期${weekDays[selDayIdx]}</span><span class="week-subtitle">${m}月${d}日</span><button class="week-calendar-btn" onclick="showCalendar()">🗓</button></div><div class="week-days">`;
+  // 以"选中日期所在周"的周日为起点，整周可见
+  const sun=new Date(selDate); sun.setDate(selDate.getDate()-selDate.getDay());
   for(let i=0;i<7;i++){
     const dt=new Date(sun); dt.setDate(sun.getDate()+i);
-    const active=dt.getDate()===today.getDate();
-    h+=`<div class="day-item"><div class="day-circle${active?' active':''}"><span class="day-text">${weekDays[i]}</span><span class="day-num">${dt.getDate()}</span></div></div>`;
+    const dtStr=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    const isToday=dtStr===todayStr;
+    const isSelected=dtStr===calendarSelected;
+    const isFuture=dt>today;
+    // 预览态：今天及以前视为有数据（与日历弹窗保持一致）
+    const hasData=dtStr<=todayStr;
+    const cls=['day-circle',hasData?'has-data':'',isToday?'today':'',isSelected?'selected':'',isFuture?'future':''].filter(Boolean).join(' ');
+    const click=isFuture?'':`onclick="pickDate('${dtStr}')"`;
+    h+=`<div class="day-item" ${click}><div class="${cls}"><span class="day-text">${weekDays[i]}</span><span class="day-num">${dt.getDate()}</span></div></div>`;
   }
   h+=`</div></div>`;
 
@@ -1333,16 +1514,21 @@ function drawMovementChart(){
 // 长期 Tab
 // ═══════════════════════════════════════
 const longtermState={
-  expanded:{heart:false,breath:false,sleep:false,sound:false},
+  expanded:{heart:true,breath:true,sleep:false,sound:false},
   activePeriod:'7',
+  chartPeriods:{}, // per-chart: {chartId: '7'|'30'|'90'}
   // 趋势数据缓存: {field: [{date,value},...]}
   data:{},
   streak:{days:0,label:'',totalDays:7},
   scoreDelta:{current:0,previous:0,change:0,trend:'up'},
   daysOnTarget:0,
   stories:[],
-  riskIndicators:[]
+  riskIndicators:[],
+  rewardWins:[]
 };
+
+function longtermToggleModule(m){longtermState.expanded[m]=!longtermState.expanded[m];renderLongterm();}
+function ltSwitchPeriod(chartId,period){longtermState.chartPeriods[chartId]=period;renderLongterm();}
 
 async function renderLongterm(){
   const lt=longtermState;
@@ -1403,7 +1589,10 @@ async function renderLongterm(){
 
   let h='';
 
-  // ── 坚持见效 Hero ──
+  // ── 全局交互提示 ──
+  h+=`<div class="global-tip-card"><span class="tip-icon">💡</span>点击数据点查看当日详情 · 月/全周期视图可拖动查看任意日期</div>`;
+
+  // ── 坚持见效 Hero v2 ──
   h+=`<div class="lt-hero"><div class="lt-hero-title">坚持有回报</div><div class="lt-hero-streak">${lt.streak.days}<span style="font-size:22px;font-weight:600;color:#8aad9f"> 天</span></div><div class="lt-hero-streak-sub">${lt.streak.label} · 达标 ${lt.daysOnTarget}/${totalDays||7} 天</div><div class="lt-hero-delta"><div class="lt-hero-delta-item"><span class="lt-hero-delta-icon">📈</span><span class="lt-hero-delta-text">健康评分</span><span class="lt-hero-delta-num" style="color:#4cd964">${scoreAvg||'--'} 分</span></div><div class="lt-hero-delta-item"><span class="lt-hero-delta-icon">🎯</span><span class="lt-hero-delta-text">本周达标</span><span class="lt-hero-delta-num">${lt.daysOnTarget}/${totalDays||7}</span></div></div></div>`;
 
   // ── 坚持统计行 ──
@@ -1510,8 +1699,6 @@ async function renderLongterm(){
     if(lt.expanded.sound){ drawLongtermLine('snore',lt.data.snore_num,0,20,0,5,5,'次','#ffb086'); drawLongtermLine('sleeptalk',lt.data.sleeptalk_num,0,10,0,3,3,'次','#b15dff'); }
   },200);
 }
-
-function longtermToggleModule(m){longtermState.expanded[m]=!longtermState.expanded[m];renderLongterm();}
 
 // 长期图表引擎（移植自小程序 drawHealthLineChart）
 // 平滑 Catmull-Rom 曲线 + 健康分区 + 双行日期轴 + Y刻度 + 实测均值线 + 同龄人参考线
