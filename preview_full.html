@@ -1514,21 +1514,33 @@ function drawPhaseChart(){
   if(!c) return;
   const {ctx,w,h}=c;
   ctx.clearRect(0,0,w,h);
+  // 深色背景
+  const bg=ctx.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#0d1f29');bg.addColorStop(1,'#061016');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
   const points=[{level:0.78,stage:'light'},{level:0.68,stage:'light'},{level:0.58,stage:'deep'},{level:0.48,stage:'deep'},{level:0.42,stage:'deep'},{level:0.46,stage:'deep'},{level:0.52,stage:'light'},{level:0.57,stage:'light'},{level:0.62,stage:'light'},{level:0.54,stage:'light'},{level:0.70,stage:'dream'},{level:0.88,stage:'dream'},{level:0.84,stage:'dream'},{level:0.64,stage:'light'},{level:0.56,stage:'light'},{level:0.52,stage:'deep'},{level:0.62,stage:'light'},{level:0.44,stage:'deep'},{level:0.40,stage:'deep'},{level:0.50,stage:'deep'},{level:0.66,stage:'dream'},{level:0.84,stage:'dream'},{level:0.80,stage:'dream'},{level:0.72,stage:'light'},{level:0.60,stage:'light'},{level:0.58,stage:'light'},{level:0.60,stage:'light'},{level:0.62,stage:'light'},{level:0.66,stage:'light'},{level:0.61,stage:'light'},{level:0.58,stage:'light'},{level:0.62,stage:'light'},{level:0.70,stage:'dream'},{level:0.82,stage:'dream'},{level:0.90,stage:'dream'},{level:0.92,stage:'dream'},{level:0.84,stage:'dream'},{level:0.76,stage:'dream'},{level:0.78,stage:'dream'},{level:0.64,stage:'light'},{level:0.60,stage:'light'},{level:0.58,stage:'light'},{level:0.54,stage:'light'},{level:0.56,stage:'light'},{level:0.62,stage:'light'},{level:0.60,stage:'light'},{level:0.66,stage:'awake'},{level:0.94,stage:'awake'}];
   if(points.length<2) return;
   const padX=10,padT=18,padB=18,chartW=w-padX*2,chartH=h-padT-padB;
+  // 虚线网格（深色风格）
   ctx.strokeStyle='rgba(129,168,185,0.24)';ctx.lineWidth=1;
   ctx.setLineDash([7,8]);
   [0.2,0.5,0.8].forEach(r=>{const y=padT+chartH*r;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
   ctx.setLineDash([]);
-  const step=chartW/(points.length-1);
+  // 分段着色折线 + 发光
   const colors={awake:'rgba(207,217,232,1)',dream:'rgba(177,93,255,1)',light:'rgba(113,191,209,1)',deep:'rgba(0,166,160,1)'};
+  const step=chartW/(points.length-1);
   for(let i=0;i<points.length-1;i++){
-    const curr=points[i],next=points[i+1];
-    ctx.strokeStyle=colors[curr.stage]||'rgba(113,191,209,1)';
-    ctx.lineWidth=2.2;ctx.lineCap='round';
+    const curr=points[i],next=points[i+1],clr=colors[curr.stage]||colors.light;
+    ctx.strokeStyle=clr;ctx.shadowColor=clr;ctx.shadowBlur=6;
+    ctx.lineWidth=2.4;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(padX+i*step,padT+(1-curr.level)*chartH);ctx.lineTo(padX+(i+1)*step,padT+(1-next.level)*chartH);ctx.stroke();
   }
+  ctx.shadowBlur=0;
+  // 数据点
+  points.forEach((p,i)=>{
+    const clr=colors[p.stage]||colors.light;
+    ctx.fillStyle=clr;ctx.beginPath();ctx.arc(padX+i*step,padT+(1-p.level)*chartH,1.8,0,Math.PI*2);ctx.fill();
+  });
 }
 
 // Movement Chart
@@ -1543,13 +1555,23 @@ function drawMovementChart(){
   const merged=movement.slice(0,len).concat(turnover.slice(0,len));
   const min=0,max=Math.max(1,...merged),range=max-min;
   const padX=8,padT=8,padB=6,chartW=w-padX*2,chartH=h-padT-padB;
-  const drawSeries=(series,clr)=>{
+  // 虚线网格
+  ctx.strokeStyle='rgba(216,231,226,0.55)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);
+  [0.25,0.5,0.75].forEach(r=>{const y=padT+chartH*r;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+  ctx.setLineDash([]);
+  const drawSeries=(series,clr,fillClr)=>{
     const step=chartW/(len-1);
-    ctx.strokeStyle=clr;ctx.lineWidth=1.8;ctx.lineCap='round';ctx.beginPath();
-    series.slice(0,len).forEach((v,i)=>{const x=padX+i*step;const y=padT+(1-(v-min)/range)*chartH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+    // fill area
+    ctx.fillStyle=fillClr;ctx.beginPath();ctx.moveTo(padX,padT+chartH);
+    series.slice(0,len).forEach((v,i)=>{const x=padX+i*step;const y=padT+(1-(v-min)/range)*chartH;ctx.lineTo(x,y);});
+    ctx.lineTo(padX+(len-1)*step,padT+chartH);ctx.closePath();ctx.fill();
+    // line
+    ctx.strokeStyle=clr;ctx.lineWidth=2.2;ctx.lineCap='round';ctx.shadowColor=clr;ctx.shadowBlur=4;
+    ctx.beginPath();series.slice(0,len).forEach((v,i)=>{const x=padX+i*step;const y=padT+(1-(v-min)/range)*chartH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
     ctx.stroke();
+    ctx.shadowBlur=0;
   };
-  drawSeries(movement,'#4fc3d8');drawSeries(turnover,'#c95b77');
+  drawSeries(movement,'#4fc3d8','rgba(79,195,216,0.08)');drawSeries(turnover,'#c95b77','rgba(201,91,119,0.10)');
 }
 
 // ═══════════════════════════════════════
