@@ -2142,16 +2142,16 @@ function renderMy(){
         var inp='width:100%;height:42px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa;box-sizing:border-box';
         // 基础信息
         h+=`<div class="user-card"><div class="user-card-title">基础信息</div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">姓名 / 称呼</label><input id="pfNickname" style="${inp}" value="${(p.nickname||'').replace(/"/g,'&quot;')}" placeholder="请输入"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">姓名 / 称呼</label><input id="pfNickname" style="${inp}" value="${(p.nickname||'').replace(/"/g,'&quot;')}"/></div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">性别</label>${sel('pfGender',p.gender||'male',['male','female'].map(function(v){return v==='male'?'男':'女';}))}</div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">出生年份</label><input id="pfBirthYear" type="number" style="${inp}" value="${p.birthYear||''}" placeholder="如 1960"/></div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">身高 (cm)</label><input id="pfHeight" type="number" style="${inp}" value="${p.heightCm||''}" placeholder="如 170"/></div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">体重 (kg)</label><input id="pfWeight" type="number" style="${inp}" value="${p.weightKg||''}" placeholder="如 65"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">出生年份</label><input id="pfBirthYear" type="number" style="${inp}" value="${p.birthYear||''}"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">身高 (cm)</label><input id="pfHeight" type="number" style="${inp}" value="${p.heightCm||''}"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">体重 (kg)</label><input id="pfWeight" type="number" style="${inp}" value="${p.weightKg||''}"/></div>`;
         h+=`</div>`;
         // 健康信息
         h+=`<div class="user-card"><div class="user-card-title">健康信息</div>`;
         [{id:'pfChronic',l:'心肺慢病史',v:p.chronic},{id:'pfCardiovascular',l:'心血管病史',v:p.cardiovascular},{id:'pfFamilyHistory',l:'家族病史',v:p.familyHistory},{id:'pfAllergy',l:'过敏史',v:p.allergyHistory},{id:'pfSurgery',l:'手术史',v:p.surgeryHistory},{id:'pfMedication',l:'当前用药',v:p.currentMedication}].forEach(function(f){
-          h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">${f.l}</label><input id="${f.id}" style="${inp}" value="${(f.v||'').replace(/"/g,'&quot;')}" placeholder="如无填写 --"/></div>`;
+          h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">${f.l}</label><input id="${f.id}" style="${inp}" value="${(f.v||'').replace(/"/g,'&quot;')}"/></div>`;
         });
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">是否为失能老人</label>${sel('pfIsDisabled',p.isDisabled||'否',['否','是'])}</div>`;
         h+=`</div>`;
@@ -2165,8 +2165,8 @@ function renderMy(){
         // 睡眠信息
         h+=`<div class="user-card"><div class="user-card-title">睡眠信息</div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">睡眠环境</label>${sel('pfSleepEnv',p.sleepEnv||'独自睡',['独自睡','双人睡'])}</div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">床垫厚度(cm)</label><input id="pfMattressT" type="number" style="${inp}" value="${p.mattressThickness||''}" placeholder="如 20"/></div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">床垫宽度(cm)</label><input id="pfMattressW" type="number" style="${inp}" value="${p.mattressWidth||''}" placeholder="如 150"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">床垫厚度(cm)</label><input id="pfMattressT" type="number" style="${inp}" value="${p.mattressThickness||''}"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">床垫宽度(cm)</label><input id="pfMattressW" type="number" style="${inp}" value="${p.mattressWidth||''}"/></div>`;
         h+=`</div>`;
         // 按钮
         h+=`<div style="display:flex;gap:8px"><button onclick="myState.profileEdit=false;renderMy()" style="flex:1;height:44px;border:1.5px solid #dde5e1;border-radius:10px;background:#fff;color:#6a8b82;font-size:15px;font-weight:700;cursor:pointer">取消</button><button onclick="doSaveDevicePerson()" style="flex:2;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">保存</button></div>`;
