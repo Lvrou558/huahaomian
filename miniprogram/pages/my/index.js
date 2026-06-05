@@ -140,8 +140,6 @@ Page({
       weight: 45,
       bmi: "19.5",        // 自动计算 BMI = 体重 / (身高/100)^2
       bmiLevel: "正常",   // 偏瘦 <18.5 / 正常 18.5-24 / 超重 24-28 / 肥胖 >28
-      bloodType: "O型",
-      address: "--",
 
       // 健康史
       chronic: "--",           // 慢性疾病
@@ -156,11 +154,6 @@ Page({
       drinkingHabit: "不饮酒", // 不饮酒 / 偶尔 / 经常
       caffeineHabit: "偶尔",   // 不喝咖啡因 / 偶尔 / 每日
       exerciseFreq: "每周 1-2 次", // 不运动 / 每周 1-2 次 / 每周 3+ 次
-
-      // 紧急联系人
-      emergencyName: "--",
-      emergencyPhone: "--",
-      emergencyRelation: "--", // 子女 / 配偶 / 父母 / 其他
 
       // 睡眠环境
       isDisabled: "否",
@@ -1021,6 +1014,10 @@ Page({
     if (field === "sleepEnv") return ["独自睡", "双人睡"];
     if (field === "isDisabled") return ["否", "是"];
     if (field === "gender") return ["男", "女"];
+    if (field === "smokingHabit") return ["不吸烟", "偶尔", "经常"];
+    if (field === "drinkingHabit") return ["不饮酒", "偶尔", "经常"];
+    if (field === "caffeineHabit") return ["不喝咖啡因", "偶尔", "每日"];
+    if (field === "exerciseFreq") return ["不运动", "每周 1-2 次", "每周 3+ 次"];
     return [];
   },
 
