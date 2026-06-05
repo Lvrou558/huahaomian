@@ -2112,20 +2112,66 @@ function renderMy(){
       const bmi = (p.heightCm&&p.weightKg)? (p.weightKg/Math.pow(p.heightCm/100,2)) : null;
       const bmiText = bmi? (bmi.toFixed(1)+'（'+(bmi<18.5?'偏瘦':bmi<24?'正常':bmi<28?'偏胖':'肥胖')+'）') : '--';
       const name = p.nickname || (p.phone?('用户'+p.phone.slice(-4)):'被监测人');
+      const val=function(v){return (v&&v!=='--')?v:'--';};
       if(!s.profileEdit){
         h+=`<div class="user-cover"><div class="user-cover-name">${name}</div><div class="user-cover-age">${age!=null?age+'岁':'--'}</div><div class="user-cover-sub">${genderText}${p.birthYear?'  出生年份 '+p.birthYear:''}</div></div>`;
-        const fields=[{l:'被监测人',v:name},{l:'性别',v:genderText},{l:'出生年份',v:p.birthYear||'--'},{l:'身高',v:p.heightCm?p.heightCm+' cm':'--'},{l:'体重',v:p.weightKg?p.weightKg+' kg':'--'},{l:'BMI 指数',v:bmiText}];
-        h+=`<div class="user-card"><div class="user-card-title">基础信息</div>${fields.map(f=>`<div class="user-field"><span class="user-field-label">${f.l}</span><span class="user-field-text">${f.v}</span></div>`).join('')}</div>`;
+        // 基础信息
+        h+=`<div class="user-card"><div class="user-card-title"><span>基础信息</span><span class="user-card-edit" onclick="myState.profileEdit=true;renderMy()">编辑</span></div>`;
+        [{l:'被监测人',v:name},{l:'性别',v:genderText},{l:'出生年份',v:p.birthYear||'--'},{l:'身高',v:p.heightCm?p.heightCm+' cm':'--'},{l:'体重',v:p.weightKg?p.weightKg+' kg':'--'},{l:'BMI 指数',v:bmiText}].forEach(function(f){
+          h+=`<div class="user-field"><span class="user-field-label">${f.l}</span><span class="user-field-text">${f.v}</span></div>`;
+        });
+        h+=`</div>`;
+        // 健康史
+        h+=`<div class="user-card"><div class="user-card-title">健康史</div>`;
+        [{l:'心肺慢病史',v:val(p.chronic)},{l:'心血管病史',v:val(p.cardiovascular)},{l:'家族病史',v:val(p.familyHistory)},{l:'过敏史',v:val(p.allergyHistory)},{l:'手术史',v:val(p.surgeryHistory)},{l:'当前用药',v:val(p.currentMedication)},{l:'是否为失能老人',v:val(p.isDisabled)}].forEach(function(f){
+          h+=`<div class="user-field"><span class="user-field-label">${f.l}</span><span class="user-field-text">${f.v}</span></div>`;
+        });
+        h+=`</div>`;
+        // 生活习惯
+        h+=`<div class="user-card"><div class="user-card-title">生活习惯</div>`;
+        [{l:'吸烟',v:val(p.smokingHabit)},{l:'饮酒',v:val(p.drinkingHabit)},{l:'咖啡因摄入',v:val(p.caffeineHabit)},{l:'运动频率',v:val(p.exerciseFreq)}].forEach(function(f){
+          h+=`<div class="user-field"><span class="user-field-label">${f.l}</span><span class="user-field-text">${f.v}</span></div>`;
+        });
+        h+=`</div>`;
+        // 睡眠环境
+        h+=`<div class="user-card"><div class="user-card-title">睡眠环境</div>`;
+        [{l:'睡眠环境',v:val(p.sleepEnv)},{l:'床垫厚度',v:p.mattressThickness?p.mattressThickness+' cm':'--'},{l:'床垫宽度',v:p.mattressWidth?p.mattressWidth+' cm':'--'}].forEach(function(f){
+          h+=`<div class="user-field"><span class="user-field-label">${f.l}</span><span class="user-field-text">${f.v}</span></div>`;
+        });
+        h+=`</div>`;
         h+=`<button class="btn" onclick="myState.profileEdit=true;renderMy()" style="width:100%;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">编辑信息</button>`;
       } else {
-        const inp='width:100%;height:42px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa;box-sizing:border-box';
-        h+=`<div class="user-card"><div class="user-card-title">编辑基础信息</div>`;
+        var sel=function(id,val,opts){ var h='<select id="'+id+'" style="width:100%;height:42px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa;box-sizing:border-box">'; opts.forEach(function(o){ h+='<option value="'+o+'"'+(val===o?' selected':'')+'>'+o+'</option>'; }); h+='</select>'; return h; };
+        var inp='width:100%;height:42px;border:1.5px solid #dde5e1;border-radius:10px;padding:0 12px;font-size:14px;color:#14443a;outline:none;background:#f9fbfa;box-sizing:border-box';
+        // 基础信息
+        h+=`<div class="user-card"><div class="user-card-title">基础信息</div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">姓名 / 称呼</label><input id="pfNickname" style="${inp}" value="${(p.nickname||'').replace(/"/g,'&quot;')}" placeholder="请输入"/></div>`;
-        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">性别</label><select id="pfGender" style="${inp}"><option value="male"${p.gender==='male'?' selected':''}>男</option><option value="female"${p.gender==='female'?' selected':''}>女</option></select></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">性别</label>${sel('pfGender',p.gender||'male',['male','female'].map(function(v){return v==='male'?'男':'女';}))}</div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">出生年份</label><input id="pfBirthYear" type="number" style="${inp}" value="${p.birthYear||''}" placeholder="如 1960"/></div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">身高 (cm)</label><input id="pfHeight" type="number" style="${inp}" value="${p.heightCm||''}" placeholder="如 170"/></div>`;
         h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">体重 (kg)</label><input id="pfWeight" type="number" style="${inp}" value="${p.weightKg||''}" placeholder="如 65"/></div>`;
         h+=`</div>`;
+        // 健康信息
+        h+=`<div class="user-card"><div class="user-card-title">健康信息</div>`;
+        [{id:'pfChronic',l:'心肺慢病史',v:p.chronic},{id:'pfCardiovascular',l:'心血管病史',v:p.cardiovascular},{id:'pfFamilyHistory',l:'家族病史',v:p.familyHistory},{id:'pfAllergy',l:'过敏史',v:p.allergyHistory},{id:'pfSurgery',l:'手术史',v:p.surgeryHistory},{id:'pfMedication',l:'当前用药',v:p.currentMedication}].forEach(function(f){
+          h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">${f.l}</label><input id="${f.id}" style="${inp}" value="${(f.v||'').replace(/"/g,'&quot;')}" placeholder="如无填写 --"/></div>`;
+        });
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">是否为失能老人</label>${sel('pfIsDisabled',p.isDisabled||'否',['否','是'])}</div>`;
+        h+=`</div>`;
+        // 生活习惯
+        h+=`<div class="user-card"><div class="user-card-title">生活习惯</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">吸烟</label>${sel('pfSmoking',p.smokingHabit||'不吸烟',['不吸烟','偶尔','经常'])}</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">饮酒</label>${sel('pfDrinking',p.drinkingHabit||'不饮酒',['不饮酒','偶尔','经常'])}</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">咖啡因摄入</label>${sel('pfCaffeine',p.caffeineHabit||'偶尔',['不喝咖啡因','偶尔','每日'])}</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">运动频率</label>${sel('pfExercise',p.exerciseFreq||'不运动',['不运动','每周 1-2 次','每周 3+ 次'])}</div>`;
+        h+=`</div>`;
+        // 睡眠信息
+        h+=`<div class="user-card"><div class="user-card-title">睡眠信息</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">睡眠环境</label>${sel('pfSleepEnv',p.sleepEnv||'独自睡',['独自睡','双人睡'])}</div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">床垫厚度(cm)</label><input id="pfMattressT" type="number" style="${inp}" value="${p.mattressThickness||''}" placeholder="如 20"/></div>`;
+        h+=`<div style="margin-bottom:10px"><label style="font-size:12px;color:#6a8b82;display:block;margin-bottom:4px">床垫宽度(cm)</label><input id="pfMattressW" type="number" style="${inp}" value="${p.mattressWidth||''}" placeholder="如 150"/></div>`;
+        h+=`</div>`;
+        // 按钮
         h+=`<div style="display:flex;gap:8px"><button onclick="myState.profileEdit=false;renderMy()" style="flex:1;height:44px;border:1.5px solid #dde5e1;border-radius:10px;background:#fff;color:#6a8b82;font-size:15px;font-weight:700;cursor:pointer">取消</button><button onclick="doSaveDevicePerson()" style="flex:2;height:44px;border:none;border-radius:10px;background:#1F8A6F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">保存</button></div>`;
       }
     }
@@ -2881,20 +2927,29 @@ function _currentEditDeviceId(){
   var sel = (appData.devices||[])[myState.selectedDeviceIdx];
   return (sel && sel.device_id) || myState.currentDeviceId || '';
 }
+function _gid(id){ var el=document.getElementById(id); return el?el.value:''; }
 function doSaveDevicePerson(){
-  var nickname=(document.getElementById('pfNickname').value||'').trim();
-  var gender=document.getElementById('pfGender').value;
-  var birthYear=parseInt(document.getElementById('pfBirthYear').value,10);
-  var heightCm=parseInt(document.getElementById('pfHeight').value,10);
-  var weightKg=parseFloat(document.getElementById('pfWeight').value);
-  if(!birthYear||!heightCm||!weightKg){ alert('请填写出生年份、身高、体重'); return; }
   var did = _currentEditDeviceId();
   if(!did){ alert('未选中设备，无法保存'); return; }
-  myState.devicePersons[did] = {nickname:nickname,gender:gender,birthYear:birthYear,heightCm:heightCm,weightKg:weightKg};
+  var nickname=(_gid('pfNickname')||'').trim();
+  var birthYear=parseInt(_gid('pfBirthYear'),10);
+  var heightCm=parseInt(_gid('pfHeight'),10);
+  var weightKg=parseFloat(_gid('pfWeight'));
+  if(!nickname||!birthYear||!heightCm||!weightKg){ alert('请填写姓名、出生年份、身高、体重'); return; }
+  myState.devicePersons[did] = {
+    nickname:nickname, gender:_gid('pfGender')==='男'?'male':'female',
+    birthYear:birthYear, heightCm:heightCm, weightKg:weightKg,
+    chronic:(_gid('pfChronic')||'').trim(), cardiovascular:(_gid('pfCardiovascular')||'').trim(),
+    familyHistory:(_gid('pfFamilyHistory')||'').trim(), allergyHistory:(_gid('pfAllergy')||'').trim(),
+    surgeryHistory:(_gid('pfSurgery')||'').trim(), currentMedication:(_gid('pfMedication')||'').trim(),
+    isDisabled:_gid('pfIsDisabled'), smokingHabit:_gid('pfSmoking'), drinkingHabit:_gid('pfDrinking'),
+    caffeineHabit:_gid('pfCaffeine'), exerciseFreq:_gid('pfExercise'),
+    sleepEnv:_gid('pfSleepEnv'), mattressThickness:parseInt(_gid('pfMattressT'),10)||'',
+    mattressWidth:parseInt(_gid('pfMattressW'),10)||''
+  };
   _persistDevicePersons();
   myState.profileEdit = false;
   if(typeof renderMy==='function') renderMy();
-  alert('已保存');
 }
 
 function getCardiacRisks(){
