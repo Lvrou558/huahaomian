@@ -58,7 +58,6 @@
             <text class="dc2-online {{item.online ? 'online' : 'offline'}}">●</text>
           </view>
           <text class="dc2-sn">{{item.sn}}</text>
-          <text class="dc2-user">被监测人：{{item.userName}}　年龄：{{item.userAge}}</text>
         </view>
         <text class="dc2-arrow">›</text>
       </view>
@@ -460,7 +459,6 @@
           <text class="md-device-online" wx:if="{{item.online}}">●</text>
         </view>
         <text class="md-device-sn">{{item.sn}}</text>
-        <text class="md-device-user">被监测人：{{item.userName}}   年龄：{{item.userAge}}</text>
       </view>
       <view class="md-device-unbind" catchtap="confirmUnbindDevice" data-id="{{item.id}}">
         <text class="md-unbind-icon">🗑️</text>
@@ -578,12 +576,6 @@
   <!-- 3. 被监测人信息                                  -->
   <!-- ============================================== -->
   <block wx:if="{{currentView === 'user'}}">
-    <view class="user-cover">
-      <view class="user-cover-name">{{userInfo.name}}</view>
-      <view class="user-cover-age">{{userInfo.age}}岁</view>
-      <view class="user-cover-sub">{{userInfo.gender}}  出生日期 {{userInfo.birthDate}}</view>
-    </view>
-
     <!-- 只读视图 -->
     <block wx:if="{{!editingUser}}">
       <view class="user-card">

@@ -2037,9 +2037,7 @@ function renderMy(){
         h+=`<div class="device-card-v2" onclick="switchToDevice('${d.device_id}',${i})" style="${isCurrent?'border:2px solid #1F8A6F;background:#f0faf6':''}">`;
         h+=`<div class="dc2-icon"><span class="dc2-icon-emoji">🛏</span></div>`;
         h+=`<div class="dc2-body"><div class="dc2-name-row"><span class="dc2-name">${name}</span><span class="dc2-online ${online?'online':'offline'}">${online?'●':'○'}</span><button class="dc2-edit-name" title="改名" onclick="event.stopPropagation();openDeviceNameEditor('${d.device_id}')">✎</button></div>`;
-        h+=`<span class="dc2-sn">${d.device_id||''}</span>`;
-        h+=fmtDevicePersonLine(d.device_id);
-        h+=`<span class="dc2-user">${isCurrent?'🟢 当前显示':(d.is_primary?'⭐ 主设备':'')}</span></div>`;
+        h+=`<span class="dc2-sn">${d.device_id||''}</span></div>`;
         h+=`<span class="dc2-arrow" onclick="event.stopPropagation();myState.selectedDeviceIdx=${i};myNavigate('deviceDetail')">›</span>`;
         h+=`</div>`;
       });
@@ -2114,7 +2112,6 @@ function renderMy(){
       const name = p.nickname || (p.phone?('用户'+p.phone.slice(-4)):'被监测人');
       const val=function(v){return (v&&v!=='--')?v:'--';};
       if(!s.profileEdit){
-        h+=`<div class="user-cover"><div class="user-cover-name">${name}</div><div class="user-cover-age">${age!=null?age+'岁':'--'}</div><div class="user-cover-sub">${genderText}${p.birthYear?'  出生年份 '+p.birthYear:''}</div></div>`;
         // 基础信息
         h+=`<div class="user-card"><div class="user-card-title"><span>基础信息</span><span class="user-card-edit" onclick="myState.profileEdit=true;renderMy()">编辑</span></div>`;
         [{l:'被监测人',v:name},{l:'性别',v:genderText},{l:'出生年份',v:p.birthYear||'--'},{l:'身高',v:p.heightCm?p.heightCm+' cm':'--'},{l:'体重',v:p.weightKg?p.weightKg+' kg':'--'},{l:'BMI 指数',v:bmiText}].forEach(function(f){
