@@ -318,24 +318,32 @@
 
   /* ===== 睡眠双环 ===== */
   .recovery-rings-row {
-    display: flex; justify-content: space-around; padding: 12px 0;
+    display: flex; justify-content: space-evenly; padding: 16px 8px;
+    margin-top: 4px; background: rgba(255,255,255,0.85);
+    border: 1px solid #e6f0ea; border-radius: 16px;
   }
   .recovery-ring-box { text-align: center; }
+  .recovery-ring-outer {
+    width: 92px; height: 92px; border-radius: 50%; padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, #d9f4e3, #f7fcf9);
+    box-shadow: 0 5px 13px rgba(31,138,111,0.18), inset 0 1px 3px rgba(255,255,255,0.9);
+    margin: 0 auto;
+  }
+  .recovery-ring-box.mind .recovery-ring-outer {
+    background: linear-gradient(145deg, #d9e8f9, #f7faff);
+    box-shadow: 0 5px 13px rgba(58,108,219,0.18), inset 0 1px 3px rgba(255,255,255,0.9);
+  }
   .recovery-ring {
-    width: 100px; height: 100px; border-radius: 50%;
+    width: 85px; height: 85px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     position: relative;
   }
-  .recovery-ring-box.body .recovery-ring {
-    background: conic-gradient(from -90deg, #1f8a6f 0deg, #4cd964 270deg, #ebf4ef 270deg, #ebf4ef 360deg);
-  }
-  .recovery-ring-box.mind .recovery-ring {
-    background: conic-gradient(from -90deg, #3aa0e2 0deg, #6c8cff 248deg, #eaeef7 248deg, #eaeef7 360deg);
-  }
   .ring-inner {
-    width: 76px; height: 76px; border-radius: 50%;
+    width: 65px; height: 65px; border-radius: 50%;
     background: #fff; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.04);
   }
   .ring-score { font-size: 24px; font-weight: 800; color: #14443a; }
   .ring-unit { font-size: 10px; color: #8a978f; margin-top: 2px; }
@@ -396,11 +404,32 @@
   }
   .phase-legend-item {
     display: flex; align-items: center; gap: 6px; font-size: 11px;
-    padding: 6px 8px; background: #f9fcfb; border-radius: 8px;
+    padding: 6px 8px; background: rgba(255,255,255,0.08); border-radius: 8px;
+    color: #8ea3ab;
   }
-  .phase-dot { width: 10px; height: 10px; border-radius: 3px; }
-  .phase-text { color: #14443a; font-weight: 500; }
-  .phase-pct { color: #8a978f; font-weight: 400; margin-left: 4px; }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 6px rgba(110,185,210,0.35); }
+  .phase-text { color: #8ea3ab; font-weight: 500; }
+  .phase-pct { color: #2cd2c4; font-weight: 700; margin-left: 4px; }
+
+  /* 深色睡眠分期卡 */
+  .sleep-phase-card-inner {
+    background: linear-gradient(180deg, #09141a 0%, #050b0f 100%);
+    border: 1px solid #13262f; border-radius: 9px; padding: 10px; margin-top: 8px;
+  }
+  .phase-time-row { display: flex; justify-content: space-between; color: #9ab0b8; font-size: 12px; margin-bottom: 6px; }
+  .phase-time-tick { font-size: 10px; color: rgba(152,178,191,0.78); line-height: 1; }
+  .sleep-section-title--first { margin-top: 4px; padding-top: 0; border-top: none; }
+
+  /* 睡眠循环分析 */
+  .cycle-analysis-wrap { margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(109,144,162,0.28); }
+  .cycle-analysis-title { font-size: 13px; color: #d4e7f3; font-weight: 700; margin-bottom: 6px; }
+  .cycle-item { background: rgba(13,28,38,0.66); border: 1px solid rgba(76,118,141,0.36); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; }
+  .cycle-item-title { display: block; font-size: 11px; color: #f0f8ff; font-weight: 700; line-height: 1.45; }
+  .cycle-segment-row { margin-top: 6px; }
+  .cycle-segment-track { display: flex; width: 100%; height: 22px; overflow: hidden; border-radius: 6px; background: rgba(146,179,197,0.14); }
+  .cycle-segment { height: 100%; min-width: 20px; display: flex; align-items: center; justify-content: center; }
+  .cycle-segment-text { font-size: 9px; color: #fff; font-weight: 600; line-height: 1; white-space: nowrap; }
+  .cycle-recovery-text { display: block; margin-top: 6px; font-size: 10px; color: #a8cae4; line-height: 1.5; }
 
   /* ===== 体动 ===== */
   .movement-head {
@@ -913,20 +942,18 @@
         <!-- 身体 + 精神 双环 -->
         <div class="recovery-rings-row">
           <div class="recovery-ring-box body">
-            <div class="recovery-ring">
-              <div class="ring-inner">
-                <span class="ring-score">75</span>
-                <span class="ring-unit">/ 100</span>
+            <div class="recovery-ring-outer">
+              <div class="recovery-ring" style="background: conic-gradient(from -90deg, #1f8a6f 0deg, #4cd964 270deg, #ebf4ef 270deg, #ebf4ef 360deg);">
+                <div class="ring-inner"><span class="ring-score">75</span><span class="ring-unit">/ 100</span></div>
               </div>
             </div>
             <span class="ring-label">身体恢复度</span>
             <div class="ring-status-pill">良好</div>
           </div>
           <div class="recovery-ring-box mind">
-            <div class="recovery-ring">
-              <div class="ring-inner">
-                <span class="ring-score">69</span>
-                <span class="ring-unit">/ 100</span>
+            <div class="recovery-ring-outer">
+              <div class="recovery-ring" style="background: conic-gradient(from -90deg, #3aa0e2 0deg, #6c8cff 248deg, #eaeef7 248deg, #eaeef7 360deg);">
+                <div class="ring-inner"><span class="ring-score">69</span><span class="ring-unit">/ 100</span></div>
               </div>
             </div>
             <span class="ring-label">精神恢复度</span>
@@ -982,26 +1009,7 @@
         <div class="sleep-section-title">🛏️ 睡眠分期</div>
         <div class="sub-title">整夜分期节律清晰，深睡与梦境切换有序，恢复效率稳定。</div>
         <div class="phase-time-row"><span>入睡23:15</span><span>起床08:35</span></div>
-        <!-- 睡眠分期堆叠条 SVG -->
-        <svg class="phase-chart" viewBox="0 0 350 120" preserveAspectRatio="none">
-          <!-- 简化的分期条带 -->
-          <rect x="5" y="20" width="20" height="20" fill="#cfd9e8"/>
-          <rect x="25" y="60" width="40" height="40" fill="#71bfd1"/>
-          <rect x="65" y="20" width="20" height="20" fill="#cfd9e8"/>
-          <rect x="85" y="80" width="50" height="20" fill="#00a6a0"/>
-          <rect x="135" y="60" width="30" height="40" fill="#71bfd1"/>
-          <rect x="165" y="40" width="30" height="20" fill="#b15dff"/>
-          <rect x="195" y="80" width="35" height="20" fill="#00a6a0"/>
-          <rect x="230" y="60" width="30" height="40" fill="#71bfd1"/>
-          <rect x="260" y="40" width="25" height="20" fill="#b15dff"/>
-          <rect x="285" y="60" width="35" height="40" fill="#71bfd1"/>
-          <rect x="320" y="20" width="25" height="20" fill="#cfd9e8"/>
-          <!-- 阶段标签 -->
-          <text x="4" y="32" font-size="8" fill="#8a978f">清醒</text>
-          <text x="4" y="52" font-size="8" fill="#8a978f">REM</text>
-          <text x="4" y="72" font-size="8" fill="#8a978f">浅睡</text>
-          <text x="4" y="92" font-size="8" fill="#8a978f">深睡</text>
-        </svg>
+        <canvas id="phaseChart" class="phase-chart" style="width:100%;height:125px;background:transparent;border-radius:6px"></canvas>
         <div class="phase-time-axis">
           <span>23:15</span><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>08:35</span>
         </div>
@@ -1023,6 +1031,13 @@
             <span class="phase-text">深睡眠 1小时21分钟 <span class="phase-pct">18.5%</span></span>
           </div>
         </div>
+        <div class="cycle-analysis-wrap">
+          <div class="cycle-analysis-title">睡眠循环与累计恢复分析</div>
+          <div class="cycle-item"><span class="cycle-item-title">第1个循环（23:30 - 01:00）</span><div class="cycle-segment-row"><div class="cycle-segment-track"><div class="cycle-segment" style="width:20%;background:#00a6a0"><span class="cycle-segment-text">深睡20%</span></div><div class="cycle-segment" style="width:30%;background:#71bfd1"><span class="cycle-segment-text">浅睡30%</span></div><div class="cycle-segment" style="width:50%;background:#b15dff"><span class="cycle-segment-text">REM50%</span></div></div></div><span class="cycle-recovery-text">身体恢复至14%，精神恢复至65%</span></div>
+          <div class="cycle-item"><span class="cycle-item-title">第2个循环（01:00 - 02:30）</span><div class="cycle-segment-row"><div class="cycle-segment-track"><div class="cycle-segment" style="width:40%;background:#00a6a0"><span class="cycle-segment-text">深睡40%</span></div><div class="cycle-segment" style="width:40%;background:#71bfd1"><span class="cycle-segment-text">浅睡40%</span></div><div class="cycle-segment" style="width:20%;background:#b15dff"><span class="cycle-segment-text">REM20%</span></div></div></div><span class="cycle-recovery-text">身体恢复至42%，精神恢复至82%</span></div>
+          <div class="cycle-item"><span class="cycle-item-title">第3个循环（02:30 - 04:00）</span><div class="cycle-segment-row"><div class="cycle-segment-track"><div class="cycle-segment" style="width:35%;background:#00a6a0"><span class="cycle-segment-text">深睡35%</span></div><div class="cycle-segment" style="width:50%;background:#71bfd1"><span class="cycle-segment-text">浅睡50%</span></div><div class="cycle-segment" style="width:15%;background:#b15dff"><span class="cycle-segment-text">REM15%</span></div></div></div><span class="cycle-recovery-text">身体恢复至78%，精神恢复至90%</span></div>
+          <div class="cycle-item"><span class="cycle-item-title">第4个循环（04:00 - 08:35）</span><div class="cycle-segment-row"><div class="cycle-segment-track"><div class="cycle-segment" style="width:10%;background:#00a6a0"><span class="cycle-segment-text">深睡10%</span></div><div class="cycle-segment" style="width:40%;background:#71bfd1"><span class="cycle-segment-text">浅睡40%</span></div><div class="cycle-segment" style="width:50%;background:#b15dff"><span class="cycle-segment-text">REM50%</span></div></div></div><span class="cycle-recovery-text">身体恢复至92%，精神恢复至100%</span></div>
+        </div>
 
         <!-- 体动健康 -->
         <div class="sleep-section-title">🏃 体动健康</div>
@@ -1035,30 +1050,7 @@
             <span class="movement-count-unit">次</span>
           </div>
         </div>
-        <svg class="movement-chart" viewBox="0 0 350 100" preserveAspectRatio="none">
-          <line x1="0" y1="50" x2="350" y2="50" stroke="#eaf1ed" stroke-dasharray="3 3"/>
-          <!-- 体动柱（蓝色） -->
-          <g fill="#58c7f5">
-            <rect x="20" y="40" width="6" height="10"/>
-            <rect x="40" y="35" width="6" height="15"/>
-            <rect x="80" y="42" width="6" height="8"/>
-            <rect x="130" y="38" width="6" height="12"/>
-            <rect x="180" y="30" width="6" height="20"/>
-            <rect x="220" y="38" width="6" height="12"/>
-            <rect x="270" y="32" width="6" height="18"/>
-            <rect x="310" y="36" width="6" height="14"/>
-          </g>
-          <!-- 翻身柱（橙色） -->
-          <g fill="#f2b26b">
-            <rect x="60" y="50" width="6" height="20"/>
-            <rect x="100" y="50" width="6" height="25"/>
-            <rect x="150" y="50" width="6" height="18"/>
-            <rect x="200" y="50" width="6" height="32"/>
-            <rect x="250" y="50" width="6" height="28"/>
-            <rect x="290" y="50" width="6" height="35"/>
-            <rect x="330" y="50" width="6" height="40"/>
-          </g>
-        </svg>
+        <canvas id="movementChart" class="trend-chart movement-chart" style="height:75px;margin-top:5px;"></canvas>
         <div class="chart-axis-labels">
           <span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span><span>09:00</span>
         </div>
@@ -1188,6 +1180,69 @@
   document.querySelectorAll('.status-line').forEach(line => {
     line.addEventListener('click', e => e.stopPropagation());
   });
+
+  // Canvas setup helper
+  function setupCanvas(id,w,h){
+    var c=document.getElementById(id); if(!c) return null;
+    var dpr=window.devicePixelRatio||1;
+    c.width=w*dpr; c.height=h*dpr; c.style.width=w+'px'; c.style.height=h+'px';
+    var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+    return {ctx:ctx, w:w, h:h};
+  }
+
+  // 睡眠分期图（深色主题 + 四色分段发光折线）
+  function drawPhaseChart(){
+    var c=setupCanvas('phaseChart',380,125); if(!c) return;
+    var ctx=c.ctx, w=c.w, h=c.h;
+    ctx.clearRect(0,0,w,h);
+    var bg=ctx.createLinearGradient(0,0,0,h);
+    bg.addColorStop(0,'#0d1f29'); bg.addColorStop(1,'#061016');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+    var pts=[{l:0.78,s:'light'},{l:0.68,s:'light'},{l:0.58,s:'deep'},{l:0.48,s:'deep'},{l:0.42,s:'deep'},{l:0.46,s:'deep'},{l:0.52,s:'light'},{l:0.57,s:'light'},{l:0.62,s:'light'},{l:0.54,s:'light'},{l:0.70,s:'dream'},{l:0.88,s:'dream'},{l:0.84,s:'dream'},{l:0.64,s:'light'},{l:0.56,s:'light'},{l:0.52,s:'deep'},{l:0.62,s:'light'},{l:0.44,s:'deep'},{l:0.40,s:'deep'},{l:0.50,s:'deep'},{l:0.66,s:'dream'},{l:0.84,s:'dream'},{l:0.80,s:'dream'},{l:0.72,s:'light'},{l:0.60,s:'light'},{l:0.58,s:'light'},{l:0.60,s:'light'},{l:0.62,s:'light'},{l:0.66,s:'light'},{l:0.61,s:'light'},{l:0.58,s:'light'},{l:0.62,s:'light'},{l:0.70,s:'dream'},{l:0.82,s:'dream'},{l:0.90,s:'dream'},{l:0.92,s:'dream'},{l:0.84,s:'dream'},{l:0.76,s:'dream'},{l:0.78,s:'dream'},{l:0.64,s:'light'},{l:0.60,s:'light'},{l:0.58,s:'light'},{l:0.54,s:'light'},{l:0.56,s:'light'},{l:0.62,s:'light'},{l:0.60,s:'light'},{l:0.66,s:'awake'},{l:0.94,s:'awake'}];
+    if(pts.length<2) return;
+    var px=10,pt=18,pb=18,cw=w-px*2,ch=h-pt-pb;
+    ctx.strokeStyle='rgba(129,168,185,0.24)';ctx.lineWidth=1;ctx.setLineDash([7,8]);
+    [0.2,0.5,0.8].forEach(function(r){var y=pt+ch*r;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+    ctx.setLineDash([]);
+    var cs={awake:'#cfd9e8',dream:'#b15dff',light:'#71bfd1',deep:'#00a6a0'};
+    var st=cw/(pts.length-1);
+    for(var i=0;i<pts.length-1;i++){var clr=cs[pts[i].s]||cs.light;ctx.strokeStyle=clr;ctx.shadowColor=clr;ctx.shadowBlur=6;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(px+i*st,pt+(1-pts[i].l)*ch);ctx.lineTo(px+(i+1)*st,pt+(1-pts[i+1].l)*ch);ctx.stroke();}
+    ctx.shadowBlur=0;
+    pts.forEach(function(p,i){var clr=cs[p.s]||cs.light;ctx.fillStyle=clr;ctx.beginPath();ctx.arc(px+i*st,pt+(1-p.l)*ch,1.8,0,Math.PI*2);ctx.fill();});
+  }
+
+  // 体动图
+  function drawMovementChart(){
+    var c=setupCanvas('movementChart',380,75); if(!c) return;
+    var ctx=c.ctx,w=c.w,h=c.h; ctx.clearRect(0,0,w,h);
+    var mv=[4,2,3,1,2,3,0,0,1,3,2,0,1,2,5,4,1,0,0,1,4,2,0,0,1,4,2,0,0,1,5,3,3,1,0,4,3,2,0,1,1,1,0,0,0,2,3,4];
+    var to=[1,3,3,0,0,0,2,3,0,3,0,0,0,2,0,3,0,0,0,0,4,0,0,2,0,4,4,0,0,3,1,4,4,2,3,5,0,4,6,4,6,4,4,2,0,0,0,2];
+    var ln=Math.min(mv.length,to.length),mg=mv.slice(0,ln).concat(to.slice(0,ln));
+    var mn=0,mx=Math.max(1,Math.max.apply(null,mg)),rg=mx-mn;
+    var px=8,pt=8,pb=6,cw=w-px*2,ch=h-pt-pb;
+    ctx.strokeStyle='rgba(216,231,226,0.55)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);
+    [0.25,0.5,0.75].forEach(function(r){var y=pt+ch*r;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+    ctx.setLineDash([]);
+    function ds(sr,cl,fc){
+      var sp=cw/(ln-1);
+      ctx.fillStyle=fc;ctx.beginPath();ctx.moveTo(px,pt+ch);
+      sr.slice(0,ln).forEach(function(v,i){ctx.lineTo(px+i*sp,pt+(1-(v-mn)/rg)*ch);});
+      ctx.lineTo(px+(ln-1)*sp,pt+ch);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=cl;ctx.lineWidth=2.2;ctx.lineCap='round';ctx.shadowColor=cl;ctx.shadowBlur=4;
+      ctx.beginPath();sr.slice(0,ln).forEach(function(v,i){var x=px+i*sp,y=pt+(1-(v-mn)/rg)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+      ctx.stroke();ctx.shadowBlur=0;
+    }
+    ds(mv,'#4fc3d8','rgba(79,195,216,0.08)');ds(to,'#c95b77','rgba(201,91,119,0.10)');
+  }
+
+  // 初始化
+  var phaseObserver=new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      if(m.target.classList.contains('expanded')){setTimeout(function(){drawPhaseChart();drawMovementChart();},100);}
+    });
+  });
+  var sleepCard=document.getElementById('card-sleep');
+  if(sleepCard) phaseObserver.observe(sleepCard,{attributes:true,attributeFilter:['class']});
 </script>
 </body>
 </html>
